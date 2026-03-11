@@ -1,766 +1,1407 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Travel Planner - Discover Your Next Adventure</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            overflow-x: hidden;
-        }
-
-        /* Navigation */
-        nav {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 25px 60px;
-            z-index: 1000;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, transparent 100%);
-            transition: background 0.3s ease;
-        }
-
-        nav.scrolled {
-            background: rgba(255, 255, 255, 0.98);
-            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
-        }
-
-        .logo {
-            font-size: 24px;
-            font-weight: 700;
-            color: white;
-            letter-spacing: 1px;
-        }
-
-        nav.scrolled .logo,
-        nav.scrolled .nav-links > li > a {
-            color: #1a1a1a;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 40px;
-            list-style: none;
-            align-items: center;
-        }
-
-        .nav-links > li {
-            position: relative;
-        }
-
-        .nav-links > li > a {
-            text-decoration: none;
-            color: white;
-            font-weight: 500;
-            font-size: 15px;
-            letter-spacing: 0.5px;
-            transition: opacity 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            cursor: pointer;
-        }
-
-        .nav-links > li > a:hover {
-            opacity: 0.7;
-        }
-
-        /* Dropdown Arrow */
-        .dropdown-toggle::after {
-            content: '▼';
-            font-size: 10px;
-            margin-left: 5px;
-            transition: transform 0.3s ease;
-        }
-
-        .nav-links > li:hover .dropdown-toggle::after {
-            transform: rotate(180deg);
-        }
-
-        /* Mega Dropdown Menu */
-        .mega-dropdown {
-            position: fixed;
-            top: 80px;
-            left: 0;
-            right: 0;
-            background: white;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-            max-height: 80vh;
-            overflow-y: auto;
-            z-index: 999;
-        }
-
-        .nav-links > li:hover .mega-dropdown {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .dropdown-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 40px;
-        }
-
-        .dropdown-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 50px;
-        }
-
-        .dropdown-section h3 {
-            font-size: 20px;
-            font-weight: 700;
-            color: #667eea;
-            margin-bottom: 25px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            border-bottom: 3px solid #667eea;
-            padding-bottom: 10px;
-        }
-
-        .dropdown-items {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .dropdown-items.territories {
-            grid-template-columns: repeat(2, 1fr);
-        }
-
-        .dropdown-item {
-            position: relative;
-            text-decoration: none;
-            display: block;
-            border-radius: 12px;
-            overflow: hidden;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            height: 150px;
-            cursor: pointer;
-        }
-
-        .dropdown-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-        }
-
-        .dropdown-item-image {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.3s ease;
-        }
-
-        .dropdown-item:hover .dropdown-item-image {
-            transform: scale(1.1);
-        }
-
-        .dropdown-item-overlay {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%);
-            padding: 15px;
-            color: white;
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        /* Map Modal */
-        .map-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            z-index: 2000;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .map-modal.active {
-            display: flex;
-        }
-
-        .map-modal-content {
-            background: white;
-            border-radius: 20px;
-            width: 100%;
-            max-width: 1200px;
-            max-height: 90vh;
-            overflow: hidden;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .map-modal-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 25px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .map-modal-header h2 {
-            font-size: 28px;
-            font-weight: 700;
-        }
-
-        .map-modal-close {
-            background: rgba(255, 255, 255, 0.2);
-            border: 2px solid white;
-            color: white;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            font-size: 24px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-        }
-
-        .map-modal-close:hover {
-            background: white;
-            color: #667eea;
-            transform: rotate(90deg);
-        }
-
-        .map-modal-body {
-            display: flex;
-            flex: 1;
-            overflow: hidden;
-        }
-
-        #map {
-            flex: 1;
-            min-height: 500px;
-        }
-
-        .map-sidebar {
-            width: 350px;
-            padding: 30px;
-            background: #f8f9fa;
-            overflow-y: auto;
-            border-left: 1px solid #e0e0e0;
-        }
-
-        .map-sidebar h3 {
-            font-size: 18px;
-            color: #667eea;
-            margin-bottom: 20px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .airport-item {
-            background: white;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-
-        .airport-item:hover {
-            transform: translateX(5px);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-
-        .airport-name {
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 5px;
-            font-size: 15px;
-        }
-
-        .airport-code {
-            display: inline-block;
-            background: #667eea;
-            color: white;
-            padding: 4px 10px;
-            border-radius: 5px;
-            font-size: 12px;
-            font-weight: 700;
-            margin-bottom: 5px;
-        }
-
-        .airport-location {
-            color: #666;
-            font-size: 13px;
-        }
-
-        /* Custom Leaflet Popup */
-        .leaflet-popup-content-wrapper {
-            border-radius: 12px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-        }
-
-        .leaflet-popup-content {
-            margin: 15px;
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-        }
-
-        .popup-title {
-            font-weight: 700;
-            font-size: 16px;
-            color: #667eea;
-            margin-bottom: 5px;
-        }
-
-        .popup-code {
-            background: #667eea;
-            color: white;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 700;
-            display: inline-block;
-            margin-bottom: 5px;
-        }
-
-        .popup-location {
-            color: #666;
-            font-size: 13px;
-        }
-
-        /* Hero Section */
-        .hero {
-            position: relative;
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            overflow: hidden;
-        }
-
-        .hero-background {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-            background-size: 400% 400%;
-            animation: gradientShift 15s ease infinite;
-        }
-
-        .hero-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600"><path d="M0,100 Q300,200 600,100 T1200,100 L1200,600 L0,600 Z" fill="rgba(255,255,255,0.05)"/><circle cx="200" cy="150" r="100" fill="rgba(255,255,255,0.03)"/><circle cx="900" cy="250" r="150" fill="rgba(255,255,255,0.03)"/></svg>');
-            background-size: cover;
-            opacity: 0.6;
-        }
-
-        @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        .hero-content {
-            position: relative;
-            z-index: 2;
-            color: white;
-            max-width: 1000px;
-            padding: 0 20px;
-        }
-
-        .hero h1 {
-            font-size: 72px;
-            font-weight: 700;
-            line-height: 1.1;
-            margin-bottom: 20px;
-            letter-spacing: -1px;
-            text-shadow: 0 4px 20px rgba(0,0,0,0.2);
-        }
-
-        .hero p {
-            font-size: 24px;
-            font-weight: 300;
-            margin-bottom: 40px;
-            opacity: 0.95;
-            line-height: 1.6;
-        }
-
-        .cta-buttons {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            padding: 18px 40px;
-            border: none;
-            border-radius: 50px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
-            letter-spacing: 0.5px;
-        }
-
-        .btn-primary {
-            background: white;
-            color: #667eea;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 30px rgba(255,255,255,0.3);
-        }
-
-        .btn-secondary {
-            background: transparent;
-            color: white;
-            border: 2px solid white;
-        }
-
-        .btn-secondary:hover {
-            background: rgba(255,255,255,0.1);
-            transform: translateY(-3px);
-        }
-
-        /* Search Bar */
-        .search-section {
-            position: absolute;
-            bottom: 60px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 90%;
-            max-width: 800px;
-            z-index: 3;
-        }
-
-        .search-container {
-            background: white;
-            border-radius: 60px;
-            padding: 8px 8px 8px 30px;
-            display: flex;
-            align-items: center;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            gap: 15px;
-        }
-
-        .search-container input {
-            flex: 1;
-            border: none;
-            outline: none;
-            font-size: 18px;
-            padding: 15px;
-            color: #1a1a1a;
-        }
-
-        .search-container input::placeholder {
-            color: #999;
-        }
-
-        .search-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 18px 45px;
-            border-radius: 50px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .search-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        /* Scroll Indicator */
-        .scroll-indicator {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: white;
-            font-size: 14px;
-            text-align: center;
-            z-index: 2;
-            opacity: 0.8;
-        }
-
-        .scroll-indicator::after {
-            content: '↓';
-            display: block;
-            font-size: 24px;
-            animation: bounce 2s infinite;
-        }
-
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(10px); }
-            60% { transform: translateY(5px); }
-        }
-
-        /* Mobile Responsive */
-        @media (max-width: 1200px) {
-            .dropdown-items {
-                grid-template-columns: repeat(3, 1fr);
-            }
-        }
-
-        @media (max-width: 968px) {
-            nav {
-                padding: 20px 30px;
-            }
-
-            .nav-links {
-                gap: 20px;
-            }
-
-            .nav-links a {
-                font-size: 14px;
-            }
-
-            .dropdown-items {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .dropdown-grid {
-                grid-template-columns: 1fr;
-                gap: 30px;
-            }
-
-            .map-modal-body {
-                flex-direction: column;
-            }
-
-            .map-sidebar {
-                width: 100%;
-                max-height: 300px;
-                border-left: none;
-                border-top: 1px solid #e0e0e0;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .hero h1 {
-                font-size: 42px;
-            }
-
-            .hero p {
-                font-size: 18px;
-            }
-
-            .cta-buttons {
-                flex-direction: column;
-                align-items: center;
-            }
-
-            .btn {
-                width: 100%;
-                max-width: 300px;
-            }
-
-            .search-container {
-                flex-direction: column;
-                padding: 15px;
-                border-radius: 30px;
-            }
-
-            .search-container input {
-                width: 100%;
-                text-align: center;
-            }
-
-            .search-btn {
-                width: 100%;
-            }
-
-            .search-section {
-                bottom: 40px;
-            }
-
-            .dropdown-container {
-                padding: 20px;
-            }
-
-            .dropdown-items {
-                grid-template-columns: 1fr;
-            }
-
-            .dropdown-items.territories {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wanderlust — Discover Your Next Adventure</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 </head>
 <body>
-    <!-- Map Modal -->
-    <div class="map-modal" id="mapModal">
-        <div class="map-modal-content">
-            <div class="map-modal-header">
-                <h2 id="modalTitle">California Airports</h2>
-                <button class="map-modal-close" onclick="closeMapModal()">×</button>
-            </div>
-            <div class="map-modal-body">
-                <div id="map"></div>
-                <div class="map-sidebar">
-                    <h3>✈️ Major Airports</h3>
-                    <div id="airportList"></div>
-                </div>
-            </div>
-        </div>
+
+<!-- ══════════════════════════════════════════
+     PRELOADER
+══════════════════════════════════════════ -->
+<div class="preloader" id="preloader">
+  <div class="preloader-content">
+    <div class="preloader-globe">🌍</div>
+    <h2 class="preloader-text">WANDERLUST</h2>
+    <div class="preloader-bar"><div class="preloader-progress"></div></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     TOAST NOTIFICATION
+══════════════════════════════════════════ -->
+<div class="toast" id="toast">
+  <span class="toast-icon" id="toastIcon">✅</span>
+  <span id="toastMsg">Message here</span>
+</div>
+
+<!-- ══════════════════════════════════════════
+     CURRENCY TICKER
+══════════════════════════════════════════ -->
+<div class="currency-ticker" id="currencyTicker">
+  <div class="ticker-track" id="tickerTrack"></div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     AIRPORT MAP MODAL
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="mapModal">
+  <div class="modal-box large">
+    <div class="modal-head">
+      <h2 id="modalTitle">California Airports</h2>
+      <button class="modal-close" onclick="closeMapModal()">✕</button>
     </div>
+    <div class="map-modal-body">
+      <div id="map"></div>
+      <div class="map-sidebar">
+        <h3>✈️ Major Airports</h3>
+        <div id="airportList"></div>
+      </div>
+    </div>
+  </div>
+</div>
 
-    <!-- Navigation -->
-    <nav id="navbar">
-        <div class="logo">TRAVEL PLANNER</div>
-        <ul class="nav-links">
-            <li>
-                <a class="dropdown-toggle">Destinations</a>
-                <div class="mega-dropdown">
-                    <div class="dropdown-container">
-                        <div class="dropdown-grid">
-                            <div class="dropdown-section">
-                                <h3>States</h3>
-                                <div class="dropdown-items">
-                                    <a class="dropdown-item" onclick="showMap('California')">
-                                        <img src="https://images.unsplash.com/photo-1506146332389-18140dc7b2fb?w=400&h=300&fit=crop" alt="California" class="dropdown-item-image">
-                                        <div class="dropdown-item-overlay">California</div>
-                                    </a>
-                                    <a class="dropdown-item" onclick="showMap('Texas')">
-                                        <img src="https://images.unsplash.com/photo-1531218150217-54595bc2b934?w=400&h=300&fit=crop" alt="Texas" class="dropdown-item-image">
-                                        <div class="dropdown-item-overlay">Texas</div>
-                                    </a>
-                                    <a class="dropdown-item" onclick="showMap('Florida')">
-                                        <img src="https://images.unsplash.com/photo-1505142468610-359e7d316be0?w=400&h=300&fit=crop" alt="Florida" class="dropdown-item-image">
-                                        <div class="dropdown-item-overlay">Florida</div>
-                                    </a>
-                                    <a class="dropdown-item" onclick="showMap('New York')">
-                                        <img src="https://images.unsplash.com/photo-1546436836-07a91091f160?w=400&h=300&fit=crop" alt="New York" class="dropdown-item-image">
-                                        <div class="dropdown-item-overlay">New York</div>
-                                    </a>
-                                    <a class="dropdown-item" onclick="showMap('Illinois')">
-                                        <img src="https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=400&h=300&fit=crop" alt="Illinois" class="dropdown-item-image">
-                                        <div class="dropdown-item-overlay">Illinois</div>
-                                    </a>
-                                    <a class="dropdown-item" onclick="showMap('Nevada')">
-                                        <img src="https://images.unsplash.com/photo-1582224782351-999def29d3b8?w=400&h=300&fit=crop" alt="Nevada" class="dropdown-item-image">
-                                        <div class="dropdown-item-overlay">Nevada</div>
-                                    </a>
-                                    <a class="dropdown-item" onclick="showMap('Washington')">
-                                        <img src="https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=400&h=300&fit=crop" alt="Washington" class="dropdown-item-image">
-                                        <div class="dropdown-item-overlay">Washington</div>
-                                    </a>
-                                    <a class="dropdown-item" onclick="showMap('Colorado')">
-                                        <img src="https://images.unsplash.com/photo-1489493585363-d69421e0edd3?w=400&h=300&fit=crop" alt="Colorado" class="dropdown-item-image">
-                                        <div class="dropdown-item-overlay">Colorado</div>
-                                    </a>
-                                    <a class="dropdown-item" onclick="showMap('Hawaii')">
-                                        <img src="https://images.unsplash.com/photo-1542259009477-d625272157b7?w=400&h=300&fit=crop" alt="Hawaii" class="dropdown-item-image">
-                                        <div class="dropdown-item-overlay">Hawaii</div>
-                                    </a>
-                                    <a class="dropdown-item" onclick="showMap('Arizona')">
-                                        <img src="https://images.unsplash.com/photo-1518365050014-70fe7232897f?w=400&h=300&fit=crop" alt="Arizona" class="dropdown-item-image">
-                                        <div class="dropdown-item-overlay">Arizona</div>
-                                    </a>
-                                    <a class="dropdown-item" onclick="showMap('Massachusetts')">
-                                        <img src="https://images.unsplash.com/photo-1573577503166-676fa8e3a8bc?w=400&h=300&fit=crop" alt="Massachusetts" class="dropdown-item-image">
-                                        <div class="dropdown-item-overlay">Massachusetts</div>
-                                    </a>
-                                    <a class="dropdown-item" onclick="showMap('Georgia')">
-                                        <img src="https://images.unsplash.com/photo-1600298881974-6be191ceeda1?w=400&h=300&fit=crop" alt="Georgia" class="dropdown-item-image">
-                                        <div class="dropdown-item-overlay">Georgia</div>
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="dropdown-section">
-                                <h3>Territories</h3>
-                                <div class="dropdown-items territories">
-                                    <a class="dropdown-item" onclick="showMap('Puerto Rico')">
-                                        <img src="https://images.unsplash.com/photo-1580655653885-65763b2597d0?w=400&h=300&fit=crop" alt="Puerto Rico" class="dropdown-item-image">
-                                        <div class="dropdown-item-overlay">Puerto Rico</div>
-                                    </a>
-                                    <a class="dropdown-item" onclick="showMap('U.S. Virgin Islands')">
-                                        <img src="https://images.unsplash.com/photo-1542259009477-d625272157b7?w=400&h=300&fit=crop" alt="U.S. Virgin Islands" class="dropdown-item-image">
-                                        <div class="dropdown-item-overlay">U.S. Virgin Islands</div>
-                                    </a>
-                                </div>
-                                <h3 style="margin-top: 30px;">Special Districts</h3>
-                                <div class="dropdown-items territories">
-                                    <a class="dropdown-item" onclick="showMap('Washington D.C.')">
-                                        <img src="https://images.unsplash.com/photo-1617581629397-a72507c3de9e?w=400&h=300&fit=crop" alt="Washington D.C." class="dropdown-item-image">
-                                        <div class="dropdown-item-overlay">Washington D.C.</div>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </li>
-            <li><a href="#plan">Plan Trip</a></li>
-            <li><a href="#experiences">Experiences</a></li>
-            <li><a href="#about">About</a></li>
+<!-- ══════════════════════════════════════════
+     DESTINATION MAP MODAL
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="destinationMapModal">
+  <div class="modal-box large">
+    <div class="modal-head">
+      <h2 id="destinationMapTitle">Explore City</h2>
+      <button class="modal-close" onclick="closeDestinationMap()">✕</button>
+    </div>
+    <div class="map-modal-body">
+      <div id="destinationMap"></div>
+      <div class="map-sidebar">
+        <h3>📍 Points of Interest</h3>
+        <div id="destinationPOIs"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PACKING LIST MODAL  [NEW FEATURE 1]
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="packingModal">
+  <div class="modal-box medium">
+    <div class="modal-head">
+      <h2>🎒 Smart Packing List</h2>
+      <button class="modal-close" onclick="closeModal('packingModal')">✕</button>
+    </div>
+    <div class="modal-body-scroll">
+      <div class="packing-controls">
+        <select id="packingDestType" onchange="generatePackingList()">
+          <option value="beach">🏖️ Beach / Tropical</option>
+          <option value="mountain">🏔️ Mountain / Hiking</option>
+          <option value="city">🏙️ City Break</option>
+          <option value="winter">❄️ Winter / Snow</option>
+          <option value="business">💼 Business Trip</option>
+        </select>
+        <select id="packingDays" onchange="generatePackingList()">
+          <option value="3">3 Days</option>
+          <option value="7">1 Week</option>
+          <option value="14">2 Weeks</option>
+          <option value="30">1 Month+</option>
+        </select>
+      </div>
+      <div id="packingListOutput"></div>
+      <div class="packing-footer">
+        <button class="btn btn-primary" onclick="printPackingList()">🖨️ Print List</button>
+        <button class="btn btn-outline" onclick="copyPackingList()">📋 Copy List</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     CURRENCY CONVERTER MODAL  [NEW FEATURE 2]
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="currencyModal">
+  <div class="modal-box small">
+    <div class="modal-head">
+      <h2>💱 Currency Converter</h2>
+      <button class="modal-close" onclick="closeModal('currencyModal')">✕</button>
+    </div>
+    <div class="modal-body-scroll">
+      <div class="currency-converter">
+        <div class="conv-row">
+          <input type="number" id="convAmount" value="100" oninput="convertCurrency()">
+          <select id="convFrom" onchange="convertCurrency()">
+            <option value="USD">🇺🇸 USD</option>
+            <option value="EUR">🇪🇺 EUR</option>
+            <option value="GBP">🇬🇧 GBP</option>
+            <option value="JPY">🇯🇵 JPY</option>
+            <option value="AUD">🇦🇺 AUD</option>
+            <option value="CAD">🇨🇦 CAD</option>
+            <option value="INR">🇮🇳 INR</option>
+            <option value="CHF">🇨🇭 CHF</option>
+          </select>
+        </div>
+        <button class="swap-btn" onclick="swapCurrencies()">⇅ Swap</button>
+        <div class="conv-row">
+          <input type="number" id="convResult" readonly>
+          <select id="convTo" onchange="convertCurrency()">
+            <option value="EUR">🇪🇺 EUR</option>
+            <option value="USD">🇺🇸 USD</option>
+            <option value="GBP">🇬🇧 GBP</option>
+            <option value="JPY">🇯🇵 JPY</option>
+            <option value="AUD">🇦🇺 AUD</option>
+            <option value="CAD">🇨🇦 CAD</option>
+            <option value="INR">🇮🇳 INR</option>
+            <option value="CHF">🇨🇭 CHF</option>
+          </select>
+        </div>
+        <p class="conv-rate" id="convRate"></p>
+        <div id="convAllRates" class="all-rates"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     TRIP BUDGET TRACKER MODAL  [NEW FEATURE 3]
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="budgetModal">
+  <div class="modal-box medium">
+    <div class="modal-head">
+      <h2>📊 Trip Budget Tracker</h2>
+      <button class="modal-close" onclick="closeModal('budgetModal')">✕</button>
+    </div>
+    <div class="modal-body-scroll">
+      <div class="budget-setup">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Trip Name</label>
+            <input type="text" id="budgetTripName" placeholder="e.g. NYC Adventure">
+          </div>
+          <div class="form-group">
+            <label>Total Budget ($)</label>
+            <input type="number" id="totalBudget" placeholder="e.g. 2000">
+          </div>
+        </div>
+        <div class="budget-categories" id="budgetCategories"></div>
+        <button class="btn btn-primary" onclick="addBudgetEntry()">➕ Add Expense</button>
+        <div id="budgetSummary" class="budget-summary"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     WEATHER MODAL  [NEW FEATURE 4]
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="weatherModal">
+  <div class="modal-box medium">
+    <div class="modal-head">
+      <h2>🌤️ Destination Weather</h2>
+      <button class="modal-close" onclick="closeModal('weatherModal')">✕</button>
+    </div>
+    <div class="modal-body-scroll">
+      <div class="weather-search">
+        <input type="text" id="weatherCity" placeholder="Enter city name..." onkeypress="if(event.key==='Enter') fetchWeather()">
+        <button class="btn btn-primary" onclick="fetchWeather()">🔍 Check Weather</button>
+      </div>
+      <div id="weatherOutput"></div>
+      <div class="weather-quick-cities">
+        <p>Quick access:</p>
+        <div class="city-chips">
+          <button onclick="quickWeather('New York')">New York</button>
+          <button onclick="quickWeather('Paris')">Paris</button>
+          <button onclick="quickWeather('Tokyo')">Tokyo</button>
+          <button onclick="quickWeather('Sydney')">Sydney</button>
+          <button onclick="quickWeather('Dubai')">Dubai</button>
+          <button onclick="quickWeather('London')">London</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     FLIGHT SEARCH MODAL  [NEW FEATURE 5]
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="flightModal">
+  <div class="modal-box medium">
+    <div class="modal-head">
+      <h2>✈️ Flight Search</h2>
+      <button class="modal-close" onclick="closeModal('flightModal')">✕</button>
+    </div>
+    <div class="modal-body-scroll">
+      <div class="flight-form">
+        <div class="trip-type-toggle">
+          <button class="tt-btn active" id="ttOne" onclick="setTripType('one')">One Way</button>
+          <button class="tt-btn" id="ttRound" onclick="setTripType('round')">Round Trip</button>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>From</label>
+            <input type="text" id="flightFrom" placeholder="City or airport code" value="New York (JFK)">
+          </div>
+          <div class="form-group">
+            <label>To</label>
+            <input type="text" id="flightTo" placeholder="City or airport code" value="Los Angeles (LAX)">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Depart</label>
+            <input type="date" id="flightDepart">
+          </div>
+          <div class="form-group" id="returnGroup">
+            <label>Return</label>
+            <input type="date" id="flightReturn">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Passengers</label>
+            <select id="flightPass">
+              <option>1 Adult</option>
+              <option>2 Adults</option>
+              <option>2 Adults + 1 Child</option>
+              <option>2 Adults + 2 Children</option>
+              <option>Group (5+)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Class</label>
+            <select id="flightClass">
+              <option>Economy</option>
+              <option>Premium Economy</option>
+              <option>Business</option>
+              <option>First Class</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary full-w" onclick="searchFlights()">🔍 Search Flights</button>
+      </div>
+      <div id="flightResults"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     HOTEL SEARCH MODAL  [NEW FEATURE 6]
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="hotelModal">
+  <div class="modal-box medium">
+    <div class="modal-head">
+      <h2>🏨 Find Hotels</h2>
+      <button class="modal-close" onclick="closeModal('hotelModal')">✕</button>
+    </div>
+    <div class="modal-body-scroll">
+      <div class="hotel-form">
+        <div class="form-group">
+          <label>Destination</label>
+          <input type="text" id="hotelCity" placeholder="City or hotel name" value="New York">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Check-in</label>
+            <input type="date" id="hotelCheckin">
+          </div>
+          <div class="form-group">
+            <label>Check-out</label>
+            <input type="date" id="hotelCheckout">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Guests</label>
+            <select id="hotelGuests">
+              <option>1 Guest</option>
+              <option>2 Guests</option>
+              <option>3 Guests</option>
+              <option>4+ Guests</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Star Rating</label>
+            <select id="hotelStars">
+              <option value="any">Any</option>
+              <option value="3">3+ Stars</option>
+              <option value="4">4+ Stars</option>
+              <option value="5">5 Stars</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary full-w" onclick="searchHotels()">🔍 Search Hotels</button>
+      </div>
+      <div id="hotelResults"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     TRAVEL QUIZ MODAL  [NEW FEATURE 7]
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="quizModal">
+  <div class="modal-box medium">
+    <div class="modal-head">
+      <h2>🧭 Find Your Destination</h2>
+      <button class="modal-close" onclick="closeModal('quizModal')">✕</button>
+    </div>
+    <div class="modal-body-scroll">
+      <div id="quizContent"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     VISA INFO MODAL  [NEW FEATURE 8]
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="visaModal">
+  <div class="modal-box medium">
+    <div class="modal-head">
+      <h2>🛂 Visa Requirements</h2>
+      <button class="modal-close" onclick="closeModal('visaModal')">✕</button>
+    </div>
+    <div class="modal-body-scroll">
+      <div class="visa-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Your Passport</label>
+            <select id="visaFrom">
+              <option value="US">🇺🇸 United States</option>
+              <option value="UK">🇬🇧 United Kingdom</option>
+              <option value="EU">🇪🇺 EU (Schengen)</option>
+              <option value="IN">🇮🇳 India</option>
+              <option value="CN">🇨🇳 China</option>
+              <option value="AU">🇦🇺 Australia</option>
+              <option value="CA">🇨🇦 Canada</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Destination Country</label>
+            <select id="visaTo">
+              <option value="JP">🇯🇵 Japan</option>
+              <option value="FR">🇫🇷 France</option>
+              <option value="TH">🇹🇭 Thailand</option>
+              <option value="AE">🇦🇪 UAE / Dubai</option>
+              <option value="SG">🇸🇬 Singapore</option>
+              <option value="MX">🇲🇽 Mexico</option>
+              <option value="BR">🇧🇷 Brazil</option>
+              <option value="ZA">🇿🇦 South Africa</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary full-w" onclick="checkVisa()">🔍 Check Requirements</button>
+      </div>
+      <div id="visaOutput"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     TRIP COUNTDOWN MODAL  [NEW FEATURE 9]
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="countdownModal">
+  <div class="modal-box small">
+    <div class="modal-head">
+      <h2>⏳ Trip Countdown</h2>
+      <button class="modal-close" onclick="closeModal('countdownModal')">✕</button>
+    </div>
+    <div class="modal-body-scroll">
+      <div class="countdown-setup">
+        <div class="form-group">
+          <label>Trip Name</label>
+          <input type="text" id="countdownName" placeholder="e.g. Tokyo Adventure 2025">
+        </div>
+        <div class="form-group">
+          <label>Departure Date</label>
+          <input type="date" id="countdownDate">
+        </div>
+        <button class="btn btn-primary full-w" onclick="addCountdown()">➕ Add Trip</button>
+      </div>
+      <div id="countdownList" class="countdown-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PHRASE BOOK MODAL  [NEW FEATURE 10]
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="phraseModal">
+  <div class="modal-box medium">
+    <div class="modal-head">
+      <h2>🗣️ Travel Phrase Book</h2>
+      <button class="modal-close" onclick="closeModal('phraseModal')">✕</button>
+    </div>
+    <div class="modal-body-scroll">
+      <div class="phrase-controls">
+        <select id="phraseLanguage" onchange="loadPhrases()">
+          <option value="es">🇪🇸 Spanish</option>
+          <option value="fr">🇫🇷 French</option>
+          <option value="jp">🇯🇵 Japanese</option>
+          <option value="de">🇩🇪 German</option>
+          <option value="it">🇮🇹 Italian</option>
+          <option value="pt">🇧🇷 Portuguese</option>
+          <option value="zh">🇨🇳 Mandarin</option>
+          <option value="ar">🇦🇪 Arabic</option>
+        </select>
+        <select id="phraseCategory" onchange="loadPhrases()">
+          <option value="essentials">Essential Phrases</option>
+          <option value="food">Food & Dining</option>
+          <option value="transport">Transport</option>
+          <option value="hotel">Hotel</option>
+          <option value="emergency">Emergency</option>
+        </select>
+      </div>
+      <div id="phraseOutput"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PHOTO DIARY MODAL  [NEW FEATURE 11]
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="diaryModal">
+  <div class="modal-box medium">
+    <div class="modal-head">
+      <h2>📖 Travel Diary</h2>
+      <button class="modal-close" onclick="closeModal('diaryModal')">✕</button>
+    </div>
+    <div class="modal-body-scroll">
+      <div class="diary-add">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Destination</label>
+            <input type="text" id="diaryCity" placeholder="Where are you?">
+          </div>
+          <div class="form-group">
+            <label>Date</label>
+            <input type="date" id="diaryDate">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Mood</label>
+          <div class="mood-picker" id="moodPicker">
+            <button class="mood-btn active" data-mood="😊">😊</button>
+            <button class="mood-btn" data-mood="🤩">🤩</button>
+            <button class="mood-btn" data-mood="😌">😌</button>
+            <button class="mood-btn" data-mood="😴">😴</button>
+            <button class="mood-btn" data-mood="🥵">🥵</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Journal Entry</label>
+          <textarea id="diaryText" rows="4" placeholder="What happened today?"></textarea>
+        </div>
+        <button class="btn btn-primary full-w" onclick="saveDiaryEntry()">💾 Save Entry</button>
+      </div>
+      <div id="diaryEntries" class="diary-entries"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     NAVBAR
+══════════════════════════════════════════ -->
+<nav id="navbar">
+  <div class="logo">WANDERLUST</div>
+  <ul class="nav-links">
+    <li>
+      <a class="dropdown-toggle">Destinations ▾</a>
+      <div class="mega-dropdown">
+        <div class="dropdown-container">
+          <div class="dropdown-grid">
+            <div class="dropdown-section">
+              <h3>United States</h3>
+              <div class="dropdown-items">
+                <a class="dropdown-item" onclick="showMap('California')">
+                  <img src="https://images.unsplash.com/photo-1506146332389-18140dc7b2fb?w=400&h=260&fit=crop" alt="California" class="dropdown-item-image">
+                  <div class="dropdown-item-overlay">California</div>
+                </a>
+                <a class="dropdown-item" onclick="showMap('Texas')">
+                  <img src="https://images.unsplash.com/photo-1531218150217-54595bc2b934?w=400&h=260&fit=crop" alt="Texas" class="dropdown-item-image">
+                  <div class="dropdown-item-overlay">Texas</div>
+                </a>
+                <a class="dropdown-item" onclick="showMap('Florida')">
+                  <img src="https://images.unsplash.com/photo-1505142468610-359e7d316be0?w=400&h=260&fit=crop" alt="Florida" class="dropdown-item-image">
+                  <div class="dropdown-item-overlay">Florida</div>
+                </a>
+                <a class="dropdown-item" onclick="showMap('New York')">
+                  <img src="https://images.unsplash.com/photo-1546436836-07a91091f160?w=400&h=260&fit=crop" alt="New York" class="dropdown-item-image">
+                  <div class="dropdown-item-overlay">New York</div>
+                </a>
+                <a class="dropdown-item" onclick="showMap('Hawaii')">
+                  <img src="https://images.unsplash.com/photo-1542259009477-d625272157b7?w=400&h=260&fit=crop" alt="Hawaii" class="dropdown-item-image">
+                  <div class="dropdown-item-overlay">Hawaii</div>
+                </a>
+                <a class="dropdown-item" onclick="showMap('Nevada')">
+                  <img src="https://images.unsplash.com/photo-1605833556294-ea5c7a74f97a?w=400&h=260&fit=crop" alt="Nevada" class="dropdown-item-image">
+                  <div class="dropdown-item-overlay">Nevada</div>
+                </a>
+              </div>
+            </div>
+            <div class="dropdown-section">
+              <h3>Territories & DC</h3>
+              <div class="dropdown-items territories">
+                <a class="dropdown-item" onclick="showMap('Puerto Rico')">
+                  <img src="https://images.unsplash.com/photo-1580655653885-65763b2597d0?w=400&h=260&fit=crop" alt="Puerto Rico" class="dropdown-item-image">
+                  <div class="dropdown-item-overlay">Puerto Rico</div>
+                </a>
+                <a class="dropdown-item" onclick="showMap('Washington D.C.')">
+                  <img src="https://images.unsplash.com/photo-1617581629397-a72507c3de9e?w=400&h=260&fit=crop" alt="Washington D.C." class="dropdown-item-image">
+                  <div class="dropdown-item-overlay">Washington D.C.</div>
+                </a>
+              </div>
+              <h3 style="margin-top:1.5rem">Quick Tools</h3>
+              <div class="dropdown-tools">
+                <button onclick="openModal('weatherModal'); loadWeatherModal()">🌤️ Weather Check</button>
+                <button onclick="openModal('currencyModal'); convertCurrency()">💱 Currency</button>
+                <button onclick="openModal('visaModal')">🛂 Visa Info</button>
+                <button onclick="openModal('phraseModal'); loadPhrases()">🗣️ Phrases</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </li>
+    <li><a href="#experiences" onclick="scrollTo('experiences')">Experiences</a></li>
+    <li><a href="#plan" onclick="scrollTo('plan')">Plan Trip</a></li>
+    <li><a href="#tools" onclick="scrollTo('tools')">Tools</a></li>
+    <li><a href="#about" onclick="scrollTo('about')">About</a></li>
+    <li>
+      <button class="dark-mode-toggle" id="darkModeToggle" aria-label="Toggle dark mode">
+        <span class="sun-icon">☀️</span>
+        <span class="moon-icon">🌙</span>
+      </button>
+    </li>
+  </ul>
+  <button class="hamburger" id="hamburger" onclick="toggleMobileMenu()">☰</button>
+</nav>
+
+<!-- Mobile menu -->
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#destinations" onclick="toggleMobileMenu()">Destinations</a>
+  <a href="#experiences" onclick="toggleMobileMenu()">Experiences</a>
+  <a href="#plan" onclick="toggleMobileMenu()">Plan Trip</a>
+  <a href="#tools" onclick="toggleMobileMenu()">Tools</a>
+  <a href="#about" onclick="toggleMobileMenu()">About</a>
+</div>
+
+<!-- ══════════════════════════════════════════
+     HERO
+══════════════════════════════════════════ -->
+<section class="hero">
+  <div class="hero-video-container">
+    <video class="hero-video" autoplay muted loop playsinline
+      poster="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&h=1080&fit=crop">
+      <source src="./video/hero.mp4" type="video/mp4">
+    </video>
+  </div>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <div class="hero-badge" data-aos="fade-down">✦ Discover the World</div>
+    <h1 data-aos="fade-up" data-aos-delay="100">Every Journey<br><em>Tells a Story</em></h1>
+    <p data-aos="fade-up" data-aos-delay="200">Handcrafted itineraries, real-time tools, and expert guidance for travelers who demand more than ordinary.</p>
+    <div class="cta-buttons" data-aos="fade-up" data-aos-delay="300">
+      <a href="#plan" class="btn btn-primary" onclick="event.preventDefault(); scrollTo('plan')">✦ Start Planning</a>
+      <button class="btn btn-glass" onclick="openModal('quizModal'); startQuiz()">🧭 Find My Destination</button>
+    </div>
+  </div>
+  <div class="hero-search" data-aos="fade-up" data-aos-delay="400">
+    <div class="search-tabs">
+      <button class="stab active" onclick="setSearchTab(this,'flights')">✈️ Flights</button>
+      <button class="stab" onclick="setSearchTab(this,'hotels')">🏨 Hotels</button>
+      <button class="stab" onclick="setSearchTab(this,'experiences')">🎯 Experiences</button>
+    </div>
+    <div class="search-bar-wrap">
+      <input type="text" class="hero-input" id="heroSearch" placeholder="Search destinations, cities, airports…">
+      <button class="search-btn" onclick="handleHeroSearch()">Search</button>
+    </div>
+  </div>
+  <div class="scroll-cue">Scroll to explore ↓</div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     DESTINATIONS
+══════════════════════════════════════════ -->
+<section id="destinations" class="popular-destinations">
+  <div class="container">
+    <div class="section-header" data-aos="fade-up">
+      <span class="section-eyebrow">Where to next?</span>
+      <h2>Popular Destinations</h2>
+      <p>Explore America's most sought-after locations, from coastal cities to national wonders.</p>
+    </div>
+    <div class="destinations-grid">
+      <div class="destination-card" data-aos="fade-up" onclick="openDestinationMap('New York City')">
+        <img src="https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=800&h=600&fit=crop" alt="New York City">
+        <div class="dest-overlay">
+          <span class="dest-tag">Urban Paradise</span>
+          <h3>New York City</h3>
+          <p>The city that never sleeps</p>
+          <div class="dest-meta">
+            <span>⭐ 4.9</span>
+            <span>🌡️ 18°C</span>
+            <span>🕐 Best: Sep–Nov</span>
+          </div>
+          <button class="dest-btn" onclick="event.stopPropagation(); openDestinationMap('New York City')">Explore Map →</button>
+        </div>
+      </div>
+      <div class="destination-card" data-aos="fade-up" data-aos-delay="80" onclick="openDestinationMap('San Francisco')">
+        <img src="https://images.unsplash.com/photo-1501594907352-04cda38ebc29?w=800&h=600&fit=crop" alt="San Francisco">
+        <div class="dest-overlay">
+          <span class="dest-tag">Coastal Charm</span>
+          <h3>San Francisco</h3>
+          <p>Golden Gate & tech hub</p>
+          <div class="dest-meta">
+            <span>⭐ 4.8</span>
+            <span>🌡️ 14°C</span>
+            <span>🕐 Best: Sep–Nov</span>
+          </div>
+          <button class="dest-btn" onclick="event.stopPropagation(); openDestinationMap('San Francisco')">Explore Map →</button>
+        </div>
+      </div>
+      <div class="destination-card" data-aos="fade-up" data-aos-delay="160" onclick="openDestinationMap('Grand Canyon')">
+        <img src="https://images.unsplash.com/photo-1474044159687-1ee9f3a51722?w=800&h=600&fit=crop" alt="Grand Canyon">
+        <div class="dest-overlay">
+          <span class="dest-tag">Adventure</span>
+          <h3>Grand Canyon</h3>
+          <p>Nature's masterpiece</p>
+          <div class="dest-meta">
+            <span>⭐ 4.9</span>
+            <span>🌡️ 22°C</span>
+            <span>🕐 Best: Mar–May</span>
+          </div>
+          <button class="dest-btn" onclick="event.stopPropagation(); openDestinationMap('Grand Canyon')">Explore Map →</button>
+        </div>
+      </div>
+      <div class="destination-card" data-aos="fade-up" data-aos-delay="240" onclick="openDestinationMap('Miami')">
+        <img src="https://images.unsplash.com/photo-1533106418989-88406c7cc8ca?w=800&h=600&fit=crop" alt="Miami">
+        <div class="dest-overlay">
+          <span class="dest-tag">Beach Life</span>
+          <h3>Miami Beach</h3>
+          <p>Tropical paradise</p>
+          <div class="dest-meta">
+            <span>⭐ 4.7</span>
+            <span>🌡️ 28°C</span>
+            <span>🕐 Best: Dec–Apr</span>
+          </div>
+          <button class="dest-btn" onclick="event.stopPropagation(); openDestinationMap('Miami')">Explore Map →</button>
+        </div>
+      </div>
+      <div class="destination-card" data-aos="fade-up" data-aos-delay="320" onclick="openDestinationMap('Las Vegas')">
+        <img src="https://images.unsplash.com/photo-1605833556294-ea5c7a74f97a?w=800&h=600&fit=crop" alt="Las Vegas">
+        <div class="dest-overlay">
+          <span class="dest-tag">Nightlife</span>
+          <h3>Las Vegas</h3>
+          <p>Entertainment capital</p>
+          <div class="dest-meta">
+            <span>⭐ 4.6</span>
+            <span>🌡️ 32°C</span>
+            <span>🕐 Best: Mar–May</span>
+          </div>
+          <button class="dest-btn" onclick="event.stopPropagation(); openDestinationMap('Las Vegas')">Explore Map →</button>
+        </div>
+      </div>
+      <div class="destination-card" data-aos="fade-up" data-aos-delay="400" onclick="openDestinationMap('Yellowstone')">
+        <img src="https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?w=800&h=600&fit=crop" alt="Yellowstone">
+        <div class="dest-overlay">
+          <span class="dest-tag">Nature</span>
+          <h3>Yellowstone</h3>
+          <p>Wildlife & geysers</p>
+          <div class="dest-meta">
+            <span>⭐ 4.9</span>
+            <span>🌡️ 12°C</span>
+            <span>🕐 Best: Jun–Aug</span>
+          </div>
+          <button class="dest-btn" onclick="event.stopPropagation(); openDestinationMap('Yellowstone')">Explore Map →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     STATS
+══════════════════════════════════════════ -->
+<section class="stats-counter">
+  <div class="container">
+    <div class="stats-grid">
+      <div class="stat-item" data-aos="fade-up">
+        <span class="stat-number" data-target="50000">0</span>
+        <span class="stat-label">Happy Travelers</span>
+      </div>
+      <div class="stat-item" data-aos="fade-up" data-aos-delay="100">
+        <span class="stat-number" data-target="200">0</span>
+        <span class="stat-label">Destinations</span>
+      </div>
+      <div class="stat-item" data-aos="fade-up" data-aos-delay="200">
+        <span class="stat-number" data-target="15">0</span>
+        <span class="stat-label">Years Experience</span>
+      </div>
+      <div class="stat-item last-stat" data-aos="fade-up" data-aos-delay="300">
+        <span class="stat-number" data-target="98">0</span>
+        <span class="stat-label">Satisfaction Rate</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     TRAVEL TOOLS  [NEW SECTION]
+══════════════════════════════════════════ -->
+<section id="tools" class="travel-tools">
+  <div class="container">
+    <div class="section-header" data-aos="fade-up">
+      <span class="section-eyebrow">Everything you need</span>
+      <h2>Essential Travel Tools</h2>
+      <p>From packing to currency conversion — all your travel utilities in one place.</p>
+    </div>
+    <div class="tools-grid">
+      <div class="tool-card" data-aos="fade-up" onclick="openModal('weatherModal'); loadWeatherModal()">
+        <div class="tool-icon">🌤️</div>
+        <h3>Weather Forecast</h3>
+        <p>Real-time weather for any destination worldwide</p>
+        <span class="tool-cta">Check Now →</span>
+      </div>
+      <div class="tool-card" data-aos="fade-up" data-aos-delay="80" onclick="openModal('currencyModal'); convertCurrency()">
+        <div class="tool-icon">💱</div>
+        <h3>Currency Converter</h3>
+        <p>Live exchange rates for 150+ currencies</p>
+        <span class="tool-cta">Convert →</span>
+      </div>
+      <div class="tool-card" data-aos="fade-up" data-aos-delay="160" onclick="openModal('packingModal'); generatePackingList()">
+        <div class="tool-icon">🎒</div>
+        <h3>Packing Assistant</h3>
+        <p>Smart packing lists tailored to your trip type</p>
+        <span class="tool-cta">Pack Smart →</span>
+      </div>
+      <div class="tool-card" data-aos="fade-up" data-aos-delay="240" onclick="openModal('visaModal')">
+        <div class="tool-icon">🛂</div>
+        <h3>Visa Requirements</h3>
+        <p>Instant visa info for 190+ country combinations</p>
+        <span class="tool-cta">Check Visa →</span>
+      </div>
+      <div class="tool-card" data-aos="fade-up" data-aos-delay="320" onclick="openModal('flightModal'); setFlightDates()">
+        <div class="tool-icon">✈️</div>
+        <h3>Flight Search</h3>
+        <p>Find and compare flights across major airlines</p>
+        <span class="tool-cta">Search Flights →</span>
+      </div>
+      <div class="tool-card" data-aos="fade-up" data-aos-delay="400" onclick="openModal('hotelModal'); setHotelDates()">
+        <div class="tool-icon">🏨</div>
+        <h3>Hotel Finder</h3>
+        <p>Discover hotels that match your style and budget</p>
+        <span class="tool-cta">Find Hotels →</span>
+      </div>
+      <div class="tool-card" data-aos="fade-up" data-aos-delay="480" onclick="openModal('phraseModal'); loadPhrases()">
+        <div class="tool-icon">🗣️</div>
+        <h3>Phrase Book</h3>
+        <p>Essential phrases in 8 languages for travelers</p>
+        <span class="tool-cta">Learn Phrases →</span>
+      </div>
+      <div class="tool-card" data-aos="fade-up" data-aos-delay="560" onclick="openModal('countdownModal'); renderCountdowns()">
+        <div class="tool-icon">⏳</div>
+        <h3>Trip Countdown</h3>
+        <p>Count down to your next adventure in real-time</p>
+        <span class="tool-cta">Add Trip →</span>
+      </div>
+      <div class="tool-card" data-aos="fade-up" data-aos-delay="640" onclick="openModal('budgetModal'); initBudget()">
+        <div class="tool-icon">📊</div>
+        <h3>Budget Tracker</h3>
+        <p>Track spending and stay on budget while traveling</p>
+        <span class="tool-cta">Track Budget →</span>
+      </div>
+      <div class="tool-card" data-aos="fade-up" data-aos-delay="720" onclick="openModal('diaryModal'); loadDiaryEntries()">
+        <div class="tool-icon">📖</div>
+        <h3>Travel Diary</h3>
+        <p>Log memories, moods, and moments from your trips</p>
+        <span class="tool-cta">Start Writing →</span>
+      </div>
+      <div class="tool-card" data-aos="fade-up" data-aos-delay="800" onclick="openModal('quizModal'); startQuiz()">
+        <div class="tool-icon">🧭</div>
+        <h3>Destination Quiz</h3>
+        <p>Answer 5 questions, get your perfect destination match</p>
+        <span class="tool-cta">Take Quiz →</span>
+      </div>
+      <div class="tool-card" data-aos="fade-up" data-aos-delay="880" onclick="window.open('https://www.google.com/maps','_blank')">
+        <div class="tool-icon">🗺️</div>
+        <h3>Interactive Maps</h3>
+        <p>Explore destinations with detailed satellite maps</p>
+        <span class="tool-cta">Open Maps →</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     EXPERIENCES
+══════════════════════════════════════════ -->
+<section id="experiences" class="experiences">
+  <div class="container">
+    <div class="section-header" data-aos="fade-up">
+      <span class="section-eyebrow">Curated for you</span>
+      <h2>Unforgettable Experiences</h2>
+      <p>Handpicked activities and adventures for every type of traveler.</p>
+    </div>
+    <div class="exp-filter" data-aos="fade-up">
+      <button class="filter-btn active" onclick="filterExp('all', this)">All</button>
+      <button class="filter-btn" onclick="filterExp('adventure', this)">🧗 Adventure</button>
+      <button class="filter-btn" onclick="filterExp('culture', this)">🏛️ Culture</button>
+      <button class="filter-btn" onclick="filterExp('food', this)">🍽️ Food & Wine</button>
+      <button class="filter-btn" onclick="filterExp('relaxation', this)">🧘 Relaxation</button>
+      <button class="filter-btn" onclick="filterExp('wildlife', this)">🦁 Wildlife</button>
+    </div>
+    <div class="experiences-grid">
+      <div class="exp-card" data-category="adventure" data-aos="fade-up">
+        <div class="exp-img">
+          <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=400&fit=crop" alt="Hiking">
+          <span class="exp-badge">🔥 Popular</span>
+        </div>
+        <div class="exp-body">
+          <h3>Mountain Hiking Adventures</h3>
+          <p>Conquer breathtaking peaks and witness stunning vistas across the Rocky Mountains.</p>
+          <div class="exp-meta">
+            <span>🕐 3–5 days</span>
+            <span>⚡ Moderate</span>
+            <span class="exp-price">From $299</span>
+          </div>
+          <button class="btn btn-outline full-w" onclick="bookExperience('Mountain Hiking Adventures','$299')">Book Now</button>
+        </div>
+      </div>
+      <div class="exp-card" data-category="culture" data-aos="fade-up" data-aos-delay="80">
+        <div class="exp-img">
+          <img src="https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=600&h=400&fit=crop" alt="Museum">
+          <span class="exp-badge new">✨ New</span>
+        </div>
+        <div class="exp-body">
+          <h3>Historic City Tours</h3>
+          <p>Explore America's rich history through guided tours of iconic landmarks and museums.</p>
+          <div class="exp-meta">
+            <span>🕐 1–2 days</span>
+            <span>⚡ Easy</span>
+            <span class="exp-price">From $89</span>
+          </div>
+          <button class="btn btn-outline full-w" onclick="bookExperience('Historic City Tours','$89')">Book Now</button>
+        </div>
+      </div>
+      <div class="exp-card" data-category="food" data-aos="fade-up" data-aos-delay="160">
+        <div class="exp-img">
+          <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&h=400&fit=crop" alt="Food">
+        </div>
+        <div class="exp-body">
+          <h3>Culinary Adventures</h3>
+          <p>Savor regional cuisines and wine tastings in America's most celebrated food destinations.</p>
+          <div class="exp-meta">
+            <span>🕐 4–6 hours</span>
+            <span>⚡ Easy</span>
+            <span class="exp-price">From $149</span>
+          </div>
+          <button class="btn btn-outline full-w" onclick="bookExperience('Culinary Adventures','$149')">Book Now</button>
+        </div>
+      </div>
+      <div class="exp-card" data-category="adventure" data-aos="fade-up" data-aos-delay="240">
+        <div class="exp-img">
+          <img src="https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=600&h=400&fit=crop" alt="Rafting">
+          <span class="exp-badge trend">📈 Trending</span>
+        </div>
+        <div class="exp-body">
+          <h3>Whitewater Rafting</h3>
+          <p>Experience the thrill of rapids on America's most exciting rivers and waterways.</p>
+          <div class="exp-meta">
+            <span>🕐 Full day</span>
+            <span>⚡ Challenging</span>
+            <span class="exp-price">From $179</span>
+          </div>
+          <button class="btn btn-outline full-w" onclick="bookExperience('Whitewater Rafting','$179')">Book Now</button>
+        </div>
+      </div>
+      <div class="exp-card" data-category="relaxation" data-aos="fade-up" data-aos-delay="320">
+        <div class="exp-img">
+          <img src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=600&h=400&fit=crop" alt="Spa">
+        </div>
+        <div class="exp-body">
+          <h3>Luxury Spa Retreats</h3>
+          <p>Rejuvenate at world-class spa resorts and wellness centers across the country.</p>
+          <div class="exp-meta">
+            <span>🕐 2–3 days</span>
+            <span>⚡ Relaxing</span>
+            <span class="exp-price">From $499</span>
+          </div>
+          <button class="btn btn-outline full-w" onclick="bookExperience('Luxury Spa Retreats','$499')">Book Now</button>
+        </div>
+      </div>
+      <div class="exp-card" data-category="wildlife" data-aos="fade-up" data-aos-delay="400">
+        <div class="exp-img">
+          <img src="https://images.unsplash.com/photo-1564760055775-d63b17a55c44?w=600&h=400&fit=crop" alt="Wildlife">
+          <span class="exp-badge">🔥 Popular</span>
+        </div>
+        <div class="exp-body">
+          <h3>Wildlife Safari Tours</h3>
+          <p>Observe majestic animals in their natural habitats across national parks and reserves.</p>
+          <div class="exp-meta">
+            <span>🕐 2–4 days</span>
+            <span>⚡ Easy</span>
+            <span class="exp-price">From $399</span>
+          </div>
+          <button class="btn btn-outline full-w" onclick="bookExperience('Wildlife Safari Tours','$399')">Book Now</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     PLAN TRIP
+══════════════════════════════════════════ -->
+<section id="plan" class="plan-trip">
+  <div class="container">
+    <div class="section-header light" data-aos="fade-up">
+      <span class="section-eyebrow">Step by step</span>
+      <h2>Plan Your Perfect Trip</h2>
+      <p>Let our tools create an unforgettable, personalised journey.</p>
+    </div>
+    <div class="planning-steps">
+      <div class="step-card" data-aos="flip-left">
+        <div class="step-num">01</div>
+        <div class="step-icon">🗺️</div>
+        <h3>Choose Destination</h3>
+        <p>Browse our curated destinations and find the perfect place for your adventure.</p>
+      </div>
+      <div class="step-card" data-aos="flip-left" data-aos-delay="100">
+        <div class="step-num">02</div>
+        <div class="step-icon">📅</div>
+        <h3>Pick Your Dates</h3>
+        <p>Select travel dates and discover the best deals and experiences available.</p>
+      </div>
+      <div class="step-card" data-aos="flip-left" data-aos-delay="200">
+        <div class="step-num">03</div>
+        <div class="step-icon">✨</div>
+        <h3>Customise Experience</h3>
+        <p>Add activities, accommodations, and special touches to make it uniquely yours.</p>
+      </div>
+      <div class="step-card" data-aos="flip-left" data-aos-delay="300">
+        <div class="step-num">04</div>
+        <div class="step-icon">🎫</div>
+        <h3>Book & Go</h3>
+        <p>Confirm your booking and get ready with detailed itineraries and 24/7 support.</p>
+      </div>
+    </div>
+    <div class="trip-form" data-aos="fade-up">
+      <h3>📋 Request Your Itinerary</h3>
+      <form id="tripPlanningForm" onsubmit="submitTripForm(event)">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Destination</label>
+            <select id="destination" required>
+              <option value="">Select a destination</option>
+              <option value="california">California</option>
+              <option value="new-york">New York</option>
+              <option value="florida">Florida</option>
+              <option value="texas">Texas</option>
+              <option value="hawaii">Hawaii</option>
+              <option value="colorado">Colorado</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Number of Travelers</label>
+            <input type="number" id="travelers" min="1" max="20" value="2" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Check-in Date</label>
+            <input type="date" id="checkin" required>
+          </div>
+          <div class="form-group">
+            <label>Check-out Date</label>
+            <input type="date" id="checkout" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Interests</label>
+          <div class="checkbox-group">
+            <label><input type="checkbox" name="interests" value="adventure"> 🧗 Adventure</label>
+            <label><input type="checkbox" name="interests" value="culture"> 🏛️ Culture</label>
+            <label><input type="checkbox" name="interests" value="food"> 🍽️ Food & Wine</label>
+            <label><input type="checkbox" name="interests" value="relaxation"> 🧘 Relaxation</label>
+            <label><input type="checkbox" name="interests" value="nature"> 🌿 Nature</label>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary full-w">✦ Get My Personalised Itinerary</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     AI ITINERARY GENERATOR
+══════════════════════════════════════════ -->
+<section class="itinerary-generator" id="itinerary-generator">
+  <div class="container">
+    <div class="section-header" data-aos="fade-up">
+      <span class="section-eyebrow">AI-Powered</span>
+      <h2>Itinerary Generator</h2>
+      <p>Get a personalised day-by-day travel plan in seconds.</p>
+    </div>
+    <div class="itinerary-form-wrapper">
+      <form id="itineraryForm" class="itinerary-form" onsubmit="handleItinerarySubmit(event)" data-aos="fade-up">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Destination City</label>
+            <input type="text" id="itinerary-city" placeholder="e.g. San Francisco" required>
+          </div>
+          <div class="form-group">
+            <label>Number of Days</label>
+            <select id="itinerary-days" required>
+              <option value="">Select days</option>
+              <option value="3">3 Days</option>
+              <option value="5">5 Days</option>
+              <option value="7">7 Days</option>
+              <option value="10">10 Days</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Travel Style</label>
+            <select id="travel-style" required>
+              <option value="">Select style</option>
+              <option value="luxury">💎 Luxury</option>
+              <option value="budget">💸 Budget-Friendly</option>
+              <option value="adventure">🧗 Adventure</option>
+              <option value="relaxation">🧘 Relaxation</option>
+              <option value="cultural">🏛️ Cultural</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Budget Per Day ($)</label>
+            <input type="number" id="daily-budget" placeholder="e.g. 200" min="50" required>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary full-w">
+          <span class="btn-text">✨ Generate My Itinerary</span>
+          <span class="btn-loader" style="display:none">⏳ Generating…</span>
+        </button>
+      </form>
+
+      <div id="itinerary-result" class="itinerary-result" style="display:none" data-aos="fade-up">
+        <div class="itinerary-header">
+          <h3 id="itinerary-title"></h3>
+          <div class="itinerary-actions">
+            <button class="action-btn" onclick="saveTrip()">💾 Save</button>
+            <button class="action-btn" onclick="exportPDF()">📄 PDF</button>
+            <button class="action-btn" onclick="shareItinerary()">🔗 Share</button>
+          </div>
+        </div>
+        <div id="itinerary-content" class="itinerary-content"></div>
+        <div class="itinerary-pricing">
+          <h4>💰 Estimated Total Cost</h4>
+          <div id="total-cost" class="total-cost"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     SAVED TRIPS
+══════════════════════════════════════════ -->
+<section class="saved-trips" id="saved-trips">
+  <div class="container">
+    <div class="section-header" data-aos="fade-up">
+      <span class="section-eyebrow">Your collection</span>
+      <h2>My Saved Trips</h2>
+      <p>Access and manage your saved itineraries anytime.</p>
+    </div>
+    <div id="saved-trips-grid" class="saved-trips-grid" data-aos="fade-up"></div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     TRAVEL GUIDES
+══════════════════════════════════════════ -->
+<section class="travel-guides">
+  <div class="container">
+    <div class="section-header" data-aos="fade-up">
+      <span class="section-eyebrow">Expert knowledge</span>
+      <h2>Travel Guides & Tips</h2>
+      <p>Deep-dive guides written by experienced travellers.</p>
+    </div>
+    <div class="guides-grid">
+      <div class="guide-card featured" data-aos="fade-up" onclick="openGuide('National Parks')">
+        <div class="guide-img-wrap">
+          <img src="https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800&h=500&fit=crop" alt="National Parks">
+        </div>
+        <div class="guide-content">
+          <span class="guide-cat">⭐ Featured Guide</span>
+          <h3>Ultimate Guide to National Parks</h3>
+          <p>Everything you need to know about visiting America's 63 stunning national parks — from permits to hidden gems that most tourists miss.</p>
+          <a href="#" class="read-more" onclick="event.preventDefault(); openGuide('National Parks')">Read Full Guide →</a>
+        </div>
+      </div>
+      <div class="guide-card" data-aos="fade-up" onclick="openGuide('Budget Travel')">
+        <div class="guide-img-wrap"><img src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=600&h=400&fit=crop" alt="Budget"></div>
+        <div class="guide-content">
+          <span class="guide-cat">💸 Budget Travel</span>
+          <h3>Travel Smart: Budget Tips</h3>
+          <p>Explore amazing destinations without breaking the bank with our tried-and-tested money-saving strategies.</p>
+          <a href="#" class="read-more" onclick="event.preventDefault(); openGuide('Budget Travel')">Read Guide →</a>
+        </div>
+      </div>
+      <div class="guide-card" data-aos="fade-up" data-aos-delay="80" onclick="openGuide('Packing Tips')">
+        <div class="guide-img-wrap"><img src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=600&h=400&fit=crop" alt="Packing"></div>
+        <div class="guide-content">
+          <span class="guide-cat">🎒 Packing Tips</span>
+          <h3>Essential Packing Guide</h3>
+          <p>Pack like a pro with our comprehensive checklist and expert tips for any trip length or climate.</p>
+          <a href="#" class="read-more" onclick="event.preventDefault(); openGuide('Packing Tips')">Read Guide →</a>
+        </div>
+      </div>
+      <div class="guide-card" data-aos="fade-up" data-aos-delay="160" onclick="openGuide('Road Trips')">
+        <div class="guide-img-wrap"><img src="https://images.unsplash.com/photo-1530841377377-3ff06c0ca713?w=600&h=400&fit=crop" alt="Road Trip"></div>
+        <div class="guide-content">
+          <span class="guide-cat">🚗 Road Trips</span>
+          <h3>Best American Road Trips</h3>
+          <p>Hit the open road with our top scenic routes — from Route 66 to the Pacific Coast Highway.</p>
+          <a href="#" class="read-more" onclick="event.preventDefault(); openGuide('Road Trips')">Read Guide →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     TESTIMONIALS
+══════════════════════════════════════════ -->
+<section class="testimonials">
+  <div class="container">
+    <div class="section-header" data-aos="fade-up">
+      <span class="section-eyebrow">Real stories</span>
+      <h2>What Travellers Say</h2>
+      <p>Genuine experiences from adventurers around the world.</p>
+    </div>
+    <div class="testimonials-carousel-wrapper">
+      <button class="carousel-btn prev" onclick="moveCarousel(-1)">‹</button>
+      <div class="testimonials-carousel">
+        <div class="testimonial-card active">
+          <div class="stars">★★★★★</div>
+          <p>"An absolutely incredible experience! The itinerary was perfectly planned, and we discovered places we never would have found on our own. Highly recommend to anyone who wants more than just a typical holiday."</p>
+          <div class="testimonial-author">
+            <img src="https://i.pravatar.cc/100?img=1" alt="Sarah M.">
+            <div>
+              <strong>Sarah M.</strong>
+              <span>California Road Trip • August 2024</span>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card">
+          <div class="stars">★★★★★</div>
+          <p>"From booking to the actual trip, everything was seamless. The customer service was exceptional, and the experiences exceeded our expectations in every possible way!"</p>
+          <div class="testimonial-author">
+            <img src="https://i.pravatar.cc/100?img=5" alt="James L.">
+            <div>
+              <strong>James L.</strong>
+              <span>Grand Canyon Adventure • June 2024</span>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card">
+          <div class="stars">★★★★★</div>
+          <p>"Best vacation planning service we've ever used. They took care of every detail and helped us create memories that will last a lifetime. The kids absolutely loved it!"</p>
+          <div class="testimonial-author">
+            <img src="https://i.pravatar.cc/100?img=9" alt="Emily R.">
+            <div>
+              <strong>Emily R.</strong>
+              <span>Hawaii Family Vacation • July 2024</span>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card">
+          <div class="stars">★★★★★</div>
+          <p>"The attention to detail was remarkable. Every restaurant, hotel, and activity was perfectly curated. The currency converter and packing tools saved us so much stress!"</p>
+          <div class="testimonial-author">
+            <img src="https://i.pravatar.cc/100?img=12" alt="Michael T.">
+            <div>
+              <strong>Michael T.</strong>
+              <span>New York City Escape • May 2024</span>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card">
+          <div class="stars">★★★★★</div>
+          <p>"I've used many travel services, but this stands out. The personalised approach and local insights made our trip truly special — and the travel diary feature is brilliant!"</p>
+          <div class="testimonial-author">
+            <img src="https://i.pravatar.cc/100?img=15" alt="Jennifer K.">
+            <div>
+              <strong>Jennifer K.</strong>
+              <span>Pacific Northwest Tour • September 2024</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button class="carousel-btn next" onclick="moveCarousel(1)">›</button>
+    </div>
+    <div class="carousel-dots">
+      <span class="dot active" onclick="currentSlide(0)"></span>
+      <span class="dot" onclick="currentSlide(1)"></span>
+      <span class="dot" onclick="currentSlide(2)"></span>
+      <span class="dot" onclick="currentSlide(3)"></span>
+      <span class="dot" onclick="currentSlide(4)"></span>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     SUBMIT REVIEW
+══════════════════════════════════════════ -->
+<section class="submit-review" id="submit-review">
+  <div class="container">
+    <div class="section-header" data-aos="fade-up">
+      <span class="section-eyebrow">Share your story</span>
+      <h2>Write a Review</h2>
+      <p>Help other travellers by sharing your honest experience.</p>
+    </div>
+    <div class="review-form-wrapper" data-aos="fade-up">
+      <form id="reviewForm" class="review-form" onsubmit="submitReview(event)">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Your Name</label>
+            <input type="text" id="reviewer-name" placeholder="John Doe" required>
+          </div>
+          <div class="form-group">
+            <label>Destination Visited</label>
+            <input type="text" id="review-destination" placeholder="e.g. Grand Canyon" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Your Rating</label>
+          <div class="star-rating" id="star-rating">
+            <span class="star" data-rating="1">☆</span>
+            <span class="star" data-rating="2">☆</span>
+            <span class="star" data-rating="3">☆</span>
+            <span class="star" data-rating="4">☆</span>
+            <span class="star" data-rating="5">☆</span>
+          </div>
+          <input type="hidden" id="rating-value">
+        </div>
+        <div class="form-group">
+          <label>Your Review</label>
+          <textarea id="review-text" rows="5" placeholder="Tell us about your experience…" required></textarea>
+        </div>
+        <div class="form-group">
+          <label>Upload Photos (Optional)</label>
+          <div class="file-upload">
+            <input type="file" id="review-photos" accept="image/*" multiple>
+            <label for="review-photos" class="file-upload-label">📸 Choose Photos</label>
+            <div id="photo-preview" class="photo-preview"></div>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary full-w">✦ Submit Review</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     NEWSLETTER
+══════════════════════════════════════════ -->
+<section class="newsletter">
+  <div class="container">
+    <div class="newsletter-content" data-aos="fade-up">
+      <span class="section-eyebrow light">Stay inspired</span>
+      <h2>Get Travel Inspiration Delivered</h2>
+      <p>Join 50,000+ travellers receiving exclusive deals, hidden gems, and expert travel guides every week.</p>
+      <form class="newsletter-form" onsubmit="subscribeNewsletter(event)">
+        <input type="email" placeholder="Your email address" required>
+        <button type="submit" class="btn btn-primary">Subscribe ✦</button>
+      </form>
+      <p class="newsletter-note">No spam, ever. Unsubscribe in one click.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     ABOUT
+══════════════════════════════════════════ -->
+<section id="about" class="about">
+  <div class="container">
+    <div class="about-content">
+      <div class="about-text" data-aos="fade-right">
+        <span class="section-eyebrow">Our story</span>
+        <h2>Born from a Love of Exploration</h2>
+        <p>We're passionate about making travel accessible, enjoyable, and unforgettable for everyone. With over 15 years in the travel industry, we've helped thousands of travellers discover their dream destinations.</p>
+        <p>Our team of travel experts curate unique experiences, negotiate the best deals, and provide personalised service to ensure your journey is everything you've imagined — and more.</p>
+        <div class="about-ctas">
+          <button class="btn btn-primary" onclick="openModal('quizModal'); startQuiz()">🧭 Find My Destination</button>
+          <button class="btn btn-outline" onclick="openModal('currencyModal'); convertCurrency()">💱 Currency Tools</button>
+        </div>
+        <div class="about-stats">
+          <div class="astat"><strong>50K+</strong><span>Travellers</span></div>
+          <div class="astat"><strong>200+</strong><span>Destinations</span></div>
+          <div class="astat"><strong>15</strong><span>Years</span></div>
+          <div class="astat"><strong>98%</strong><span>Satisfaction</span></div>
+        </div>
+      </div>
+      <div class="about-image" data-aos="fade-left">
+        <img src="https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=700&h=800&fit=crop" alt="About Wanderlust">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     FOOTER
+══════════════════════════════════════════ -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-section">
+        <h3>WANDERLUST</h3>
+        <p>Your trusted partner for unforgettable journeys. Expertly crafted travel experiences since 2009.</p>
+        <div class="social-links">
+          <a href="https://facebook.com" target="_blank" aria-label="Facebook" title="Facebook">📘</a>
+          <a href="https://instagram.com" target="_blank" aria-label="Instagram" title="Instagram">📷</a>
+          <a href="https://twitter.com" target="_blank" aria-label="Twitter" title="Twitter">🐦</a>
+          <a href="https://youtube.com" target="_blank" aria-label="YouTube" title="YouTube">▶️</a>
+          <a href="https://pinterest.com" target="_blank" aria-label="Pinterest" title="Pinterest">📌</a>
+        </div>
+      </div>
+      <div class="footer-section">
+        <h4>Explore</h4>
+        <ul>
+          <li><a href="#destinations" onclick="scrollTo('destinations')">Popular Destinations</a></li>
+          <li><a href="#experiences" onclick="scrollTo('experiences')">Experiences</a></li>
+          <li><a href="#" onclick="openModal('quizModal'); startQuiz(); return false">Destination Quiz</a></li>
+          <li><a href="#" onclick="openModal('flightModal'); setFlightDates(); return false">Search Flights</a></li>
+          <li><a href="#" onclick="openModal('hotelModal'); setHotelDates(); return false">Find Hotels</a></li>
         </ul>
-    </nav>
+      </div>
+      <div class="footer-section">
+        <h4>Tools</h4>
+        <ul>
+          <li><a href="#" onclick="openModal('weatherModal'); loadWeatherModal(); return false">Weather Checker</a></li>
+          <li><a href="#" onclick="openModal('currencyModal'); convertCurrency(); return false">Currency Converter</a></li>
+          <li><a href="#" onclick="openModal('packingModal'); generatePackingList(); return false">Packing Assistant</a></li>
+          <li><a href="#" onclick="openModal('visaModal'); return false">Visa Requirements</a></li>
+          <li><a href="#" onclick="openModal('phraseModal'); loadPhrases(); return false">Phrase Book</a></li>
+        </ul>
+      </div>
+      <div class="footer-section">
+        <h4>Contact</h4>
+        <ul>
+          <li><a href="mailto:hello@wanderlust.travel">📧 hello@wanderlust.travel</a></li>
+          <li><a href="tel:+18007282553">📞 1-800-WANDER</a></li>
+          <li>📍 123 Adventure Ave, New York, NY 10001</li>
+          <li><a href="#" onclick="openModal('countdownModal'); renderCountdowns(); return false">⏳ Trip Countdown</a></li>
+          <li><a href="#" onclick="openModal('diaryModal'); loadDiaryEntries(); return false">📖 Travel Diary</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2025 Wanderlust Travel. All rights reserved.</p>
+      <div class="footer-links">
+        <a href="#" onclick="showToast('📄 Privacy Policy coming soon','info'); return false">Privacy Policy</a>
+        <a href="#" onclick="showToast('📄 Terms of Service coming soon','info'); return false">Terms of Service</a>
+        <a href="#" onclick="showToast('🍪 Cookie settings updated','success'); return false">Cookie Settings</a>
+      </div>
+    </div>
+  </div>
+</footer>
 
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="hero-background"></div>
-        <div class="hero-overlay"></div>
-        
-        <div class="hero-content">
-            <h1>Discover Your Next Adventure</h1>
-            <p>Explore breathtaking destinations, plan unforgettable journeys, and create memories that last a lifetime</p>
-            
-            <div class="cta-buttons">
-                <a href="#plan" class="btn btn-primary">Start Planning</a>
-                <a href="#destinations" class="btn btn-secondary">Explore Destinations</a>
-            </div>
-        </div>
-
-        <!-- Search Bar -->
-        <div class="search-section">
-            <div class="search-container">
-                <input type="text" placeholder="Where do you want to go?" id="searchInput">
-                <button class="search-btn" onclick="handleSearch()">Search</button>
-            </div>
-        </div>
-
-        <div class="scroll-indicator">Scroll to explore</div>
-    </section>
-
-    
+<script src="script.js"></script>
 </body>
-</html> 
+</html>
