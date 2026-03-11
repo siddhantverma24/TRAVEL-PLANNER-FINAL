@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel Planner - Discover Your Next Adventure</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 25px 60px;
+            z-index: 1000;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, transparent 100%);
+            transition: background 0.3s ease;
+        }
+
+        nav.scrolled {
+            background: rgba(255, 255, 255, 0.98);
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: white;
+            letter-spacing: 1px;
+        }
+
+        nav.scrolled .logo,
+        nav.scrolled .nav-links > li > a {
+            color: #1a1a1a;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 40px;
+            list-style: none;
+            align-items: center;
+        }
+
+        .nav-links > li {
+            position: relative;
+        }
+
+        .nav-links > li > a {
+            text-decoration: none;
+            color: white;
+            font-weight: 500;
+            font-size: 15px;
+            letter-spacing: 0.5px;
+            transition: opacity 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+
+        .nav-links > li > a:hover {
+            opacity: 0.7;
+        }
+
+        /* Dropdown Arrow */
+        .dropdown-toggle::after {
+            content: '▼';
+            font-size: 10px;
+            margin-left: 5px;
+            transition: transform 0.3s ease;
+        }
+
+        .nav-links > li:hover .dropdown-toggle::after {
+            transform: rotate(180deg);
+        }
+
+        /* Mega Dropdown Menu */
+        .mega-dropdown {
+            position: fixed;
+            top: 80px;
+            left: 0;
+            right: 0;
+            background: white;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            max-height: 80vh;
+            overflow-y: auto;
+            z-index: 999;
+        }
+
+        .nav-links > li:hover .mega-dropdown {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .dropdown-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px;
+        }
+
+        .dropdown-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 50px;
+        }
+
+        .dropdown-section h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 25px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .dropdown-items {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .dropdown-items.territories {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .dropdown-item {
+            position: relative;
+            text-decoration: none;
+            display: block;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            height: 150px;
+            cursor: pointer;
+        }
+
+        .dropdown-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+
+        .dropdown-item-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .dropdown-item:hover .dropdown-item-image {
+            transform: scale(1.1);
+        }
+
+        .dropdown-item-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%);
+            padding: 15px;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        /* Map Modal */
+        .map-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .map-modal.active {
+            display: flex;
+        }
+
+        .map-modal-content {
+            background: white;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 1200px;
+            max-height: 90vh;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .map-modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .map-modal-header h2 {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .map-modal-close {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .map-modal-close:hover {
+            background: white;
+            color: #667eea;
+            transform: rotate(90deg);
+        }
+
+        .map-modal-body {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        #map {
+            flex: 1;
+            min-height: 500px;
+        }
+
+        .map-sidebar {
+            width: 350px;
+            padding: 30px;
+            background: #f8f9fa;
+            overflow-y: auto;
+            border-left: 1px solid #e0e0e0;
+        }
+
+        .map-sidebar h3 {
+            font-size: 18px;
+            color: #667eea;
+            margin-bottom: 20px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .airport-item {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .airport-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .airport-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 15px;
+        }
+
+        .airport-code {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .airport-location {
+            color: #666;
+            font-size: 13px;
+        }
+
+        /* Custom Leaflet Popup */
+        .leaflet-popup-content-wrapper {
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+
+        .leaflet-popup-content {
+            margin: 15px;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        .popup-title {
+            font-weight: 700;
+            font-size: 16px;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .popup-code {
+            background: #667eea;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            display: inline-block;
+            margin-bottom: 5px;
+        }
+
+        .popup-location {
+            color: #666;
+            font-size: 13px;
+        }
+
+        /* Hero Section */
+        .hero {
+            position: relative;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .hero-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600"><path d="M0,100 Q300,200 600,100 T1200,100 L1200,600 L0,600 Z" fill="rgba(255,255,255,0.05)"/><circle cx="200" cy="150" r="100" fill="rgba(255,255,255,0.03)"/><circle cx="900" cy="250" r="150" fill="rgba(255,255,255,0.03)"/></svg>');
+            background-size: cover;
+            opacity: 0.6;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            color: white;
+            max-width: 1000px;
+            padding: 0 20px;
+        }
+
+        .hero h1 {
+            font-size: 72px;
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 20px;
+            letter-spacing: -1px;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        .hero p {
+            font-size: 24px;
+            font-weight: 300;
+            margin-bottom: 40px;
+            opacity: 0.95;
+            line-height: 1.6;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 18px 40px;
+            border: none;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(255,255,255,0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.1);
+            transform: translateY(-3px);
+        }
+
+        /* Search Bar */
+        .search-section {
+            position: absolute;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 800px;
+            z-index: 3;
+        }
+
+        .search-container {
+            background: white;
+            border-radius: 60px;
+            padding: 8px 8px 8px 30px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            gap: 15px;
+        }
+
+        .search-container input {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-size: 18px;
+            padding: 15px;
+            color: #1a1a1a;
+        }
+
+        .search-container input::placeholder {
+            color: #999;
+        }
+
+        .search-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 18px 45px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .search-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Scroll Indicator */
+        .scroll-indicator {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 14px;
+            text-align: center;
+            z-index: 2;
+            opacity: 0.8;
+        }
+
+        .scroll-indicator::after {
+            content: '↓';
+            display: block;
+            font-size: 24px;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(10px); }
+            60% { transform: translateY(5px); }
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 1200px) {
+            .dropdown-items {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 968px) {
+            nav {
+                padding: 20px 30px;
+            }
+
+            .nav-links {
+                gap: 20px;
+            }
+
+            .nav-links a {
+                font-size: 14px;
+            }
+
+            .dropdown-items {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .dropdown-grid {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+
+            .map-modal-body {
+                flex-direction: column;
+            }
+
+            .map-sidebar {
+                width: 100%;
+                max-height: 300px;
+                border-left: none;
+                border-top: 1px solid #e0e0e0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 42px;
+            }
+
+            .hero p {
+                font-size: 18px;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn {
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .search-container {
+                flex-direction: column;
+                padding: 15px;
+                border-radius: 30px;
+            }
+
+            .search-container input {
+                width: 100%;
+                text-align: center;
+            }
+
+            .search-btn {
+                width: 100%;
+            }
+
+            .search-section {
+                bottom: 40px;
+            }
+
+            .dropdown-container {
+                padding: 20px;
+            }
+
+            .dropdown-items {
+                grid-template-columns: 1fr;
+            }
+
+            .dropdown-items.territories {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Map Modal -->
+    <div class="map-modal" id="mapModal">
+        <div class="map-modal-content">
+            <div class="map-modal-header">
+                <h2 id="modalTitle">California Airports</h2>
+                <button class="map-modal-close" onclick="closeMapModal()">×</button>
+            </div>
+            <div class="map-modal-body">
+                <div id="map"></div>
+                <div class="map-sidebar">
+                    <h3>✈️ Major Airports</h3>
+                    <div id="airportList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav id="navbar">
+        <div class="logo">TRAVEL PLANNER</div>
+        <ul class="nav-links">
+            <li>
+                <a class="dropdown-toggle">Destinations</a>
+                <div class="mega-dropdown">
+                    <div class="dropdown-container">
+                        <div class="dropdown-grid">
+                            <div class="dropdown-section">
+                                <h3>States</h3>
+                                <div class="dropdown-items">
+                                    <a class="dropdown-item" onclick="showMap('California')">
+                                        <img src="https://images.unsplash.com/photo-1506146332389-18140dc7b2fb?w=400&h=300&fit=crop" alt="California" class="dropdown-item-image">
+                                        <div class="dropdown-item-overlay">California</div>
+                                    </a>
+                                    <a class="dropdown-item" onclick="showMap('Texas')">
+                                        <img src="https://images.unsplash.com/photo-1531218150217-54595bc2b934?w=400&h=300&fit=crop" alt="Texas" class="dropdown-item-image">
+                                        <div class="dropdown-item-overlay">Texas</div>
+                                    </a>
+                                    <a class="dropdown-item" onclick="showMap('Florida')">
+                                        <img src="https://images.unsplash.com/photo-1505142468610-359e7d316be0?w=400&h=300&fit=crop" alt="Florida" class="dropdown-item-image">
+                                        <div class="dropdown-item-overlay">Florida</div>
+                                    </a>
+                                    <a class="dropdown-item" onclick="showMap('New York')">
+                                        <img src="https://images.unsplash.com/photo-1546436836-07a91091f160?w=400&h=300&fit=crop" alt="New York" class="dropdown-item-image">
+                                        <div class="dropdown-item-overlay">New York</div>
+                                    </a>
+                                    <a class="dropdown-item" onclick="showMap('Illinois')">
+                                        <img src="https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=400&h=300&fit=crop" alt="Illinois" class="dropdown-item-image">
+                                        <div class="dropdown-item-overlay">Illinois</div>
+                                    </a>
+                                    <a class="dropdown-item" onclick="showMap('Nevada')">
+                                        <img src="https://images.unsplash.com/photo-1582224782351-999def29d3b8?w=400&h=300&fit=crop" alt="Nevada" class="dropdown-item-image">
+                                        <div class="dropdown-item-overlay">Nevada</div>
+                                    </a>
+                                    <a class="dropdown-item" onclick="showMap('Washington')">
+                                        <img src="https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=400&h=300&fit=crop" alt="Washington" class="dropdown-item-image">
+                                        <div class="dropdown-item-overlay">Washington</div>
+                                    </a>
+                                    <a class="dropdown-item" onclick="showMap('Colorado')">
+                                        <img src="https://images.unsplash.com/photo-1489493585363-d69421e0edd3?w=400&h=300&fit=crop" alt="Colorado" class="dropdown-item-image">
+                                        <div class="dropdown-item-overlay">Colorado</div>
+                                    </a>
+                                    <a class="dropdown-item" onclick="showMap('Hawaii')">
+                                        <img src="https://images.unsplash.com/photo-1542259009477-d625272157b7?w=400&h=300&fit=crop" alt="Hawaii" class="dropdown-item-image">
+                                        <div class="dropdown-item-overlay">Hawaii</div>
+                                    </a>
+                                    <a class="dropdown-item" onclick="showMap('Arizona')">
+                                        <img src="https://images.unsplash.com/photo-1518365050014-70fe7232897f?w=400&h=300&fit=crop" alt="Arizona" class="dropdown-item-image">
+                                        <div class="dropdown-item-overlay">Arizona</div>
+                                    </a>
+                                    <a class="dropdown-item" onclick="showMap('Massachusetts')">
+                                        <img src="https://images.unsplash.com/photo-1573577503166-676fa8e3a8bc?w=400&h=300&fit=crop" alt="Massachusetts" class="dropdown-item-image">
+                                        <div class="dropdown-item-overlay">Massachusetts</div>
+                                    </a>
+                                    <a class="dropdown-item" onclick="showMap('Georgia')">
+                                        <img src="https://images.unsplash.com/photo-1600298881974-6be191ceeda1?w=400&h=300&fit=crop" alt="Georgia" class="dropdown-item-image">
+                                        <div class="dropdown-item-overlay">Georgia</div>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="dropdown-section">
+                                <h3>Territories</h3>
+                                <div class="dropdown-items territories">
+                                    <a class="dropdown-item" onclick="showMap('Puerto Rico')">
+                                        <img src="https://images.unsplash.com/photo-1580655653885-65763b2597d0?w=400&h=300&fit=crop" alt="Puerto Rico" class="dropdown-item-image">
+                                        <div class="dropdown-item-overlay">Puerto Rico</div>
+                                    </a>
+                                    <a class="dropdown-item" onclick="showMap('U.S. Virgin Islands')">
+                                        <img src="https://images.unsplash.com/photo-1542259009477-d625272157b7?w=400&h=300&fit=crop" alt="U.S. Virgin Islands" class="dropdown-item-image">
+                                        <div class="dropdown-item-overlay">U.S. Virgin Islands</div>
+                                    </a>
+                                </div>
+                                <h3 style="margin-top: 30px;">Special Districts</h3>
+                                <div class="dropdown-items territories">
+                                    <a class="dropdown-item" onclick="showMap('Washington D.C.')">
+                                        <img src="https://images.unsplash.com/photo-1617581629397-a72507c3de9e?w=400&h=300&fit=crop" alt="Washington D.C." class="dropdown-item-image">
+                                        <div class="dropdown-item-overlay">Washington D.C.</div>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </li>
+            <li><a href="#plan">Plan Trip</a></li>
+            <li><a href="#experiences">Experiences</a></li>
+            <li><a href="#about">About</a></li>
+        </ul>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-background"></div>
+        <div class="hero-overlay"></div>
+        
+        <div class="hero-content">
+            <h1>Discover Your Next Adventure</h1>
+            <p>Explore breathtaking destinations, plan unforgettable journeys, and create memories that last a lifetime</p>
+            
+            <div class="cta-buttons">
+                <a href="#plan" class="btn btn-primary">Start Planning</a>
+                <a href="#destinations" class="btn btn-secondary">Explore Destinations</a>
+            </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="search-section">
+            <div class="search-container">
+                <input type="text" placeholder="Where do you want to go?" id="searchInput">
+                <button class="search-btn" onclick="handleSearch()">Search</button>
+            </div>
+        </div>
+
+        <div class="scroll-indicator">Scroll to explore</div>
+    </section>
+
+    
+</body>
+</html> 
