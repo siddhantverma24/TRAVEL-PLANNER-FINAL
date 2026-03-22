@@ -1,21 +1,117 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
-from db import get_db_connection
+# from db import get_db_connection  # Not needed yet
 from datetime import datetime
 import json
+import os
+import sys
+from dotenv import load_dotenv
+from pathlib import Path
 
-app = Flask(__name__)
-CORS(app)
+# Load environment variables from backend directory
+env_path = Path(__file__).parent / '.env'
+load_dotenv(env_path)
+
+# Configure frontend directory
+FRONTEND_DIR = os.path.join(os.path.dirname(__file__), '..', 'frontend')
+
+# Import API route blueprints
+from .routes.weather import weather_bp
+from .routes.currency import currency_bp
+from .routes.flights import flights_bp
+from .routes.hotels import hotels_bp
+from .routes.itinerary import itinerary_bp
+from .routes.maps import maps_bp
+from .routes.translate import translate_bp
+from .routes.visa import visa_bp
+from .routes.packing import packing_bp
+from .routes.phrases import phrases_bp
+from .routes.flighttracker import flighttracker_bp
+
+app = Flask(__name__, static_folder='../frontend', static_url_path='')
+CORS(app, resources={
+    r"/api/*": {
+        "origins": [
+            "http://localhost:3001",
+            "http://127.0.0.1:3001",
+            "http://localhost:5500",
+            "http://127.0.0.1:5500",
+            "http://localhost:5173",
+            "http://127.0.0.1:5173"
+        ],
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"]
+    }
+})
+
+# Register API blueprints
+app.register_blueprint(weather_bp, url_prefix='/api/weather')
+app.register_blueprint(currency_bp, url_prefix='/api/currency')
+app.register_blueprint(flights_bp, url_prefix='/api/flights')
+app.register_blueprint(hotels_bp, url_prefix='/api/hotels')
+app.register_blueprint(itinerary_bp, url_prefix='/api/itinerary')
+app.register_blueprint(maps_bp, url_prefix='/api/maps')
+app.register_blueprint(translate_bp, url_prefix='/api/translate')
+app.register_blueprint(visa_bp, url_prefix='/api/visa')
+app.register_blueprint(packing_bp, url_prefix='/api/packing')
+app.register_blueprint(phrases_bp, url_prefix='/api/phrases')
+app.register_blueprint(flighttracker_bp, url_prefix='/api/flighttracker')
+
+# ============= FRONTEND SERVING ROUTES =============
+@app.route('/index.html')
+@app.route('/')
+def serve_index():
+    """Serve the frontend index.html"""
+    return send_from_directory(FRONTEND_DIR, 'index.html')
+
+@app.route('/<path:filename>')
+def serve_static(filename):
+    """Serve static frontend files (CSS, JS, images, etc)"""
+    try:
+        return send_from_directory(FRONTEND_DIR, filename)
+    except:
+        return send_from_directory(FRONTEND_DIR, 'index.html')
 
 @app.route("/")
-def home():
+def api_root():
     """API status endpoint"""
     return jsonify({
         'status': 'online',
-        'message': 'TravelFlow API is running',
-        'version': '2.0.0',
-        'database': 'MySQL'
+        'message': 'Visit USA Travel API is running',
+        'version': '3.0.0',
+        'features': ['weather', 'currency', 'flights', 'hotels', 'itinerary', 'translate', 'visa', 'trips']
     })
+
+@app.route('/favicon.ico')
+def favicon():
+    """Favicon - return 204 No Content"""
+    return '', 204
+
+@app.route("/api/health", methods=['GET'])
+def health_check():
+    """Health check with API status"""
+    return jsonify({
+        "status": "ok",
+        "apis": {
+            "weather": bool(os.environ.get('OPENWEATHER_KEY')),
+            "currency": bool(os.environ.get('EXCHANGE_KEY')),
+            "flights": bool(os.environ.get('AMADEUS_KEY')),
+            "hotels": bool(os.environ.get('RAPIDAPI_KEY')),
+            "maps": True,
+            "itinerary": bool(os.environ.get('ANTHROPIC_API_KEY')),
+            "translate": True,
+            "visa": True
+        }
+    })
+
+# Error handlers
+@app.errorhandler(404)
+def not_found(e):
+    return jsonify({"error": "Not found"}), 404
+
+@app.errorhandler(500)
+def server_error(e):
+    return jsonify({"error": "Server error", "details": str(e)}), 500
 
 # ---------------- SAVE TRIP ----------------
 @app.route("/save-trip", methods=["POST"])
@@ -32,33 +128,33 @@ def save_trip():
         if not locations:
             return jsonify({"error": "No locations provided"}), 400
         
-        conn = get_db_connection()
-        cursor = conn.cursor()
+        # conn = get_db_connection()  # Not needed yet
+        # cursor = conn.cursor()
 
         # Insert trip with name and distance
-        cursor.execute(
-            """INSERT INTO trips (trip_name, total_distance, created_at) 
-               VALUES (%s, %s, %s)""",
-            (trip_name, total_distance, datetime.now())
-        )
-        trip_id = cursor.lastrowid
+        # cursor.execute(
+        #     """INSERT INTO trips (trip_name, total_distance, created_at) 
+        #        VALUES (%s, %s, %s)""",
+        #     (trip_name, total_distance, datetime.now())
+        # )
+        trip_id = 0  # Fallback ID
 
         # Insert all locations
-        for order, loc in enumerate(locations, start=1):
-            cursor.execute(
-                """INSERT INTO locations 
-                   (trip_id, place_name, latitude, longitude, stop_order) 
-                   VALUES (%s, %s, %s, %s, %s)""",
-                (trip_id, loc["name"], loc["lat"], loc["lon"], order)
-            )
+        # for order, loc in enumerate(locations, start=1):
+        #     cursor.execute(
+        #         """INSERT INTO locations 
+        #            (trip_id, place_name, latitude, longitude, stop_order) 
+        #            VALUES (%s, %s, %s, %s, %s)""",
+        #         (trip_id, loc["name"], loc["lat"], loc["lon"], order)
+        #     )
 
-        conn.commit()
-        cursor.close()
-        conn.close()
+        # conn.commit()
+        # cursor.close()
+        # conn.close()
 
         return jsonify({
             "success": True,
-            "message": "Trip saved successfully",
+            "message": "Trip saved successfully (database not connected)",
             "trip_id": trip_id
         })
     
@@ -70,54 +166,55 @@ def save_trip():
 def get_trips():
     """Get all saved trips with complete information"""
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        # conn = get_db_connection()  # Not needed yet
+        # cursor = conn.cursor(dictionary=True)
 
         # Get all trips
-        cursor.execute("""
-            SELECT id, trip_name, total_distance, created_at 
-            FROM trips 
-            ORDER BY created_at DESC
-        """)
-        trips = cursor.fetchall()
+        # cursor.execute("""
+        #     SELECT id, trip_name, total_distance, created_at 
+        #     FROM trips 
+        #     ORDER BY created_at DESC
+        # """)
+        # trips = cursor.fetchall()
 
         result = []
-        for trip in trips:
-            # Get locations for each trip
-            cursor.execute(
-                """SELECT place_name, latitude, longitude, stop_order 
-                   FROM locations 
-                   WHERE trip_id=%s 
-                   ORDER BY stop_order""",
-                (trip["id"],)
-            )
-            locations = cursor.fetchall()
-            
-            # Format location data
-            formatted_locations = [
-                {
-                    "name": loc["place_name"],
-                    "lat": float(loc["latitude"]),
-                    "lon": float(loc["longitude"])
-                }
-                for loc in locations
-            ]
-            
-            result.append({
-                "id": str(trip["id"]),
-                "name": trip["trip_name"],
-                "totalDistance": float(trip["total_distance"]) if trip["total_distance"] else 0,
-                "createdAt": trip["created_at"].isoformat(),
-                "locations": formatted_locations
-            })
+        # for trip in trips:
+        #     # Get locations for each trip
+        #     cursor.execute(
+        #         """SELECT place_name, latitude, longitude, stop_order 
+        #            FROM locations 
+        #            WHERE trip_id=%s 
+        #            ORDER BY stop_order""",
+        #         (trip["id"],)
+        #     )
+        #     locations = cursor.fetchall()
+        #     
+        #     # Format location data
+        #     formatted_locations = [
+        #         {
+        #             "name": loc["place_name"],
+        #             "lat": float(loc["latitude"]),
+        #             "lon": float(loc["longitude"])
+        #         }
+        #         for loc in locations
+        #     ]
+        #     
+        #     result.append({
+        #         "id": str(trip["id"]),
+        #         "name": trip["trip_name"],
+        #         "totalDistance": float(trip["total_distance"]) if trip["total_distance"] else 0,
+        #         "createdAt": trip["created_at"].isoformat(),
+        #         "locations": formatted_locations
+        #     })
 
-        cursor.close()
-        conn.close()
+        # cursor.close()
+        # conn.close()
         
         return jsonify({
             "success": True,
             "trips": result,
-            "count": len(result)
+            "count": len(result),
+            "message": "Database not connected"
         })
     
     except Exception as e:
@@ -128,26 +225,26 @@ def get_trips():
 def delete_trip(trip_id):
     """Delete a trip and its locations"""
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
+        # conn = get_db_connection()  # Not needed yet
+        # cursor = conn.cursor()
         
         # Delete locations first (foreign key constraint)
-        cursor.execute("DELETE FROM locations WHERE trip_id=%s", (trip_id,))
+        # cursor.execute("DELETE FROM locations WHERE trip_id=%s", (trip_id,))
         
         # Delete trip
-        cursor.execute("DELETE FROM trips WHERE id=%s", (trip_id,))
+        # cursor.execute("DELETE FROM trips WHERE id=%s", (trip_id,))
         
-        if cursor.rowcount == 0:
-            conn.close()
-            return jsonify({"error": "Trip not found"}), 404
+        # if cursor.rowcount == 0:
+        #     conn.close()
+        #     return jsonify({"error": "Trip not found"}), 404
         
-        conn.commit()
-        cursor.close()
-        conn.close()
+        # conn.commit()
+        # cursor.close()
+        # conn.close()
         
         return jsonify({
             "success": True,
-            "message": "Trip deleted successfully"
+            "message": "Trip deleted successfully (database not connected)"
         })
     
     except Exception as e:
@@ -158,33 +255,37 @@ def delete_trip(trip_id):
 def get_stats():
     """Get overall statistics"""
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        # conn = get_db_connection()  # Not needed yet
+        # cursor = conn.cursor(dictionary=True)
         
         # Total trips
-        cursor.execute("SELECT COUNT(*) as count FROM trips")
-        total_trips = cursor.fetchone()["count"]
+        # cursor.execute("SELECT COUNT(*) as count FROM trips")
+        # total_trips = cursor.fetchone()["count"]
+        total_trips = 0
         
         # Total locations
-        cursor.execute("SELECT COUNT(*) as count FROM locations")
-        total_locations = cursor.fetchone()["count"]
+        # cursor.execute("SELECT COUNT(*) as count FROM locations")
+        # total_locations = cursor.fetchone()["count"]
+        total_locations = 0
         
         # Total distance
-        cursor.execute("SELECT SUM(total_distance) as total FROM trips")
-        result = cursor.fetchone()
-        total_distance = float(result["total"]) if result["total"] else 0
+        # cursor.execute("SELECT SUM(total_distance) as total FROM trips")
+        # result = cursor.fetchone()
+        # total_distance = float(result["total"]) if result["total"] else 0
+        total_distance = 0.0
         
         # Average locations per trip
         avg_locations = round(total_locations / total_trips, 1) if total_trips > 0 else 0
         
-        cursor.close()
-        conn.close()
+        # cursor.close()
+        # conn.close()
         
         return jsonify({
             "total_trips": total_trips,
             "total_locations": total_locations,
             "total_distance": round(total_distance, 2),
-            "average_locations_per_trip": avg_locations
+            "average_locations_per_trip": avg_locations,
+            "message": "Database not connected"
         })
     
     except Exception as e:
@@ -230,20 +331,21 @@ def search_locations():
         if len(query) < 2:
             return jsonify({"results": []})
         
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        # conn = get_db_connection()  # Not needed yet
+        # cursor = conn.cursor(dictionary=True)
         
-        cursor.execute(
-            """SELECT DISTINCT place_name, latitude, longitude 
-               FROM locations 
-               WHERE LOWER(place_name) LIKE %s 
-               LIMIT 10""",
-            (f"%{query}%",)
-        )
+        # cursor.execute(
+        #     """SELECT DISTINCT place_name, latitude, longitude 
+        #        FROM locations 
+        #        WHERE LOWER(place_name) LIKE %s 
+        #        LIMIT 10""",
+        #     (f"%{query}%",)
+        # )
         
-        results = cursor.fetchall()
-        cursor.close()
-        conn.close()
+        # results = cursor.fetchall()
+        # cursor.close()
+        # conn.close()
+        results = []
         
         return jsonify({
             "results": [
@@ -253,7 +355,8 @@ def search_locations():
                     "lon": float(r["longitude"])
                 }
                 for r in results
-            ]
+            ],
+            "message": "Database not connected"
         })
     
     except Exception as e:
@@ -261,9 +364,9 @@ def search_locations():
 
 if __name__ == "__main__":
     print("=" * 60)
-    print("🚀 TravelFlow Backend Server - MySQL Edition")
+    print("✓ TravelFlow Backend Server - MySQL Edition")
     print("=" * 60)
-    print("Server running on: http://127.0.0.1:5001")
+    print("Server running on: http://127.0.0.1:3001")
     print("Database: MySQL (travel_planner)")
     print("=" * 60)
     print("API Endpoints:")
@@ -274,6 +377,14 @@ if __name__ == "__main__":
     print("  GET    /stats               - Get statistics")
     print("  POST   /travel-suggestions  - Get travel options")
     print("  GET    /search-locations    - Search saved locations")
+    print("  GET    /api/weather/*       - Weather API")
+    print("  GET    /api/currency/*      - Currency API")
+    print("  GET    /api/flights/*       - Flights API")
+    print("  GET    /api/hotels/*        - Hotels API")
+    print("  POST   /api/itinerary/*     - Itinerary API")
+    print("  GET    /api/maps/*          - Maps API")
+    print("  POST   /api/translate/*     - Translate API")
+    print("  GET    /api/visa/*          - Visa API")
     print("=" * 60)
     
-    app.run(port=5001, debug=True)
+    app.run(port=3001, debug=True)

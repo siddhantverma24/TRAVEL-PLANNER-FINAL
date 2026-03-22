@@ -1,28 +1,25 @@
 // ============================================================
-// WANDERLUST — script.js  (Complete Final Version)
+// VISIT USA — script.js  (Complete Final Version)
 // Features: Preloader, Navbar, Carousel, Maps, Itinerary,
 //   Weather, Currency, Packing, Visa, Flights, Hotels,
-//   Quiz, Countdown, Phrases, Budget, Diary, Reviews, Toast
+//   Quiz, Countdown, Phrases, Budget, Reviews, Toast
 // ============================================================
 
 'use strict';
 
 /* ─────────────────────────────────────────────────────────
-   1. PRELOADER
+   0. API CONFIGURATION
 ───────────────────────────────────────────────────────── */
-window.addEventListener('load', () => {
-  const pre = document.getElementById('preloader');
-  if (pre) setTimeout(() => pre.classList.add('hidden'), 800);
-});
+const API_BASE = window.location.origin; // Dynamically use current origin (localhost or 127.0.0.1)
+
+let fxRates = { USD:1, EUR:0.924, GBP:0.793, JPY:149.82, AUD:1.531, CAD:1.362, INR:83.18, CHF:0.883 };
 
 /* ─────────────────────────────────────────────────────────
-   2. TOAST
+   1. TOAST
 ───────────────────────────────────────────────────────── */
 let toastTimer;
 function showToast(msg, type = 'success') {
   const t = document.getElementById('toast');
-  const icon = { success:'✅', error:'❌', info:'ℹ️', warning:'⚠️' };
-  document.getElementById('toastIcon').textContent = icon[type] || '✅';
   document.getElementById('toastMsg').textContent = msg;
   t.className = `toast ${type} show`;
   clearTimeout(toastTimer);
@@ -68,12 +65,11 @@ const tickerRates = {
 function buildTicker() {
   const track = document.getElementById('tickerTrack');
   if (!track) return;
-  const items = Object.entries(tickerRates).map(([c, r]) =>
-    `<span>1 USD = <strong>${r} ${c}</strong></span>`
+  const items = Object.entries(fxRates).map(([c, r]) =>
+    `<span>1 USD = <strong>${r.toFixed(4)} ${c}</strong></span>`
   ).join('');
   track.innerHTML = items + items; // duplicate for seamless loop
 }
-buildTicker();
 
 /* ─────────────────────────────────────────────────────────
    5. NAVBAR
@@ -116,11 +112,10 @@ function setSearchTab(btn, type) {
   document.querySelectorAll('.stab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   const placeholders = {
-    flights: 'Search flights — e.g. New York to London…',
-    hotels: 'Search hotels — e.g. Paris, Eiffel Tower area…',
-    experiences: 'Search experiences — e.g. Grand Canyon hiking…'
+    flights: 'Where to? Enter a destination, city, or airport…',
+    hotels: 'Where to? Enter a destination, city, or hotel…'
   };
-  document.getElementById('heroSearch').placeholder = placeholders[type];
+  document.getElementById('heroSearch').placeholder = placeholders[type] || 'Where to? Enter a destination, city, or airport…';
 }
 
 function handleHeroSearch() {
@@ -216,17 +211,24 @@ function initAirportMap(location) {
   const lat = airports.reduce((s,a) => s+a.lat, 0) / airports.length;
   const lng = airports.reduce((s,a) => s+a.lng, 0) / airports.length;
   if (!airportMap) {
-    airportMap = L.map('map').setView([lat, lng], 7);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:'© OpenStreetMap' }).addTo(airportMap);
+    const mapContainer = document.getElementById('map');
+    if (!mapContainer) return;
+    
+    airportMap = L.map(mapContainer).setView([lat, lng], 7);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors',
+      maxZoom: 19
+    }).addTo(airportMap);
   } else {
     airportMap.setView([lat, lng], 7);
   }
-  currentMarkers.forEach(m => airportMap.removeLayer(m));
+  currentMarkers.forEach(m => m.remove());
   currentMarkers = [];
   const list = document.getElementById('airportList');
+  if (!list) return;
   list.innerHTML = '';
   airports.forEach(a => {
-    const m = L.marker([a.lat, a.lng]).addTo(airportMap).bindPopup(`<strong>${a.name}</strong>`);
+    const m = L.marker([a.lat, a.lng]).bindPopup(`<strong>${a.name}</strong>`).addTo(airportMap);
     currentMarkers.push(m);
     const d = document.createElement('div');
     d.className = 'poi-item';
@@ -326,17 +328,37 @@ function initDestMap(city) {
   const d = destinationPOIs[city];
   if (!d) return;
   if (destMapInstance) destMapInstance.remove();
-  destMapInstance = L.map('destinationMap').setView(d.center, 12);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:'© OpenStreetMap', maxZoom:18 }).addTo(destMapInstance);
-
-  const mkAttr = L.divIcon({ className:'', html:'<div style="background:#2d5a35;color:white;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 3px 10px rgba(0,0,0,.3)">📍</div>', iconSize:[34,34], iconAnchor:[17,34] });
-  const mkRest = L.divIcon({ className:'', html:'<div style="background:#c9a84c;color:white;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 3px 10px rgba(0,0,0,.3)">🍽️</div>', iconSize:[34,34], iconAnchor:[17,34] });
+  
+  const mapContainer = document.getElementById('destinationMap');
+  if (!mapContainer) return;
+  
+  destMapInstance = L.map(mapContainer).setView([d.center[0], d.center[1]], 12);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors',
+    maxZoom: 19
+  }).addTo(destMapInstance);
 
   const sidebar = document.getElementById('destinationPOIs');
+  if (!sidebar) return;
   sidebar.innerHTML = '';
   d.pois.forEach(p => {
-    const m = L.marker([p.lat, p.lng], { icon: p.type==='attraction' ? mkAttr : mkRest })
-      .addTo(destMapInstance).bindPopup(`<strong>${p.name}</strong><br>${p.desc}`);
+    const markerEl = document.createElement('div');
+    markerEl.style.background = p.type==='attraction' ? '#44355b' : '#eca72c';
+    markerEl.style.color = 'white';
+    markerEl.style.width = '34px';
+    markerEl.style.height = '34px';
+    markerEl.style.borderRadius = '50%';
+    markerEl.style.display = 'flex';
+    markerEl.style.alignItems = 'center';
+    markerEl.style.justifyContent = 'center';
+    markerEl.style.fontSize = '18px';
+    markerEl.style.boxShadow = '0 3px 10px rgba(0,0,0,.3)';
+    markerEl.style.cursor = 'pointer';
+    markerEl.textContent = p.type==='attraction' ? '📍' : 'R';
+    
+    const icon = L.divIcon({ html: markerEl.outerHTML, iconSize: [34, 34], className: 'custom-marker' });
+    const m = L.marker([p.lat, p.lng], { icon: icon }).bindPopup(`<strong>${p.name}</strong><br>${p.desc}`).addTo(destMapInstance);
+    
     const el = document.createElement('div');
     el.className = 'poi-item';
     el.innerHTML = `<h4>${p.type==='attraction'?'📍':'🍽️'} ${p.name}</h4><p>${p.desc}</p>`;
@@ -402,23 +424,236 @@ function bookExperience(name, price) {
 }
 
 /* ─────────────────────────────────────────────────────────
-   12. ITINERARY GENERATOR
+   12. ITINERARY GENERATOR (Groq AI)
 ───────────────────────────────────────────────────────── */
+
 function handleItinerarySubmit(e) {
   e.preventDefault();
-  const city   = document.getElementById('itinerary-city').value;
-  const days   = parseInt(document.getElementById('itinerary-days').value);
-  const style  = document.getElementById('travel-style').value;
-  const budget = parseInt(document.getElementById('daily-budget').value);
+  
+  // Validation
+  const city = document.getElementById('itinerary-city')?.value?.trim();
+  const days = document.getElementById('itinerary-days')?.value;
+  const style = document.getElementById('travel-style')?.value;
+  const budget = document.getElementById('daily-budget')?.value;
+  
+  if (!city) {
+    showToast('Please enter a destination city', 'error');
+    document.getElementById('itinerary-city')?.focus();
+    return;
+  }
+  if (!days) {
+    showToast('Please select number of days', 'error');
+    document.getElementById('itinerary-days')?.focus();
+    return;
+  }
+  if (!style) {
+    showToast('Please select a travel style', 'error');
+    document.getElementById('travel-style')?.focus();
+    return;
+  }
+  if (!budget || parseFloat(budget) < 50) {
+    showToast('Please enter a valid daily budget (minimum $50)', 'error');
+    document.getElementById('daily-budget')?.focus();
+    return;
+  }
+
   const btnTxt = e.target.querySelector('.btn-text');
   const btnLdr = e.target.querySelector('.btn-loader');
   btnTxt.style.display = 'none';
   btnLdr.style.display = 'inline';
-  setTimeout(() => {
-    generateItinerary(city, days, style, budget);
-    btnTxt.style.display = 'inline';
-    btnLdr.style.display = 'none';
-  }, 1800);
+  
+  // Call API
+  generateItineraryFromAPI(city, parseInt(days), style, parseInt(budget))
+    .then(() => {
+      btnTxt.style.display = 'inline';
+      btnLdr.style.display = 'none';
+    })
+    .catch((error) => {
+      console.error('API Error:', error);
+      btnTxt.style.display = 'inline';
+      btnLdr.style.display = 'none';
+      showToast(`Error generating itinerary: ${error.message}`, 'error');
+    });
+}
+
+async function generateItineraryFromAPI(city, days, style, budget) {
+  try {
+    const payload = {
+      destination: city,
+      days: days,
+      interests: [style],
+      budget: style
+    };
+    
+    console.log('[API] Sending itinerary request:', payload);
+    
+    const response = await fetch(`${API_BASE}/api/itinerary`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    
+    if (!response.ok) {
+      throw new Error(`API returned ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log('[API] Response received:', data);
+    
+    // Render the itinerary from API response
+    renderItineraryFromAPI(data, days, city, style, budget);
+    
+  } catch (error) {
+    console.error('[ERROR]', error);
+    // Fallback to local generation if API fails
+    showToast('Using fallback generation (API unavailable)', 'warning');
+    const acts = activityDB[style] || activityDB.budget;
+    generateLocalItinerary(city, days, style, budget, acts);
+  }
+}
+
+function renderItineraryFromAPI(data, days, city, style, budget) {
+  let html = '';
+  
+  // If API returned structured days
+  if (data.days && Array.isArray(data.days)) {
+    data.days.forEach(day => {
+      html += `<div class="itinerary-day">
+        <h4>📅 Day ${day.day} — ${day.title || city}</h4>`;
+      
+      if (day.activities && Array.isArray(day.activities)) {
+        day.activities.forEach(activity => {
+          const actTime = activity.time || '09:00';
+          const actName = activity.activity || activity.name || 'Activity';
+          const actDesc = activity.description || activity.desc || '';
+          const actCost = activity.cost || Math.round(Math.random() * 200);
+          
+          html += `<div class="itinerary-activity">
+            <div class="activity-time">⏰ ${actTime}</div>
+            <div class="activity-details">
+              <h5>${actName}</h5>
+              <p>${actDesc}</p>
+            </div>
+            <div class="activity-cost">$${actCost}</div>
+          </div>`;
+        });
+      }
+      
+      if (day.meals) {
+        html += `<div class="day-meals">
+          <strong>🍽️ Meals:</strong>
+          <p>${Object.entries(day.meals).map(([meal, venue]) => `${meal}: ${venue}`).join(' | ')}</p>
+        </div>`;
+      }
+      
+      if (day.tips) {
+        html += `<div class="day-tips">
+          <strong>💡 Tips:</strong> ${day.tips}
+        </div>`;
+      }
+      
+      html += '</div>';
+    });
+  } else {
+    // Fallback if API returns text instead of JSON
+    html = `<div style="white-space: pre-wrap;">${data.itinerary || JSON.stringify(data, null, 2)}</div>`;
+  }
+  
+  document.getElementById('itinerary-title').textContent = 
+    `🌟 ${days}-Day ${city} ${style.charAt(0).toUpperCase()+style.slice(1)} Journey`;
+  document.getElementById('itinerary-content').innerHTML = html;
+  
+  // Calculate and display costs
+  const totalCost = data.totalCost || Math.round(budget * days * 0.8);
+  const breakdown = data.breakdown || {
+    accommodation: Math.round(totalCost * 0.35),
+    food: Math.round(totalCost * 0.35),
+    activities: Math.round(totalCost * 0.20),
+    transport: Math.round(totalCost * 0.10)
+  };
+  
+  document.getElementById('total-cost').innerHTML = `
+    $${totalCost.toLocaleString()}
+    <div class="cost-breakdown">
+      <div class="cost-item">
+        <span>🎭 Activities</span>
+        <strong>$${breakdown.activities?.toLocaleString() || 0}</strong>
+      </div>
+      <div class="cost-item">
+        <span>🏨 Accommodation</span>
+        <strong>$${breakdown.accommodation?.toLocaleString() || 0}</strong>
+      </div>
+      <div class="cost-item">
+        <span>🚗 Transport</span>
+        <strong>$${breakdown.transport?.toLocaleString() || 0}</strong>
+      </div>
+    </div>`;
+  
+  const result = document.getElementById('itinerary-result');
+  result.style.display = 'block';
+  result.scrollIntoView({ behavior:'smooth', block:'start' });
+  if (window.AOS) AOS.refresh();
+  
+  showToast(`✨ Your ${days}-day itinerary has been generated!`, 'success');
+}
+
+function generateLocalItinerary(city, days, style, budget, acts) {
+  let html = '', total = 0;
+  const times = ['9:00 AM','12:30 PM','4:00 PM','7:30 PM'];
+  const dayNames = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+  
+  for (let d = 1; d <= days; d++) {
+    const dayName = dayNames[(d - 1) % 7];
+    html += `<div class="itinerary-day">
+      <h4>📅 Day ${d} — ${city} (${dayName})</h4>`;
+    
+    times.slice(0, 3).forEach(t => {
+      const a = acts[Math.floor(Math.random() * acts.length)];
+      const cost = Math.round(a.cost * (budget / 200));
+      total += cost;
+      html += `<div class="itinerary-activity">
+        <div class="activity-time">⏰ ${t}</div>
+        <div class="activity-details">
+          <h5>${a.name}</h5>
+          <p>${a.desc}</p>
+        </div>
+        <div class="activity-cost">$${cost}</div>
+      </div>`;
+    });
+    html += '</div>';
+  }
+  
+  document.getElementById('itinerary-title').textContent =
+    `🌟 ${days}-Day ${city} ${style.charAt(0).toUpperCase()+style.slice(1)} Journey`;
+  document.getElementById('itinerary-content').innerHTML = html;
+  
+  const activitiesCost = Math.round(total * 0.6);
+  const accommodationCost = Math.round(total * 0.28);
+  const transportCost = Math.round(total * 0.12);
+  
+  document.getElementById('total-cost').innerHTML = `
+    $${total.toLocaleString()}
+    <div class="cost-breakdown">
+      <div class="cost-item">
+        <span>🎭 Activities</span>
+        <strong>$${activitiesCost.toLocaleString()}</strong>
+      </div>
+      <div class="cost-item">
+        <span>🏨 Accommodation</span>
+        <strong>$${accommodationCost.toLocaleString()}</strong>
+      </div>
+      <div class="cost-item">
+        <span>🚗 Transport</span>
+        <strong>$${transportCost.toLocaleString()}</strong>
+      </div>
+    </div>`;
+  
+  const result = document.getElementById('itinerary-result');
+  result.style.display = 'block';
+  result.scrollIntoView({ behavior:'smooth', block:'start' });
+  if (window.AOS) AOS.refresh();
+  
+  showToast(`✨ Your ${days}-day itinerary has been generated!`, 'success');
 }
 
 const activityDB = {
@@ -465,37 +700,8 @@ const activityDB = {
 };
 
 function generateItinerary(city, days, style, budget) {
-  const acts = activityDB[style] || activityDB.budget;
-  let html = '', total = 0;
-  const times = ['9:00 AM','12:30 PM','4:00 PM'];
-  for (let d = 1; d <= days; d++) {
-    html += `<div class="itinerary-day"><h4>Day ${d} — ${city}</h4>`;
-    times.forEach(t => {
-      const a = acts[Math.floor(Math.random() * acts.length)];
-      const cost = Math.round(a.cost * (budget / 200));
-      total += cost;
-      html += `<div class="itinerary-activity">
-        <div class="activity-time">${t}</div>
-        <div class="activity-details"><h5>${a.name}</h5><p>${a.desc}</p></div>
-        <div class="activity-cost">$${cost}</div>
-      </div>`;
-    });
-    html += '</div>';
-  }
-  document.getElementById('itinerary-title').textContent =
-    `${days}-Day ${city} ${style.charAt(0).toUpperCase()+style.slice(1)} Journey`;
-  document.getElementById('itinerary-content').innerHTML = html;
-  document.getElementById('total-cost').innerHTML = `
-    $${total.toLocaleString()}
-    <div class="cost-breakdown">
-      <div class="cost-item"><span>Activities</span><strong>$${Math.round(total*.6).toLocaleString()}</strong></div>
-      <div class="cost-item"><span>Accommodation</span><strong>$${Math.round(total*.28).toLocaleString()}</strong></div>
-      <div class="cost-item"><span>Transport</span><strong>$${Math.round(total*.12).toLocaleString()}</strong></div>
-    </div>`;
-  const result = document.getElementById('itinerary-result');
-  result.style.display = 'block';
-  result.scrollIntoView({ behavior:'smooth', block:'start' });
-  if (window.AOS) AOS.refresh();
+  // Deprecated - use generateItineraryFromAPI instead
+  console.warn('[DEPRECATED] Direct call to generateItinerary - use API');
 }
 
 /* ─────────────────────────────────────────────────────────
@@ -567,7 +773,7 @@ function exportPDF() {
   .itinerary-day{background:#f5f5f0;padding:20px;margin:20px 0;border-left:5px solid #2d5a35;border-radius:10px}
   .itinerary-activity{display:flex;gap:15px;margin:12px 0;padding:12px;background:#fff;border-radius:8px}
   .activity-time{font-weight:bold;color:#2d5a35;min-width:75px}
-  .activity-cost{margin-left:auto;font-weight:bold;color:#c9a84c}
+  .activity-cost{margin-left:auto;font-weight:bold;color:#eca72c}
   .itinerary-actions,.itinerary-pricing{display:none}
   @media print{body{padding:20px}.itinerary-day{break-inside:avoid}}</style>
   </head><body>${content}</body></html>`);
@@ -588,20 +794,6 @@ function shareItinerary() {
 function fallbackShare(title, url) {
   navigator.clipboard.writeText(`${title}\n${url}`)
     .then(() => showToast('Link copied to clipboard! 🔗'));
-}
-
-/* ─────────────────────────────────────────────────────────
-   16. TRIP PLANNING FORM
-───────────────────────────────────────────────────────── */
-function submitTripForm(e) {
-  e.preventDefault();
-  const dest = document.getElementById('destination').value;
-  showToast(`✅ Request received for ${dest}! Our team will contact you within 24 hours.`);
-  e.target.reset();
-  setTimeout(() => {
-    document.getElementById('itinerary-city').value = dest.replace('-',' ').replace(/\b\w/g,l=>l.toUpperCase());
-    scrollTo('itinerary-generator');
-  }, 1500);
 }
 
 /* ─────────────────────────────────────────────────────────
@@ -668,7 +860,6 @@ function subscribeNewsletter(e) {
 ───────────────────────────────────────────────────────── */
 const guideContent = {
   'National Parks': {
-    icon:'🏞️',
     text:`<p>America's 63 national parks span over 85 million acres of wilderness. From the geysers of Yellowstone to the red rock formations of Arches, each park offers a unique natural experience.</p>
     <h3>Top Tips for Visiting</h3>
     <ul>
@@ -683,7 +874,6 @@ const guideContent = {
     <p>Yellowstone, Grand Canyon, Yosemite, Zion, and Great Smoky Mountains attract over 50 million visitors combined each year. Yellowstone alone has more geothermal features than anywhere else on Earth.</p>`
   },
   'Budget Travel': {
-    icon:'💸',
     text:`<p>Travelling on a budget doesn't mean sacrificing quality experiences. With the right strategies, you can explore America and the world for a fraction of the typical cost.</p>
     <h3>Money-Saving Strategies</h3>
     <ul>
@@ -698,7 +888,6 @@ const guideContent = {
     <p>Most major US cities offer dozens of free world-class experiences — from the Smithsonian museums in DC to the High Line in NYC, Central Park, and Golden Gate Park in SF.</p>`
   },
   'Packing Tips': {
-    icon:'🎒',
     text:`<p>The art of packing well means having everything you need without the burden of heavy bags. Here's how the experts do it.</p>
     <h3>The Golden Rules</h3>
     <ul>
@@ -713,7 +902,6 @@ const guideContent = {
     <p>A good noise-cancelling headset, a compact travel router, and an e-reader can transform long journeys. Don't forget to download offline maps, translation apps, and your airline apps before departure.</p>`
   },
   'Road Trips': {
-    icon:'🚗',
     text:`<p>America was built for road trips. With 4 million miles of roads crossing every landscape imaginable, the journey often becomes the destination.</p>
     <h3>Top Road Trip Routes</h3>
     <ul>
@@ -740,8 +928,8 @@ function openGuide(name) {
   m.innerHTML = `
     <div class="modal-box medium">
       <div class="modal-head">
-        <h2>${g.icon} ${name}</h2>
-        <button class="modal-close" onclick="closeModal('guideModal')">✕</button>
+        <h2>${name}</h2>
+        <button class="modal-close" onclick="closeModal('guideModal')">X</button>
       </div>
       <div class="modal-body-scroll guide-article">${g.text}</div>
     </div>`;
@@ -754,47 +942,131 @@ function openGuide(name) {
 ───────────────────────────────────────────────────────── */
 const packingDB = {
   beach:{
-    'Clothing':['👙 Swimsuit / Bikini','👕 Light T-shirts (×4)','🩳 Shorts (×3)','👗 Beach cover-up','🌂 Light rain jacket','👡 Sandals','👟 Comfortable walking shoes'],
-    'Essentials':['🧴 Sunscreen SPF 50+','😎 Sunglasses','🧢 Wide-brim hat','🏖️ Beach towel','💊 Insect repellent','💊 Antihistamine'],
-    'Tech & Extras':['📱 Waterproof phone case','🔋 Portable charger','📷 Camera','🎒 Dry bag','📖 Book / e-reader','🎵 Bluetooth speaker']
+    'Clothing':['Swimsuit / Bikini','Light T-shirts (×4)','Shorts (×3)','Beach cover-up','Light rain jacket','Sandals','Comfortable walking shoes'],
+    'Essentials':['Sunscreen SPF 50+','Sunglasses','Wide-brim hat','Beach towel','Insect repellent','Antihistamine'],
+    'Tech & Extras':['Waterproof phone case','Portable charger','Camera','Dry bag','Book / e-reader','Bluetooth speaker']
   },
   mountain:{
-    'Clothing':['🧥 Insulated jacket','🧣 Thermal base layers (×2)','👖 Hiking trousers (×2)','🧤 Gloves','🧢 Beanie','🥾 Hiking boots','🧦 Merino wool socks (×4)'],
-    'Gear':['🎒 Daypack (20–30L)','🗺️ Trail map / compass','🔦 Headlamp + extra batteries','⛏️ Trekking poles','🆘 Emergency whistle','🔪 Multi-tool'],
-    'Safety':['💊 First-aid kit','🌡️ Emergency blanket','🧴 High-altitude sunscreen','💧 Water purification tablets','🐻 Bear spray (if required)','📡 Offline maps downloaded']
+    'Clothing':['Insulated jacket','Thermal base layers (×2)','Hiking trousers (×2)','Gloves','Beanie','Hiking boots','Merino wool socks (×4)'],
+    'Gear':['Daypack (20–30L)','Trail map / compass','Headlamp + extra batteries','Trekking poles','Emergency whistle','Multi-tool'],
+    'Safety':['First-aid kit','Emergency blanket','High-altitude sunscreen','Water purification tablets','Bear spray (if required)','Offline maps downloaded']
   },
   city:{
-    'Clothing':['👔 Smart casual outfits (×3)','👕 Casual T-shirts (×3)','👖 Versatile jeans (×2)','🧥 Light jacket / blazer','👞 Comfortable walking shoes','🩴 Dress shoes'],
-    'Essentials':['🎒 Daypack / tote bag','💳 Travel wallet','🔒 TSA-approved luggage lock','☂️ Compact umbrella','💊 Pain relievers','📍 City guidebook'],
-    'Tech':['🔌 Universal power adapter','🔋 Portable charger','💻 Laptop + charger','🎧 Noise-cancelling headphones','📱 Local SIM card']
+    'Clothing':['Smart casual outfits (×3)','Casual T-shirts (×3)','Versatile jeans (×2)','Light jacket / blazer','Comfortable walking shoes','Dress shoes'],
+    'Essentials':['Daypack / tote bag','Travel wallet','TSA-approved luggage lock','Compact umbrella','Pain relievers','City guidebook'],
+    'Tech':['Universal power adapter','Portable charger','Laptop + charger','Noise-cancelling headphones','Local SIM card']
   },
   winter:{
-    'Clothing':['🧥 Heavy-duty winter coat','🧣 Thermal scarf','🧤 Insulated gloves','🎿 Snow boots','👖 Thermal leggings','🧦 Wool socks (×5)','🎩 Fur-lined hat'],
-    'Gear':['🕶️ Anti-glare snow goggles','💊 Vitamin D supplements','🧴 Heavy moisturiser','💋 Lip balm SPF','🌡️ Pocket hand warmers','☂️ Waterproof umbrella'],
-    'Safety':['🆘 Emergency contact list','🏥 Travel insurance documents','💊 Cold & flu medication','🔋 Extra phone battery (cold drains fast)']
+    'Clothing':['Heavy-duty winter coat','Thermal scarf','Insulated gloves','Snow boots','Thermal leggings','Wool socks (×5)','Fur-lined hat'],
+    'Gear':['Anti-glare snow goggles','Vitamin D supplements','Heavy moisturiser','Lip balm SPF','Pocket hand warmers','Waterproof umbrella'],
+    'Safety':['Emergency contact list','Travel insurance documents','Cold & flu medication','Extra phone battery (cold drains fast)']
   },
   business:{
-    'Clothing':['👔 Dress shirts (×3)','🤵 Business suit (×2)','👔 Ties (×2)','👞 Polished dress shoes','🧥 Overcoat','🩲 Formal underwear (×5)'],
-    'Work Essentials':['💼 Professional laptop bag','💻 Laptop + charger','🖨️ Portable Wi-Fi hotspot','📒 Notebook & pens','💳 Business cards','📁 Document organiser'],
-    'Personal':['🪥 Grooming kit','💊 Antacids / vitamins','🧴 Travel-size toiletries','😴 Sleep mask + ear plugs (for early flights)']
+    'Clothing':['Dress shirts (×3)','Business suit (×2)','Ties (×2)','Polished dress shoes','Overcoat','Formal underwear (×5)'],
+    'Work Essentials':['Professional laptop bag','Laptop + charger','Portable Wi-Fi hotspot','Notebook & pens','Business cards','Document organiser'],
+    'Personal':['Grooming kit','Antacids / vitamins','Travel-size toiletries','Sleep mask + ear plugs (for early flights)']
   }
 };
 
-function generatePackingList() {
-  const type = document.getElementById('packingDestType').value;
+async function generatePackingList() {
   const days = parseInt(document.getElementById('packingDays').value);
-  const data = packingDB[type] || packingDB.city;
-  let html = '';
-  Object.entries(data).forEach(([cat, items]) => {
-    html += `<div class="packing-category"><h4>${cat}</h4>`;
-    items.forEach((item, i) => {
-      html += `<div class="packing-item">
-        <input type="checkbox" id="pk${cat}${i}" onchange="this.nextElementSibling.style.textDecoration=this.checked?'line-through':'none'">
-        <label for="pk${cat}${i}">${item}${days>7&&cat==='Clothing'?' (×'+Math.ceil(days/7)+' weeks)':''}</label>
-      </div>`;
+  const destination = document.getElementById('packingDestination')?.value.trim();
+  
+  // Require destination input
+  if (!destination) {
+    document.getElementById('packingListOutput').innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);"><p>📍 Please enter a destination to generate your packing list</p></div>';
+    return;
+  }
+  
+  try {
+    document.getElementById('packingListOutput').innerHTML = '<div style="text-align:center;padding:20px;"><p>🔄 Generating AI-powered packing list for ' + destination + '...</p></div>';
+    
+    const response = await fetch(`${API_BASE}/api/packing/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        destination: destination,
+        days: days,
+        travelers: 'solo'
+      })
     });
-    html += '</div>';
-  });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    
+    const data = await response.json();
+    renderPackingFromAPI(data);
+    
+  } catch (err) {
+    console.error('[PACKING] API call failed:', err.message);
+    // Show error message instead of fallback
+    document.getElementById('packingListOutput').innerHTML = '<div style="background:#f8d7da;border:1px solid #f5c6cb;padding:15px;border-radius:8px;color:#721c24;"><strong>⚠️ Error:</strong> Could not generate packing list. Please check your API key and try again.</div>';
+  }
+}
+
+function renderPackingFromAPI(data) {
+  let html = '';
+  
+  // Add destination header
+  if (data.destination) {
+    html += `<div style="background:linear-gradient(135deg, rgba(45, 90, 53, 0.06) 0%, rgba(236, 167, 44, 0.06) 100%);padding:16px;border-radius:12px;margin-bottom:20px;border-left:5px solid var(--spicy-paprika);">
+      <h3 style="margin:0;color:var(--spicy-paprika);font-size:1.3rem;font-family:var(--font-display);">📦 Packing List for ${data.destination}</h3>
+      <small style="color:var(--text-muted);">AI-personalized for your trip</small>
+    </div>`;
+  }
+  
+  // Add warning if present
+  if (data.weatherWarning) {
+    html += `<div style="background:#fff3cd;border:1px solid #ffc107;padding:14px;border-radius:8px;margin-bottom:18px;color:#856404;border-left:4px solid #ffc107;">
+      <strong>⚠️ Important Note:</strong> ${data.weatherWarning}
+    </div>`;
+  }
+  
+  // Render categories
+  if (data.categories && Array.isArray(data.categories)) {
+    data.categories.forEach(cat => {
+      html += `<div class="packing-category">
+        <h4>${cat.icon} ${cat.name}</h4>`;
+      
+      if (cat.items && Array.isArray(cat.items)) {
+        cat.items.forEach((item, i) => {
+          const essential = item.essential ? '⭐ ' : '';
+          const quantityText = item.quantity > 1 ? ` (×${item.quantity})` : '';
+          html += `<div class="packing-item">
+            <input type="checkbox" id="pk${cat.name}${i}" onchange="this.nextElementSibling.style.textDecoration=this.checked?'line-through':'none'">
+            <label for="pk${cat.name}${i}">
+              <span style="font-weight:500;">${essential}${item.name}${quantityText}</span>
+              <span>${item.reason}</span>
+            </label>
+          </div>`;
+        });
+      }
+      html += '</div>';
+    });
+  }
+  
+  // Add tips section
+  if (data.tips && Array.isArray(data.tips)) {
+    html += `<div style="background:linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);padding:18px;border-radius:12px;margin-top:22px;border-left:4px solid #4caf50;">
+      <h4 style="color:#2e7d32;margin-top:0;margin-bottom:12px;font-family:var(--font-display);">💡 Pro Packing Tips</h4>
+      <ul style="margin:0;padding-left:24px;color:#33691e;gap:8px;">`;
+    data.tips.forEach(tip => {
+      html += `<li style="margin-bottom:10px;line-height:1.5;">${tip}</li>`;
+    });
+    html += `</ul>
+    </div>`;
+  }
+  
+  // Add total items count
+  if (data.totalItems) {
+    html += `<div style="text-align:center;color:var(--text-muted);font-size:0.9em;margin-top:18px;padding-top:18px;border-top:1px solid var(--border);">
+      <small>📋 Total items: <strong>${data.totalItems}</strong> | ✨ Generated by Groq AI</small>
+    </div>`;
+  }
+  
   document.getElementById('packingListOutput').innerHTML = html;
 }
 
@@ -817,25 +1089,67 @@ function copyPackingList() {
 /* ─────────────────────────────────────────────────────────
    21. FEATURE 2: CURRENCY CONVERTER
 ───────────────────────────────────────────────────────── */
-// Simulated live rates relative to USD (updated values)
-const fxRates = { USD:1, EUR:0.924, GBP:0.793, JPY:149.82, AUD:1.531, CAD:1.362, INR:83.18, CHF:0.883 };
+// Fallback rates (will be updated with live rates from API)
+
+// Load live exchange rates from Flask backend
+async function loadLiveRates() {
+  try {
+    console.log('[CURRENCY] Fetching from:', `${API_BASE}/api/currency?base=USD`);
+    const res = await fetch(`${API_BASE}/api/currency?base=USD`);
+    
+    if (!res.ok) {
+      console.error('[CURRENCY] HTTP error:', res.status);
+      convertCurrency();
+      return;
+    }
+    
+    const data = await res.json();
+    console.log('[CURRENCY] Raw response:', data);
+    
+    // Accept rates whether cached or live
+    // Only reject if rates object is missing entirely
+    if (data.rates && Object.keys(data.rates).length > 0) {
+      fxRates = data.rates;
+      console.log('[CURRENCY] Rates loaded successfully:', fxRates);
+    } else {
+      console.warn('[CURRENCY] No rates in response, using fallback');
+    }
+    
+    // Always call these regardless of where rates came from
+    convertCurrency();
+    buildTicker();
+    
+  } catch (err) {
+    console.error('[CURRENCY] Fetch failed:', err.message);
+    // Still call convertCurrency so UI shows something
+    convertCurrency();
+    buildTicker();
+  }
+}
 
 function convertCurrency() {
-  const amt  = parseFloat(document.getElementById('convAmount')?.value) || 0;
-  const from = document.getElementById('convFrom')?.value;
-  const to   = document.getElementById('convTo')?.value;
+  const amt   = parseFloat(document.getElementById('convAmount')?.value) || 0;
+  const from  = document.getElementById('convFrom')?.value;
+  const to    = document.getElementById('convTo')?.value;
   if (!from || !to) return;
-  const result = (amt / fxRates[from]) * fxRates[to];
-  const resEl = document.getElementById('convResult');
+  
+  const result = (amt / (fxRates[from] || 1)) * (fxRates[to] || 1);
+  const resEl  = document.getElementById('convResult');
   if (resEl) resEl.value = result.toFixed(2);
+  
   const rateEl = document.getElementById('convRate');
-  if (rateEl) rateEl.textContent = `1 ${from} = ${(fxRates[to]/fxRates[from]).toFixed(4)} ${to}`;
-  // Show all rates for the 'from' currency
+  if (rateEl) rateEl.textContent = 
+    `1 ${from} = ${((fxRates[to] || 1) / (fxRates[from] || 1)).toFixed(4)} ${to}`;
+  
   const allEl = document.getElementById('convAllRates');
   if (allEl) {
-    allEl.innerHTML = Object.keys(fxRates).filter(c=>c!==from).map(c =>
-      `<div class="rate-row"><span>1 ${from} → ${c}</span><span>${(fxRates[c]/fxRates[from]).toFixed(4)}</span></div>`
-    ).join('');
+    allEl.innerHTML = Object.keys(fxRates)
+      .filter(c => c !== from)
+      .map(c => `
+        <div class="rate-row">
+          <span>1 ${from} → ${c}</span>
+          <span>${((fxRates[c] || 1) / (fxRates[from] || 1)).toFixed(4)}</span>
+        </div>`).join('');
   }
 }
 
@@ -852,41 +1166,158 @@ function swapCurrencies() {
 let budgetEntries = JSON.parse(localStorage.getItem('wl_budget') || '[]');
 
 function initBudget() {
+  // Set today's date as default
+  const today = new Date().toISOString().split('T')[0];
+  const dateInput = document.getElementById('budgetExpenseDate');
+  if (dateInput) dateInput.value = today;
   renderBudget();
 }
 
 function addBudgetEntry() {
-  const name  = document.getElementById('budgetTripName').value || 'Expense';
-  const total = parseFloat(document.getElementById('totalBudget').value) || 0;
-  const entryName = prompt('Expense name (e.g. Hotel, Food, Transport):') || 'Expense';
-  const entryAmt  = parseFloat(prompt('Amount ($):')) || 0;
-  const cat       = prompt('Category (food/hotel/transport/activity/other):') || 'other';
-  if (entryAmt <= 0) { showToast('Please enter a valid amount', 'warning'); return; }
-  budgetEntries.push({ id:Date.now(), trip:name, name:entryName, amount:entryAmt, category:cat, date:new Date().toLocaleDateString() });
+  const tripName = document.getElementById('budgetTripName')?.value?.trim();
+  const totalBudget = parseFloat(document.getElementById('totalBudget')?.value) || 0;
+  const expenseName = document.getElementById('budgetExpenseName')?.value?.trim();
+  const expenseAmount = parseFloat(document.getElementById('budgetExpenseAmount')?.value) || 0;
+  const category = document.getElementById('budgetExpenseCategory')?.value || 'other';
+  const date = document.getElementById('budgetExpenseDate')?.value || new Date().toISOString().split('T')[0];
+
+  // Validation
+  if (!tripName) {
+    showToast('Please enter a trip name', 'error');
+    document.getElementById('budgetTripName')?.focus();
+    return;
+  }
+  if (totalBudget <= 0) {
+    showToast('Please enter a valid total budget', 'error');
+    document.getElementById('totalBudget')?.focus();
+    return;
+  }
+  if (!expenseName) {
+    showToast('Please enter expense description', 'error');
+    document.getElementById('budgetExpenseName')?.focus();
+    return;
+  }
+  if (expenseAmount <= 0) {
+    showToast('Please enter a valid amount', 'error');
+    document.getElementById('budgetExpenseAmount')?.focus();
+    return;
+  }
+
+  budgetEntries.push({
+    id: Date.now(),
+    trip: tripName,
+    name: expenseName,
+    amount: expenseAmount,
+    category: category,
+    date: date
+  });
+
   localStorage.setItem('wl_budget', JSON.stringify(budgetEntries));
+  
+  // Clear inputs
+  document.getElementById('budgetExpenseName').value = '';
+  document.getElementById('budgetExpenseAmount').value = '';
+  document.getElementById('budgetExpenseCategory').value = 'other';
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('budgetExpenseDate').value = today;
+  
   renderBudget();
+  showToast(`Expense "$${expenseAmount.toFixed(2)}" added successfully!`, 'success');
 }
 
 function renderBudget() {
   const total = parseFloat(document.getElementById('totalBudget')?.value) || 0;
-  const spent = budgetEntries.reduce((s,e) => s+e.amount, 0);
-  const pct   = total ? Math.min((spent/total)*100, 100) : 0;
-  const color = pct > 90 ? '#e74c3c' : pct > 70 ? '#f39c12' : '#2d5a35';
-  const list  = document.getElementById('budgetCategories');
-  if (list) {
-    list.innerHTML = budgetEntries.map(e => `
-      <div class="budget-entry">
-        <span class="budget-entry-name">📌 ${e.name} <small style="opacity:.6">${e.category}</small></span>
-        <span class="budget-entry-amount">$${e.amount.toFixed(2)}</span>
-        <button class="budget-entry-del" onclick="deleteBudgetEntry(${e.id})">✕</button>
-      </div>`).join('') || '<p style="opacity:.5;font-size:.9rem">No expenses yet — add your first one!</p>';
+  const spent = budgetEntries.reduce((s, e) => s + e.amount, 0);
+  const remaining = Math.max(total - spent, 0);
+  const pct = total ? Math.min((spent / total) * 100, 100) : 0;
+  
+  // Color coding based on budget usage
+  let color, status;
+  if (pct >= 100) {
+    color = '#e74c3c';
+    status = '⚠️ Over Budget!';
+  } else if (pct >= 90) {
+    color = '#e67e22';
+    status = '⚠️ Warning - Near limit';
+  } else if (pct >= 70) {
+    color = '#f39c12';
+    status = '✓ On track';
+  } else {
+    color = '#27ae60';
+    status = '✓ Plenty remaining';
   }
+
+  // Render summary
   const sumEl = document.getElementById('budgetSummary');
-  if (sumEl && (total||spent)) {
+  if (sumEl && (total || spent)) {
     sumEl.innerHTML = `
-      <p>💰 Budget: <strong>$${total.toLocaleString()}</strong> &nbsp; Spent: <strong>$${spent.toFixed(2)}</strong> &nbsp; Remaining: <strong style="color:${color}">$${Math.max(total-spent,0).toFixed(2)}</strong></p>
-      <div class="budget-bar"><div class="budget-bar-fill" style="width:${pct}%;background:${color}"></div></div>
-      <p style="font-size:.82rem;opacity:.8">${pct.toFixed(1)}% of budget used</p>`;
+      <div class="budget-cards">
+        <div class="budget-card">
+          <span class="budget-card-label">Total Budget</span>
+          <span class="budget-card-value">$${total.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+        </div>
+        <div class="budget-card">
+          <span class="budget-card-label">Spent</span>
+          <span class="budget-card-value" style="color: ${color};">$${spent.toFixed(2)}</span>
+        </div>
+        <div class="budget-card">
+          <span class="budget-card-label">Remaining</span>
+          <span class="budget-card-value" style="color: ${remaining > 0 ? '#27ae60' : '#e74c3c'};">$${remaining.toFixed(2)}</span>
+        </div>
+      </div>
+      <div class="budget-progress">
+        <div class="budget-bar">
+          <div class="budget-bar-fill" style="width:${pct}%;background:${color}"></div>
+        </div>
+        <div class="budget-bar-info">
+          <span>${pct.toFixed(1)}% of budget used</span>
+          <span style="color:${color};font-weight:700">${status}</span>
+        </div>
+      </div>`;
+  }
+
+  // Render category breakdown
+  const categoryBreakdown = {};
+  budgetEntries.forEach(e => {
+    if (!categoryBreakdown[e.category]) {
+      categoryBreakdown[e.category] = 0;
+    }
+    categoryBreakdown[e.category] += e.amount;
+  });
+
+  // Render expense list
+  const list = document.getElementById('budgetCategories');
+  if (list) {
+    if (budgetEntries.length === 0) {
+      list.innerHTML = '<p class="empty-state">No expenses yet — add your first one!</p>';
+    } else {
+      const sorted = [...budgetEntries].sort((a, b) => new Date(b.date) - new Date(a.date));
+      list.innerHTML = sorted.map(e => {
+        const categoryEmoji = {
+          flight: '✈️',
+          hotel: '🏨',
+          food: '🍽️',
+          transport: '🚗',
+          activity: '🎭',
+          shopping: '🛍️',
+          other: '📌'
+        }[e.category] || '📌';
+        return `
+          <div class="budget-entry">
+            <div class="budget-entry-col">
+              <span class="budget-entry-category">${categoryEmoji}</span>
+              <div class="budget-entry-details">
+                <span class="budget-entry-name">${e.name}</span>
+                <small class="budget-entry-date">${new Date(e.date).toLocaleDateString()}</small>
+              </div>
+            </div>
+            <div class="budget-entry-col">
+              <span class="budget-entry-amount">$${e.amount.toFixed(2)}</span>
+              <button class="budget-entry-del" onclick="deleteBudgetEntry(${e.id})" title="Delete">✕</button>
+            </div>
+          </div>`;
+      }).join('');
+    }
   }
 }
 
@@ -894,6 +1325,7 @@ function deleteBudgetEntry(id) {
   budgetEntries = budgetEntries.filter(e => e.id !== id);
   localStorage.setItem('wl_budget', JSON.stringify(budgetEntries));
   renderBudget();
+  showToast('Expense deleted', 'info');
 }
 
 /* ─────────────────────────────────────────────────────────
@@ -912,42 +1344,78 @@ const weatherDB = {
   'las vegas':  {temp:32,feel:34,humidity:20,wind:8,condition:'Sunny',icon:'☀️',forecast:[{d:'Mon',i:'☀️',t:'32°'},{d:'Tue',i:'☀️',t:'34°'},{d:'Wed',i:'🌤️',t:'30°'},{d:'Thu',i:'☀️',t:'33°'},{d:'Fri',i:'☀️',t:'35°'}]},
 };
 
-function fetchWeather() {
-  const city = document.getElementById('weatherCity').value.trim().toLowerCase();
+async function fetchWeather() {
+  const city = document.getElementById('weatherCity')?.value?.trim();
   if (!city) { showToast('Enter a city name', 'warning'); return; }
-  const data = weatherDB[city] || weatherDB[city.split(',')[0].trim()];
-  const out  = document.getElementById('weatherOutput');
-  if (!data) {
-    out.innerHTML = `<div style="text-align:center;padding:2rem;color:var(--text-muted)">
-      <p>⚠️ Weather data not available for "${city}".</p>
-      <p style="font-size:.85rem;margin-top:.5rem">Try: New York, Paris, Tokyo, Sydney, Dubai, or London</p>
-    </div>`;
-    return;
+  
+  const out = document.getElementById('weatherOutput');
+  out.innerHTML = '<p style="text-align:center;padding:2rem;opacity:.6">🔍 Fetching weather for ' + city + '...</p>';
+  
+  try {
+    const res = await fetch(`${API_BASE}/api/weather?city=${encodeURIComponent(city)}`);
+    const data = await res.json();
+    
+    if (data.error) {
+      out.innerHTML = `
+        <div style="text-align:center;padding:2rem;color:var(--text-muted)">
+          <p>⚠️ ${data.error}</p>
+          <p style="font-size:.85rem;margin-top:.5rem">
+            Try: New York, London, Tokyo, Sydney, Dubai
+          </p>
+        </div>`;
+      return;
+    }
+
+    const dispCity = city.replace(/\b\w/g, l => l.toUpperCase());
+    out.innerHTML = `
+      <div class="weather-card">
+        <p style="font-size:1.1rem;font-weight:700;color:#fff;margin-bottom:.3rem">${dispCity}</p>
+        <div class="weather-temp">${data.temp}°C</div>
+        <p class="weather-desc">${data.condition} · Feels like ${data.feels}°C</p>
+        <div class="weather-details">
+          <div class="weather-detail">
+            <span>Humidity</span>
+            <span>${data.humidity}%</span>
+          </div>
+          <div class="weather-detail">
+            <span>Wind</span>
+            <span>${data.wind} km/h</span>
+          </div>
+          <div class="weather-detail">
+            <span>Feels Like</span>
+            <span>${data.feels}°C</span>
+          </div>
+        </div>
+        <div class="weather-forecast">
+          ${data.forecast.map(f => `
+            <div class="forecast-day">
+              <span class="f-day">${f.d}</span>
+              <span class="f-icon">${f.i}</span>
+              <span class="f-temp">${f.t}</span>
+            </div>`).join('')}
+        </div>
+      </div>`;
+
+  } catch (err) {
+    console.error('[WEATHER]', err);
+    out.innerHTML = `
+      <div style="text-align:center;padding:2rem;color:var(--text-muted)">
+        <p>⚠️ Could not connect to weather service.</p>
+        <p style="font-size:.85rem;margin-top:.5rem">
+          Make sure Flask server is running on port 3001.
+        </p>
+      </div>`;
   }
-  const dispCity = city.replace(/\b\w/g, l => l.toUpperCase());
-  out.innerHTML = `
-    <div class="weather-card">
-      <span class="weather-icon">${data.icon}</span>
-      <p style="font-size:1.1rem;font-weight:700;color:#fff;margin-bottom:.3rem">${dispCity}</p>
-      <div class="weather-temp">${data.temp}°C</div>
-      <p class="weather-desc">${data.condition} · Feels like ${data.feel}°C</p>
-      <div class="weather-details">
-        <div class="weather-detail"><span>💧 Humidity</span><span>${data.humidity}%</span></div>
-        <div class="weather-detail"><span>💨 Wind</span><span>${data.wind} km/h</span></div>
-        <div class="weather-detail"><span>🌡️ Feels Like</span><span>${data.feel}°C</span></div>
-      </div>
-      <div class="weather-forecast">
-        ${data.forecast.map(f=>`<div class="forecast-day"><span class="f-day">${f.d}</span><span class="f-icon">${f.i}</span><span class="f-temp">${f.t}</span></div>`).join('')}
-      </div>
-    </div>`;
 }
 function quickWeather(city) {
   document.getElementById('weatherCity').value = city;
   fetchWeather();
 }
 function loadWeatherModal() {
-  // Pre-load New York on open
-  setTimeout(() => { document.getElementById('weatherCity').value='New York'; fetchWeather(); }, 100);
+  setTimeout(() => {
+    document.getElementById('weatherCity').value = 'New York';
+    fetchWeather();
+  }, 100);
 }
 
 /* ─────────────────────────────────────────────────────────
@@ -1024,6 +1492,104 @@ function bookFlight(airline, price) {
 }
 
 /* ─────────────────────────────────────────────────────────
+   24B. LIVE FLIGHT TRACKER (NEW)
+───────────────────────────────────────────────────────── */
+function openFlightTracker() {
+  openModal('flightTrackerModal');
+}
+
+function quickTrack(flightNum) {
+  document.getElementById('flightNumberInput').value = flightNum;
+  trackFlight();
+}
+
+async function trackFlight() {
+  const flight = document.getElementById('flightNumberInput')
+    ?.value?.trim().toUpperCase().replace(/\s/g, '');
+  
+  if (!flight) { 
+    showToast('Please enter a flight number', 'warning'); 
+    return; 
+  }
+
+  const out = document.getElementById('flightTrackerOutput');
+  out.innerHTML = '<p style="text-align:center;padding:2rem;opacity:.6">🔍 Tracking flight ' + flight + '...</p>';
+
+  try {
+    const res  = await fetch(`${API_BASE}/api/flights/status?flight=${flight}`);
+    const data = await res.json();
+
+    if (data.error) {
+      out.innerHTML = `
+        <div style="text-align:center;padding:2rem;color:var(--text-muted)">
+          <p>✈️ Flight ${flight} not found</p>
+          <p style="font-size:.85rem;margin-top:.5rem">Try: AA100, DL1, UA1, BA112</p>
+        </div>`;
+      return;
+    }
+
+    out.innerHTML = `
+      <div style="padding:1.5rem 0">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem">
+          <div>
+            <h3 style="font-size:1.5rem;margin-bottom:.25rem">${data.flightNumber}</h3>
+            <p style="font-size:.9rem;color:var(--text-secondary)">${data.airline}</p>
+          </div>
+          <div style="background:${data.statusColor};color:#fff;padding:.5rem 1.25rem;border-radius:50px;font-weight:700;font-size:.85rem">
+            ${data.statusLabel}
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:1rem;align-items:center;background:var(--bg-sand);padding:1.5rem;border-radius:12px;margin-bottom:1.5rem">
+          <div style="text-align:left">
+            <div style="font-size:2rem;font-weight:700;color:var(--spicy-paprika)">${data.from.iata}</div>
+            <div style="font-size:.85rem;color:var(--text-secondary)">${data.from.city}</div>
+            <div style="font-size:.8rem;color:var(--text-muted);margin-top:.25rem">${data.from.terminal || ''} ${data.from.gate ? '· Gate ' + data.from.gate : ''}</div>
+            <div style="font-size:.9rem;font-weight:600;margin-top:.5rem">
+              ${data.from.actual || data.from.scheduled}
+              ${data.from.delay > 0 ? '<span style="color:#e74c3c;font-size:.75rem"> +' + data.from.delay + 'm delay</span>' : ''}
+            </div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:1.5rem">✈️</div>
+            <div style="font-size:.75rem;color:var(--text-muted);margin-top:.25rem">${data.duration || ''}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:2rem;font-weight:700;color:var(--spicy-paprika)">${data.to.iata}</div>
+            <div style="font-size:.85rem;color:var(--text-secondary)">${data.to.city}</div>
+            <div style="font-size:.8rem;color:var(--text-muted);margin-top:.25rem">${data.to.terminal || ''} ${data.to.gate ? '· Gate ' + data.to.gate : ''}</div>
+            <div style="font-size:.9rem;font-weight:600;margin-top:.5rem">
+              ${data.to.estimated || data.to.scheduled}
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-bottom:1.5rem">
+          <div style="display:flex;justify-content:space-between;font-size:.8rem;color:var(--text-muted);margin-bottom:.4rem">
+            <span>${data.from.iata}</span>
+            <span>${data.progress || 0}% complete</span>
+            <span>${data.to.iata}</span>
+          </div>
+          <div style="height:8px;background:var(--border);border-radius:50px;overflow:hidden">
+            <div style="height:100%;width:${data.progress || 0}%;background:var(--spicy-paprika);border-radius:50px;transition:width 1s ease"></div>
+          </div>
+          <div style="text-align:center;margin-top:.5rem;font-size:.8rem;color:var(--text-muted)">
+            ✈️ ${data.aircraft || 'Aircraft info unavailable'}
+          </div>
+        </div>
+      </div>`;
+
+  } catch (err) {
+    console.error('[TRACKER]', err);
+    out.innerHTML = `
+      <div style="text-align:center;padding:2rem;color:var(--text-muted)">
+        <p>⚠️ Could not track flight ${flight}</p>
+        <p style="font-size:.85rem;margin-top:.5rem">Make sure Flask server is running on port 3001</p>
+      </div>`;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────
    25. FEATURE 6: HOTEL SEARCH
 ───────────────────────────────────────────────────────── */
 function setHotelDates() {
@@ -1046,36 +1612,238 @@ const hotelNames = [
   {n:'Holiday Inn Express',img:'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=400&h=200&fit=crop',stars:3,desc:'Smart, comfortable rooms — great value for money',base:110},
 ];
 
-function searchHotels() {
-  const city   = document.getElementById('hotelCity').value;
-  const stars  = document.getElementById('hotelStars').value;
-  const ci     = document.getElementById('hotelCheckin').value;
-  const co     = document.getElementById('hotelCheckout').value;
-  const nights = ci && co ? Math.max(1, (new Date(co)-new Date(ci))/(1000*60*60*24)) : 4;
-  const res    = document.getElementById('hotelResults');
-  res.innerHTML = '<p style="text-align:center;padding:1rem;opacity:.6">🔍 Searching hotels in ' + city + '…</p>';
-  setTimeout(() => {
-    const filtered = hotelNames.filter(h => stars==='any' || h.stars >= parseInt(stars));
-    res.innerHTML = filtered.map(h => `
-      <div class="hotel-card">
-        <img class="hotel-card-img" src="${h.img}" alt="${h.n}">
-        <div class="hotel-card-body">
-          <div class="hotel-stars">${'★'.repeat(h.stars)}${'☆'.repeat(5-h.stars)}</div>
-          <div class="hotel-name">${h.n}</div>
-          <div class="hotel-location">📍 ${city} · Free WiFi · Breakfast included</div>
-          <div class="hotel-footer">
-            <div class="hotel-price">$${h.base}<small>/night</small><br><small style="font-size:.7rem;opacity:.6">Total: $${(h.base*nights).toLocaleString()} (${nights} nights)</small></div>
-            <button class="book-hotel-btn" onclick="bookHotel('${h.n}','${h.base}')">Book →</button>
-          </div>
-        </div>
-      </div>`).join('');
-    if (!filtered.length) res.innerHTML = '<p style="text-align:center;padding:1rem;opacity:.6">No hotels found — try adjusting your filters.</p>';
-  }, 1000);
+async function searchHotels() {
+    const city    = document.getElementById('hotelCity')
+        ?.value?.trim();
+    const ci      = document.getElementById('hotelCheckin')
+        ?.value;
+    const co      = document.getElementById('hotelCheckout')
+        ?.value;
+    const guests  = document.getElementById('hotelGuests')
+        ?.value;
+    const stars   = document.getElementById('hotelStars')
+        ?.value;
+    const res     = document.getElementById('hotelResults');
+
+    if (!city) {
+        showToast('Please enter a destination', 'warning');
+        return;
+    }
+    if (!ci || !co) {
+        showToast(
+            'Please select check-in and check-out dates', 
+            'warning'
+        );
+        return;
+    }
+    if (new Date(co) <= new Date(ci)) {
+        showToast(
+            'Check-out must be after check-in', 
+            'error'
+        );
+        return;
+    }
+
+    const guestCount = guests?.includes('4') ? 4 :
+                       guests?.includes('3') ? 3 :
+                       guests?.includes('2') ? 2 : 1;
+
+    res.innerHTML = `
+        <div style="text-align:center;
+            padding:2.5rem 1rem">
+            <div style="font-size:2.5rem;
+                margin-bottom:.75rem;
+                animation:spin 2s linear infinite;
+                display:inline-block">
+                🔍
+            </div>
+            <p style="opacity:.7;font-size:.95rem">
+                Searching hotels in ${city}...
+            </p>
+            <p style="opacity:.45;font-size:.82rem;
+                margin-top:.4rem">
+                This may take a few seconds
+            </p>
+        </div>`;
+
+    try {
+        const url = `${API_BASE}/api/hotels?` +
+            `city=${encodeURIComponent(city)}` +
+            `&checkin=${ci}` +
+            `&checkout=${co}` +
+            `&guests=${guestCount}` +
+            `&stars=${stars}`;
+
+        const response = await fetch(url);
+        const data     = await response.json();
+
+        if (!data.hotels?.length) {
+            res.innerHTML = `
+                <div style="text-align:center;
+                    padding:2rem;
+                    color:var(--text-muted)">
+                    <p style="font-size:2rem;
+                        margin-bottom:.75rem">🏨</p>
+                    <p>No hotels found for ${city}</p>
+                    <p style="font-size:.82rem;
+                        margin-top:.5rem">
+                        Try different dates or 
+                        remove the star filter
+                    </p>
+                </div>`;
+            return;
+        }
+
+        const nights = data.nights || 1;
+
+        // Source badge
+        const sourceBadge = data.source === 'live'
+            ? '<span style="background:rgba(39,174,96,.1);color:#27ae60;border:1px solid rgba(39,174,96,.3);padding:.3rem .8rem;border-radius:50px;font-size:.75rem;font-weight:700">✅ Live hotel data</span>'
+            : '<span style="background:rgba(236,167,44,.1);color:var(--honey-bronze);border:1px solid rgba(236,167,44,.3);padding:.3rem .8rem;border-radius:50px;font-size:.75rem;font-weight:700">📋 Sample data</span>';
+
+        // Warning if fallback
+        let warningHtml = '';
+        if (data.warning) {
+            warningHtml = `
+                <div style="background:rgba(236,167,44,.08);
+                    border:1px solid rgba(236,167,44,.2);
+                    padding:.75rem 1rem;
+                    border-radius:8px;
+                    font-size:.8rem;
+                    color:var(--text-secondary);
+                    margin-bottom:1rem">
+                    ⚠️ ${data.warning}
+                </div>`;
+        }
+
+        res.innerHTML = `
+            <div style="display:flex;
+                justify-content:space-between;
+                align-items:center;
+                margin-bottom:1rem;
+                flex-wrap:wrap;gap:.5rem">
+                ${sourceBadge}
+                <span style="font-size:.82rem;
+                    color:var(--text-muted)">
+                    ${data.hotels.length} hotels found 
+                    · ${nights} night${nights>1?'s':''}
+                </span>
+            </div>
+            ${warningHtml}
+            ${data.hotels.map(h => `
+                <div class="hotel-card">
+                    <div style="position:relative">
+                        <img class="hotel-card-img" 
+                            src="${h.image}" 
+                            alt="${h.name}"
+                            onerror="this.src='https://placehold.co/400x200/44355b/ffffff?text=${encodeURIComponent(h.name)}'">
+                        ${h.source === 'live' ? `
+                            <span style="position:absolute;
+                                top:.6rem;right:.6rem;
+                                background:rgba(39,174,96,.9);
+                                color:#fff;
+                                padding:.25rem .6rem;
+                                border-radius:50px;
+                                font-size:.7rem;
+                                font-weight:700">
+                                ✅ Live
+                            </span>` : ''}
+                    </div>
+                    <div class="hotel-card-body">
+                        <div class="hotel-stars">
+                            ${'★'.repeat(h.stars || 0)}${'☆'.repeat(5-(h.stars||0))}
+                            ${h.rating ? `
+                                <span style="margin-left:.5rem;
+                                    font-size:.82rem;
+                                    color:var(--text-muted)">
+                                    ${h.rating}/10
+                                    ${h.reviews ? 
+                                        `(${h.reviews} reviews)` 
+                                        : ''}
+                                </span>` : ''}
+                        </div>
+                        <div class="hotel-name">
+                            ${h.name}
+                        </div>
+                        <div class="hotel-location">
+                            📍 ${h.location || city} · 
+                            ${h.amenities || 'Free WiFi'}
+                        </div>
+                        <div class="hotel-footer">
+                            <div class="hotel-price">
+                                ${h.pricePerNight > 0 ? 
+                                    `$${h.pricePerNight}
+                                    <small>/night</small>
+                                    <br>
+                                    <small style="font-size:.7rem;
+                                        opacity:.6">
+                                        Total: $${h.totalPrice || 
+                                            h.pricePerNight * nights}
+                                        (${nights} night${nights>1?'s':''})
+                                    </small>` 
+                                    : '<small>Price on request</small>'}
+                            </div>
+                            <button class="book-hotel-btn"
+                                onclick="bookHotel(
+                                    '${h.name.replace(/'/g,"\\'")}',
+                                    '${h.pricePerNight}')">
+                                Book →
+                            </button>
+                        </div>
+                    </div>
+                </div>`).join('')}`;
+
+        // Show toast
+        if (data.source === 'live') {
+            showToast(
+                `🏨 Found ${data.hotels.length} real hotels in ${city}!`
+            );
+        }
+
+    } catch (err) {
+        console.error('[HOTELS]', err);
+        res.innerHTML = `
+            <div style="text-align:center;
+                padding:2rem;
+                color:var(--text-muted)">
+                <p>⚠️ Could not search hotels.</p>
+                <p style="font-size:.82rem;margin-top:.5rem">
+                    Make sure Flask server is running 
+                    on port 3001
+                </p>
+            </div>`;
+    }
 }
 
 function bookHotel(name, price) {
   showToast(`🏨 Redirecting to book ${name} from $${price}/night…`, 'info');
   setTimeout(() => window.open('https://www.hotels.com','_blank'), 1000);
+}
+
+function setHotelCity(city) {
+    const input = document.getElementById('hotelCity');
+    if (input) {
+        input.value = city;
+        input.focus();
+    }
+}
+
+function setHotelDates() {
+    const ci = new Date();
+    ci.setDate(ci.getDate() + 14);
+    const co = new Date();
+    co.setDate(co.getDate() + 18);
+    const fmt = d => d.toISOString().split('T')[0];
+    setTimeout(() => {
+        const hci = document.getElementById('hotelCheckin');
+        const hco = document.getElementById('hotelCheckout');
+        if (hci) hci.value = fmt(ci);
+        if (hco) hco.value = fmt(co);
+        // Set min dates
+        const today = fmt(new Date());
+        if (hci) hci.min = today;
+        if (hco) hco.min = today;
+    }, 100);
 }
 
 /* ─────────────────────────────────────────────────────────
@@ -1088,7 +1856,7 @@ const quizQuestions = [
   },
   {
     q:'How do you like to spend your days?',
-    opts:[{e:'🏄',l:'Active & Outdoorsy'},{e:'🍽️',l:'Eating & Drinking'},{e:'🏛️',l:'Museums & History'},{e:'🧘',l:'Relaxing & Unwinding'}]
+    opts:[{e:'◆',l:'Active & Outdoorsy'},{e:'◉',l:'Eating & Drinking'},{e:'■',l:'Museums & History'},{e:'◯',l:'Relaxing & Unwinding'}]
   },
   {
     q:"What's your ideal trip length?",
@@ -1105,11 +1873,11 @@ const quizQuestions = [
 ];
 
 const quizResults = [
-  {dest:'Hawaii 🌺', desc:'White sand beaches, volcanic landscapes, and aloha spirit — Hawaii is your perfect match. You love the outdoors but also appreciate luxury and relaxation.', icon:'🌺'},
-  {dest:'New York City 🗽', desc:'You crave culture, world-class food, and non-stop energy. NYC\'s neighbourhoods, museums, and iconic skyline were made for you.', icon:'🗽'},
-  {dest:'Grand Canyon 🏜️', desc:'You seek awe-inspiring natural wonders and adventure. The Grand Canyon will blow your mind with its sheer scale and beauty.', icon:'🏜️'},
-  {dest:'San Francisco 🌉', desc:'Creative, diverse, and beautiful — SF\'s blend of coastal scenery, incredible food, and vibrant culture suits you perfectly.', icon:'🌉'},
-  {dest:'Yellowstone 🦬', desc:'A nature-lover at heart, you\'ll find paradise in Yellowstone\'s geysers, wildlife, and pristine wilderness.', icon:'🦬'},
+  {dest:'Hawaii', desc:'White sand beaches, volcanic landscapes, and aloha spirit — Hawaii is your perfect match. You love the outdoors but also appreciate luxury and relaxation.'},
+  {dest:'New York City', desc:'You crave culture, world-class food, and non-stop energy. NYC\'s neighbourhoods, museums, and iconic skyline were made for you.'},
+  {dest:'Grand Canyon', desc:'You seek awe-inspiring natural wonders and adventure. The Grand Canyon will blow your mind with its sheer scale and beauty.'},
+  {dest:'San Francisco', desc:'Creative, diverse, and beautiful — SF\'s blend of coastal scenery, incredible food, and vibrant culture suits you perfectly.'},
+  {dest:'Yellowstone', desc:'A nature-lover at heart, you\'ll find paradise in Yellowstone\'s geysers, wildlife, and pristine wilderness.'},
 ];
 
 let quizStep = 0, quizAnswers = [];
@@ -1119,9 +1887,9 @@ function startQuiz() {
   const c = document.getElementById('quizContent');
   c.innerHTML = `
     <div class="quiz-intro">
-      <h3>🧭 Find Your Perfect Destination</h3>
+      <h3>Find Your Perfect Destination</h3>
       <p>Answer 5 quick questions and we'll reveal your ideal travel match.</p>
-      <button class="btn btn-primary" onclick="renderQuizQuestion()">Let's Go →</button>
+      <button class="btn btn-primary" onclick="renderQuizQuestion()">Let's Go</button>
     </div>`;
 }
 
@@ -1150,12 +1918,11 @@ function showQuizResult() {
   const c = document.getElementById('quizContent');
   c.innerHTML = `
     <div class="quiz-result">
-      <span class="quiz-result-icon">${r.icon}</span>
       <h3>Your Perfect Destination Is…<br>${r.dest}</h3>
       <p>${r.desc}</p>
       <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
-        <button class="btn btn-primary" onclick="closeModal('quizModal'); scrollTo('destinations')">🗺️ Explore Now</button>
-        <button class="btn btn-outline" onclick="startQuiz()">🔄 Try Again</button>
+        <button class="btn btn-primary" onclick="closeModal('quizModal'); scrollTo('destinations')">Explore Now</button>
+        <button class="btn btn-outline" onclick="startQuiz()">Try Again</button>
       </div>
     </div>`;
 }
@@ -1196,7 +1963,7 @@ function checkVisa() {
       <div class="visa-details">
         <h4>Requirements for ${from} → ${to}</h4>
         <p style="font-size:.88rem;color:var(--text-secondary)">We don't have specific data for this combination. Please check the official embassy website or a service like iVisa.com for the most current requirements.</p>
-        <div style="margin-top:1rem"><a href="https://www.iata.org/en/publications/timatic/" target="_blank" style="color:var(--green-mid);font-weight:700">Check IATA Timatic (Official) →</a></div>
+        <div style="margin-top:1rem"><a href="https://www.iata.org/en/publications/timatic/" target="_blank" style="color:var(--spicy-paprika);font-weight:700">Check IATA Timatic (Official)</a></div>
       </div>
     </div>`;
     return;
@@ -1204,7 +1971,7 @@ function checkVisa() {
   const countryNames = {US:'🇺🇸 USA',UK:'🇬🇧 UK',EU:'🇪🇺 EU',IN:'🇮🇳 India',CN:'🇨🇳 China',AU:'🇦🇺 Australia',CA:'🇨🇦 Canada',JP:'🇯🇵 Japan',FR:'🇫🇷 France',TH:'🇹🇭 Thailand',AE:'🇦🇪 UAE',SG:'🇸🇬 Singapore',MX:'🇲🇽 Mexico',BR:'🇧🇷 Brazil',ZA:'🇿🇦 South Africa'};
   out.innerHTML = `
     <div class="visa-card">
-      <div class="visa-status ${data.status}">${data.status==='free'?'✅':data.status==='on-arrival'?'🟡':'❗'} ${data.label}</div>
+      <div class="visa-status ${data.status}">${data.status==='free'?'✓':data.status==='on-arrival'?'◐':'!'} ${data.label}</div>
       <div class="visa-details">
         <h4>${countryNames[from]||from} → ${countryNames[to]||to}</h4>
         <div class="visa-detail-row"><span>Duration of Stay</span><span>${data.duration}</span></div>
@@ -1281,131 +2048,290 @@ function deleteCountdown(id) {
 }
 
 /* ─────────────────────────────────────────────────────────
-   29. FEATURE 10: PHRASE BOOK
+   29. FEATURE 10: PHRASE BOOK (ENHANCED - v3.0)
 ───────────────────────────────────────────────────────── */
-const phrasesDB = {
-  es:{
-    essentials:[
-      ['Hello','Hola'],['Thank you','Gracias'],['Please','Por favor'],['Excuse me','Perdone'],
-      ['Yes / No','Sí / No'],["I don't understand",'No entiendo'],['Do you speak English?','¿Habla inglés?'],
-      ['Where is the bathroom?','¿Dónde está el baño?'],['How much does it cost?','¿Cuánto cuesta?']
-    ],
-    food:[['The menu, please','La carta, por favor'],['I am vegetarian','Soy vegetariano/a'],['Water, please','Agua, por favor'],['The bill, please','La cuenta, por favor'],['Delicious!','¡Delicioso!'],['Cheers!','¡Salud!']],
-    transport:[['Where is the metro?','¿Dónde está el metro?'],['A ticket to…','Un billete a…'],['How far is it?','¿A qué distancia está?'],['Turn left/right','Gire a la izquierda/derecha'],['Stop here, please','Para aquí, por favor']],
-    hotel:[['I have a reservation','Tengo una reserva'],['Check-in / Check-out','Entrada / Salida'],['Room service, please','Servicio de habitaciones'],['Do you have Wi-Fi?','¿Tiene Wi-Fi?'],['The key, please','La llave, por favor']],
-    emergency:[['Help!','¡Socorro!'],['Call the police!','¡Llame a la policía!'],['I need a doctor','Necesito un médico'],['Fire!','¡Fuego!'],["I'm lost",'Estoy perdido/a']]
-  },
-  fr:{
-    essentials:[['Hello','Bonjour'],['Thank you','Merci'],['Please','S\'il vous plaît'],['Excuse me','Excusez-moi'],['Yes / No','Oui / Non'],["I don't understand",'Je ne comprends pas'],['Do you speak English?','Parlez-vous anglais?'],['Where is the toilet?','Où sont les toilettes?'],['How much?','Combien ça coûte?']],
-    food:[['The menu, please','La carte, s\'il vous plaît'],['I am vegetarian','Je suis végétarien(ne)'],['Water, please','De l\'eau, s\'il vous plaît'],['The bill, please','L\'addition, s\'il vous plaît'],['Delicious!','Délicieux!'],['Cheers!','Santé!']],
-    transport:[['Where is the metro?','Où est le métro?'],['A ticket to…','Un billet pour…'],['How far?','C\'est loin?'],['Turn left/right','Tournez à gauche/droite'],['Stop here, please','Arrêtez ici, s\'il vous plaît']],
-    hotel:[['I have a reservation','J\'ai une réservation'],['Check-in / Check-out','Arrivée / Départ'],['Room service','Service en chambre'],['Do you have Wi-Fi?','Avez-vous le Wi-Fi?'],['The key, please','La clé, s\'il vous plaît']],
-    emergency:[['Help!','Au secours!'],['Call the police!','Appelez la police!'],['I need a doctor','J\'ai besoin d\'un médecin'],['Fire!','Au feu!'],["I'm lost",'Je suis perdu(e)']]
-  },
-  jp:{
-    essentials:[['Hello','Konnichiwa (こんにちは)'],['Thank you','Arigatou gozaimasu (ありがとうございます)'],['Please','Onegaishimasu (おねがいします)'],['Excuse me','Sumimasen (すみません)'],['Yes / No','Hai / Iie (はい / いいえ)'],["I don't understand",'Wakarimasen (わかりません)'],['Do you speak English?','Eigo wo hanasemasuka? (英語を話せますか？)'],['Where is the toilet?','Toire wa doko desu ka? (トイレはどこですか？)'],['How much?','Ikura desu ka? (いくらですか？)']],
-    food:[['The menu, please','Menyu wo kudasai (メニューをください)'],['I have allergies','Arerugi ga arimasu (アレルギーがあります)'],['Water, please','Mizu wo kudasai (水をください)'],['The bill, please','Okaikei onegaishimasu (お会計おねがいします)'],['Delicious!','Oishii! (おいしい！)'],['Cheers!','Kanpai! (乾杯！)']],
-    transport:[['Where is the station?','Eki wa doko desu ka? (駅はどこですか？)'],['One ticket to…','…made ichi-mai (…まで一枚)'],['How far?','Dono kurai tooi desu ka? (どのくらい遠いですか？)'],['Turn left/right','Hidari/Migi ni magatte (左/右に曲がって)'],['Stop here, please','Koko de tomete kudasai (ここで止めてください)']],
-    hotel:[['I have a reservation','Yoyaku ga arimasu (予約があります)'],['Check-in','Chekku in (チェックイン)'],['Room service','Rumu saabisu (ルームサービス)'],['Wi-Fi password?','Wi-Fi no pasuwaado wa? (Wi-Fiのパスワードは？)'],['The key, please','Kagi wo kudasai (鍵をください)']],
-    emergency:[['Help!','Tasukete! (助けて！)'],['Call the police!','Keisatsu wo yonde! (警察を呼んで！)'],['I need a doctor','Isha ga hitsuyou desu (医者が必要です)'],['Fire!','Kaji! (火事！)'],["I'm lost",'Michi ni mayoimashita (道に迷いました)']]
-  },
-  de:{
-    essentials:[['Hello','Hallo'],['Thank you','Danke schön'],['Please','Bitte'],['Excuse me','Entschuldigung'],['Yes / No','Ja / Nein'],["I don't understand",'Ich verstehe nicht'],['Do you speak English?','Sprechen Sie Englisch?'],['Where is the toilet?','Wo ist die Toilette?'],['How much?','Wie viel kostet das?']],
-    food:[['The menu, please','Die Speisekarte, bitte'],['I am vegetarian','Ich bin Vegetarier/in'],['Water, please','Wasser, bitte'],['The bill, please','Die Rechnung, bitte'],['Delicious!','Lecker!'],['Cheers!','Prost!']],
-    transport:[['Where is the station?','Wo ist der Bahnhof?'],['A ticket to…','Eine Fahrkarte nach…'],['How far?','Wie weit ist es?'],['Turn left/right','Links/Rechts abbiegen'],['Stop here, please','Hier anhalten, bitte']],
-    hotel:[['I have a reservation','Ich habe eine Reservierung'],['Check-in / Check-out','Ein-/Auschecken'],['Room service','Zimmerservice'],['Do you have Wi-Fi?','Haben Sie WLAN?'],['The key, please','Den Schlüssel, bitte']],
-    emergency:[['Help!','Hilfe!'],['Call the police!','Rufen Sie die Polizei!'],['I need a doctor','Ich brauche einen Arzt'],['Fire!','Feuer!'],["I'm lost",'Ich habe mich verlaufen']]
-  },
-  it:{ essentials:[['Hello','Ciao / Buongiorno'],['Thank you','Grazie'],['Please','Per favore'],['Excuse me','Mi scusi'],['Yes / No','Sì / No'],["I don't understand",'Non capisco'],['Do you speak English?','Parla inglese?'],['Where is the toilet?','Dov\'è il bagno?'],['How much?','Quanto costa?']], food:[['The menu, please','Il menù, per favore'],['I am vegetarian','Sono vegetariano/a'],['Water, please','Acqua, per favore'],['The bill, please','Il conto, per favore'],['Delicious!','Delizioso!'],['Cheers!','Salute!']], transport:[['Where is the station?','Dov\'è la stazione?'],['A ticket to…','Un biglietto per…'],['How far?','Quanto è lontano?'],['Turn left/right','Giri a sinistra/destra'],['Stop here, please','Si fermi qui, per favore']], hotel:[['I have a reservation','Ho una prenotazione'],['Check-in / Check-out','Check-in / Check-out'],['Room service','Servizio in camera'],['Do you have Wi-Fi?','Avete il Wi-Fi?'],['The key, please','La chiave, per favore']], emergency:[['Help!','Aiuto!'],['Call the police!','Chiami la polizia!'],['I need a doctor','Ho bisogno di un medico'],['Fire!','Fuoco!'],["I'm lost",'Mi sono perso/a']] },
-  pt:{ essentials:[['Hello','Olá'],['Thank you','Obrigado/a'],['Please','Por favor'],['Excuse me','Com licença'],['Yes / No','Sim / Não'],["I don't understand",'Não entendo'],['Do you speak English?','Fala inglês?'],['Where is the toilet?','Onde é o banheiro?'],['How much?','Quanto custa?']], food:[['The menu, please','O cardápio, por favor'],['I am vegetarian','Sou vegetariano/a'],['Water, please','Água, por favor'],['The bill, please','A conta, por favor'],['Delicious!','Delicioso!'],['Cheers!','Saúde!']], transport:[['Where is the station?','Onde é a estação?'],['A ticket to…','Uma passagem para…'],['How far?','Qual a distância?'],['Turn left/right','Vire à esquerda/direita'],['Stop here, please','Pare aqui, por favor']], hotel:[['I have a reservation','Tenho uma reserva'],['Check-in / Check-out','Check-in / Check-out'],['Room service','Serviço de quarto'],['Do you have Wi-Fi?','Tem Wi-Fi?'],['The key, please','A chave, por favor']], emergency:[['Help!','Socorro!'],['Call the police!','Chame a polícia!'],['I need a doctor','Preciso de um médico'],['Fire!','Fogo!'],["I'm lost",'Estou perdido/a']] },
-  zh:{ essentials:[['Hello','Nǐ hǎo (你好)'],['Thank you','Xièxiè (谢谢)'],['Please','Qǐng (请)'],['Excuse me','Láojià (劳驾)'],['Yes / No','Shì / Bù (是/不)'],["I don't understand",'Wǒ bù dǒng (我不懂)'],['Do you speak English?','Nǐ huì shuō Yīngyǔ ma? (你会说英语吗？)'],['Where is the toilet?','Cèsuǒ zài nǎlǐ? (厕所在哪里？)'],['How much?','Duōshǎo qián? (多少钱？)']], food:[['The menu, please','Càidān, qǐng (菜单，请)'],['I am vegetarian','Wǒ chī sù (我吃素)'],['Water, please','Shuǐ, qǐng (水，请)'],['The bill, please','Mǎidān (买单)'],['Delicious!','Hǎochī! (好吃！)'],['Cheers!','Gānbēi! (干杯！)']], transport:[['Where is the metro?','Dìtiě zài nǎlǐ? (地铁在哪里？)'],['A ticket to…','Yī zhāng qù…de piào (一张去…的票)'],['How far?','Yǒu duō yuǎn? (有多远？)'],['Turn left/right','Zhuǎn zuǒ/yòu (转左/右)'],['Stop here','Zài zhèlǐ tíng (在这里停)']], hotel:[['I have a reservation','Wǒ yǒu yùdìng (我有预订)'],['Check-in','Rùzhù (入住)'],['Room service','Kèfáng fúwù (客房服务)'],['Wi-Fi password?','Wi-Fi mìmǎ? (Wi-Fi密码？)'],['The key, please','Yàoshi, qǐng (钥匙，请)']], emergency:[['Help!','Jiùmìng! (救命！)'],['Call the police!','Jiào jǐngchá! (叫警察！)'],['I need a doctor','Wǒ xūyào yīshēng (我需要医生)'],['Fire!','Zháohuǒ! (着火！)'],["I'm lost",'Wǒ mílù le (我迷路了)']] },
-  ar:{ essentials:[['Hello','Marhaba (مرحبا)'],['Thank you','Shukran (شكراً)'],['Please','Min fadlak (من فضلك)'],['Excuse me','Ma\'adhira (معذرة)'],['Yes / No','Na\'am / La (نعم / لا)'],["I don't understand",'La afham (لا أفهم)'],['Do you speak English?','Hal tatakallam al-ingliziyya? (هل تتكلم الإنجليزية؟)'],['Where is the toilet?','Ayna al-hammam? (أين الحمام؟)'],['How much?','Bikam? (بكم؟)']], food:[['The menu, please','Al-qāʾima, min fadlak (القائمة، من فضلك)'],['I am vegetarian','Ana nabati (أنا نباتي)'],['Water, please','Maa, min fadlak (ماء، من فضلك)'],['The bill, please','Al-hisab, min fadlak (الحساب، من فضلك)'],['Delicious!','Ladhidh! (لذيذ!)'],['Cheers!','Fi sahitak! (في صحتك!)']], transport:[['Where is the metro?','Ayna al-metro? (أين المترو؟)'],['A ticket to…','Tadhkara ila… (تذكرة إلى…)'],['How far?','Kam yab\'ud? (كم يبعد؟)'],['Turn left/right','Ilfa yasaran/yameenan (إلفع يساراً/يميناً)'],['Stop here','Qif huna (قف هنا)']], hotel:[['I have a reservation','Ladaya hajz (لدي حجز)'],['Check-in / Check-out','Tadsjil dukhul/khuruj (تسجيل دخول/خروج)'],['Room service','Khadmat al-ghurfa (خدمة الغرفة)'],['Do you have Wi-Fi?','Hal ladaykum Wi-Fi? (هل لديكم Wi-Fi؟)'],['The key, please','Al-miftah, min fadlak (المفتاح، من فضلك)']], emergency:[['Help!','Najdah! (نجدة!)'],['Call the police!','Ittasil bialshurta! (اتصل بالشرطة!)'],['I need a doctor','Ahtaj tabib (أحتاج طبيب)'],['Fire!','Hareeq! (حريق!)'],["I'm lost",'Ana da\'il (أنا ضائع)']] }
-};
 
-function loadPhrases() {
-  const lang = document.getElementById('phraseLanguage')?.value;
-  const cat  = document.getElementById('phraseCategory')?.value;
-  const out  = document.getElementById('phraseOutput');
-  if (!lang || !cat || !out) return;
-  const data = phrasesDB[lang]?.[cat] || [];
-  if (!data.length) { out.innerHTML='<p>No phrases available.</p>'; return; }
-  out.innerHTML = data.map(([en, tr], i) => `
-    <div class="phrase-item" onclick="speakPhrase('${tr.replace(/\(.*?\)/g,'').trim()}')">
-      <span class="phrase-en">${en}</span>
-      <span class="phrase-tr">${tr}</span>
-      <button class="phrase-speak" title="Hear pronunciation">🔊</button>
-    </div>`).join('');
+// Simple Language Translation Tool using Groq
+
+// Toggle All Languages Section
+function toggleAllLanguages() {
+  const section = document.getElementById('allLanguagesSection');
+  const btn = event.target;
+  if (section.style.display === 'none') {
+    section.style.display = 'block';
+    btn.textContent = 'Hide Extra Languages';
+    btn.style.background = '#d9534f';
+  } else {
+    section.style.display = 'none';
+    btn.textContent = 'Show All (30+)';
+    btn.style.background = 'var(--accent)';
+  }
 }
 
-function speakPhrase(text) {
+// Set Quick Text
+function setQuickText(text) {
+  const textarea = document.getElementById('translateSentence');
+  textarea.value = text;
+  textarea.focus();
+  updateCharCount();
+}
+
+// Update Character Count
+function updateCharCount() {
+  const textarea = document.getElementById('translateSentence');
+  const count = textarea.value.length;
+  const charCountEl = document.getElementById('charCount');
+  if (charCountEl) {
+    charCountEl.textContent = count + ' character' + (count !== 1 ? 's' : '');
+  }
+}
+
+// Add character count listener
+document.addEventListener('DOMContentLoaded', function() {
+  const textarea = document.getElementById('translateSentence');
+  if (textarea) {
+    textarea.addEventListener('input', updateCharCount);
+  }
+});
+
+async function translateSentence() {
+  const sentence = document.getElementById('translateSentence')?.value.trim();
+  const output = document.getElementById('translationOutput');
+  
+  if (!sentence) {
+    showToast('⚠️ Please enter a sentence to translate', 'warning');
+    return;
+  }
+  
+  // Get selected languages
+  const selectedLangs = Array.from(document.querySelectorAll('input[name="transLang"]:checked'))
+    .map(checkbox => checkbox.value);
+  
+  if (selectedLangs.length === 0) {
+    showToast('⚠️ Please select at least one language', 'warning');
+    return;
+  }
+  
+  try {
+    output.innerHTML = '<div style="text-align:center;padding:40px;"><p style="font-size:1rem;color:var(--text-primary);font-weight:600">🔄 Translating to ' + selectedLangs.length + ' language' + (selectedLangs.length !== 1 ? 's' : '') + '...</p><div style="width:80%;height:4px;background:var(--border);border-radius:2px;margin:20px auto;overflow:hidden;"><div style="height:100%;background:linear-gradient(90deg, var(--accent), #ffb300);animation:progress 1.5s infinite;border-radius:2px;"></div></div></div>';
+    
+    const response = await fetch(`${API_BASE}/api/phrases/translate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        sentence: sentence,
+        languages: selectedLangs
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    
+    const data = await response.json();
+    renderTranslationResults(data);
+    showToast('✅ Translation complete!', 'success');
+    
+  } catch (err) {
+    console.error('[TRANSLATE] API call failed:', err.message);
+    output.innerHTML = '<div style="background:#f8d7da;border:2px solid #f5c6cb;padding:20px;border-radius:8px;color:#721c24;"><strong>⚠️ Error:</strong> Could not translate. ' + err.message + '</div>';
+  }
+}
+
+function renderTranslationResults(data) {
+  let html = '';
+  
+  // Header with original sentence
+  if (data.original) {
+    html += `<div class="translator-result-card" style="margin-bottom:2rem;border-left:4px solid var(--honey-bronze)">
+      <p style="margin:0;color:var(--text-muted);font-size:0.8rem;text-transform:uppercase;font-weight:700;letter-spacing:0.5px;margin-bottom:0.75rem">📌 Original Text</p>
+      <h4 style="margin:0;color:var(--text-primary);word-break:break-word;font-size:1.1rem;line-height:1.6;font-weight:700">"${data.original}"</h4>
+    </div>`;
+  }
+  
+  // Render translations by language
+  if (data.translations && typeof data.translations === 'object') {
+    const translationCount = Object.keys(data.translations).length;
+    html += `<p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:1.5rem;font-weight:600">📚 ${translationCount} Translation${translationCount !== 1 ? 's' : ''}</p>`;
+    html += '<div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:1.5rem;">';
+    
+    let index = 0;
+    for (const [language, transData] of Object.entries(data.translations)) {
+      index++;
+      const translation = transData.translation || transData;
+      const pronunciation = transData.pronunciation || '';
+      const tip = transData.tip || '';
+      
+      html += `<div class="translator-result-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+          <h5 style="margin:0;color:var(--vintage-grape);font-size:1rem;font-weight:700;font-family:var(--font-display)">🌐 ${language}</h5>
+          <span style="background:var(--grad-gold);color:white;padding:0.25rem 0.75rem;border-radius:20px;font-size:0.75rem;font-weight:700">${index}/${Object.keys(data.translations).length}</span>
+        </div>
+        <div class="translator-result-translation">${translation}</div>
+        ${pronunciation ? `<div class="translator-result-pronunciation">📢 ${pronunciation}</div>` : ''}
+        ${tip ? `<div style="background:rgba(236,167,44,0.1);border:1px solid rgba(236,167,44,0.2);border-radius:var(--r-sm);padding:0.5rem 0.75rem;font-size:0.78rem;color:var(--text-secondary);margin-top:0.5rem;line-height:1.5">💡 ${tip}</div>` : ''}
+        <div style="display:flex;gap:0.75rem;margin-top:1.25rem">
+          <button class="phrase-copy" data-text="${translation}" title="Copy translation" onclick="copyPhrase(this.dataset.text); event.stopPropagation();" style="flex:1;padding:0.6rem;background:var(--grad-green);color:white;border:none;border-radius:var(--r-sm);cursor:pointer;font-size:0.85rem;font-weight:700;transition:all 0.2s;font-family:var(--font-body)" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(68,53,91,0.2)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none'">📋 Copy</button>
+          <button class="phrase-speak" data-text="${translation}" title="Hear pronunciation" onclick="speakPhrase(this.dataset.text, '${language}'); event.stopPropagation();" style="flex:1;padding:0.6rem;background:var(--grad-green);color:white;border:none;border-radius:var(--r-sm);cursor:pointer;font-size:0.85rem;font-weight:700;transition:all 0.2s;font-family:var(--font-body)" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(68,53,91,0.2)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none'">🔊 Speak</button>
+        </div>
+      </div>`;
+    }
+    
+    html += '</div>';
+  }
+  
+  html += `<div style="text-align:center;color:var(--text-muted);font-size:0.8rem;margin-top:2.5rem;padding-top:1.5rem;border-top:2px solid var(--border);">
+    <small style="font-weight:600;font-family:var(--font-body)">🤖 Powered by Groq AI  |  Instant Multi-Language Translation</small>
+  </div>`;
+  
+  document.getElementById('translationOutput').innerHTML = html;
+}
+
+function copyPhrase(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    showToast(`✅ Copied: "${text}"`, 'success');
+  }).catch(() => {
+    showToast('Failed to copy', 'error');
+  });
+}
+
+function speakPhrase(text, language) {
   const clean = text.replace(/\(.*?\)/g,'').trim();
   if ('speechSynthesis' in window) {
     const u = new SpeechSynthesisUtterance(clean);
-    const langMap = {es:'es-ES',fr:'fr-FR',jp:'ja-JP',de:'de-DE',it:'it-IT',pt:'pt-BR',zh:'zh-CN',ar:'ar-SA'};
-    u.lang = langMap[document.getElementById('phraseLanguage').value] || 'en-US';
+    
+    const langMap = {
+      'Spanish': 'es-ES',
+      'French': 'fr-FR',
+      'Japanese': 'ja-JP',
+      'German': 'de-DE',
+      'Italian': 'it-IT',
+      'Portuguese': 'pt-BR',
+      'Mandarin Chinese': 'zh-CN',
+      'Arabic': 'ar-SA',
+      'Korean': 'ko-KR',
+      'Russian': 'ru-RU'
+    };
+    
+    u.lang = langMap[language] || 'en-US';
+    u.rate = 0.9;
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(u);
     showToast(`🔊 Playing: "${clean}"`, 'info');
   } else {
-    showToast('🔊 Speech not supported in this browser', 'warning');
+    showToast('Speech not supported in your browser', 'warning');
   }
 }
 
-/* ─────────────────────────────────────────────────────────
-   30. FEATURE 11: TRAVEL DIARY
-───────────────────────────────────────────────────────── */
-let diaryEntries = JSON.parse(localStorage.getItem('wl_diary')||'[]');
-let selectedMood = '😊';
-
-document.querySelectorAll('.mood-btn').forEach(b => {
-  b.addEventListener('click', function() {
-    document.querySelectorAll('.mood-btn').forEach(x => x.classList.remove('active'));
-    this.classList.add('active');
-    selectedMood = this.dataset.mood;
-  });
-});
-
-function saveDiaryEntry() {
-  const city = document.getElementById('diaryCity')?.value?.trim();
-  const date = document.getElementById('diaryDate')?.value;
-  const text = document.getElementById('diaryText')?.value?.trim();
-  if (!city || !text) { showToast('Please enter a city and journal entry', 'warning'); return; }
-  diaryEntries.unshift({ id:Date.now(), city, date: date || new Date().toLocaleDateString(), mood:selectedMood, text });
-  localStorage.setItem('wl_diary', JSON.stringify(diaryEntries));
-  document.getElementById('diaryCity').value = '';
-  document.getElementById('diaryDate').value = '';
-  document.getElementById('diaryText').value = '';
-  loadDiaryEntries();
-  showToast('Diary entry saved! 📖');
+async function translateSentence() {
+  const sentence = document.getElementById('translateSentence')?.value.trim();
+  const output = document.getElementById('translationOutput');
+  
+  if (!sentence) {
+    showToast('⚠️ Please enter a sentence to translate', 'warning');
+    return;
+  }
+  
+  // Get selected languages
+  const selectedLangs = Array.from(document.querySelectorAll('input[name="transLang"]:checked'))
+    .map(checkbox => checkbox.value);
+  
+  if (selectedLangs.length === 0) {
+    showToast('⚠️ Please select at least one language', 'warning');
+    return;
+  }
+  
+  try {
+    output.innerHTML = '<div style="text-align:center;padding:20px;"><p>🔄 Translating to ' + selectedLangs.length + ' languages...</p><div style="width:100%;height:4px;background:var(--border);border-radius:2px;margin-top:10px;overflow:hidden;"><div style="height:100%;background:var(--accent);animation:progress 1.5s infinite;"></div></div></div>';
+    
+    const response = await fetch(`${API_BASE}/api/phrases/translate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        sentence: sentence,
+        languages: selectedLangs,
+        context: 'travel'
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    
+    const data = await response.json();
+    renderTranslationResults(data);
+    showToast('✅ Translation complete!', 'success');
+    
+  } catch (err) {
+    console.error('[TRANSLATE] API call failed:', err.message);
+    output.innerHTML = '<div style="background:#f8d7da;border:1px solid #f5c6cb;padding:15px;border-radius:8px;color:#721c24;"><strong>⚠️ Error:</strong> Could not translate. Please check your API key and try again. Error: ' + err.message + '</div>';
+  }
 }
 
-function loadDiaryEntries() {
-  const out = document.getElementById('diaryEntries');
-  if (!out) return;
-  if (!diaryEntries.length) {
-    out.innerHTML='<p style="text-align:center;opacity:.5;padding:1rem">No entries yet — start writing your travel story!</p>'; return;
+function renderTranslationResults(data) {
+  let html = '';
+  
+  // Header with original sentence
+  if (data.original) {
+    html += `<div style="background:var(--bg-secondary);padding:1rem;border-radius:8px;margin-bottom:1.5rem;border-left:4px solid var(--accent);">
+      <p style="margin:0;color:var(--text-muted);font-size:0.85rem;">ORIGINAL</p>
+      <h4 style="margin:0.5rem 0 0 0;color:var(--text-primary);">"${data.original}"</h4>
+    </div>`;
   }
-  out.innerHTML = diaryEntries.map(e => `
-    <div class="diary-entry">
-      <div class="diary-entry-head">
-        <div>
-          <span class="diary-entry-city">${e.mood} ${e.city}</span>
-          <div class="diary-entry-meta">📅 ${e.date}</div>
+  
+  // Render translations by language
+  if (data.translations && typeof data.translations === 'object') {
+    html += '<div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:1rem;">';
+    
+    for (const [language, transData] of Object.entries(data.translations)) {
+      const translation = transData.translation || transData;
+      const pronunciation = transData.pronunciation || '';
+      const usage = transData.usage || '';
+      const tip = transData.tip || '';
+      
+      html += `<div style="background:var(--bg-secondary);padding:1rem;border-radius:8px;border:1px solid var(--border);">
+        <h5 style="margin:0 0 0.5rem 0;color:var(--accent);">🌐 ${language}</h5>
+        <div style="background:var(--bg-primary);padding:0.75rem;border-radius:6px;margin-bottom:0.75rem;">
+          <p style="margin:0;color:var(--text-primary);font-weight:600;word-break:break-word;">${translation}</p>
         </div>
-        <button class="diary-entry-del" onclick="deleteDiaryEntry(${e.id})">🗑</button>
-      </div>
-      <div class="diary-entry-body">${e.text}</div>
-    </div>`).join('');
-}
-
-function deleteDiaryEntry(id) {
-  diaryEntries = diaryEntries.filter(e => e.id!==id);
-  localStorage.setItem('wl_diary', JSON.stringify(diaryEntries));
-  loadDiaryEntries();
+        ${pronunciation ? `<p style="margin:0.5rem 0;font-size:0.85rem;color:var(--text-muted);"><strong>📢 Pronunciation:</strong> ${pronunciation}</p>` : ''}
+        ${usage ? `<p style="margin:0.5rem 0;font-size:0.85rem;color:var(--text-muted);"><strong>💡 Usage:</strong> ${usage}</p>` : ''}
+        ${tip ? `<p style="margin:0.5rem 0;font-size:0.85rem;background:rgba(255,193,7,0.1);padding:0.5rem;border-radius:4px;color:var(--text-primary);"><strong>⭐ Tip:</strong> ${tip}</p>` : ''}
+        <div style="display:flex;gap:0.5rem;margin-top:0.75rem;">
+          <button class="phrase-copy" data-text="${translation}" title="Copy translation" onclick="copyPhrase(this.dataset.text); event.stopPropagation();" style="flex:1;padding:0.5rem;background:var(--accent);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.85rem;">📋 Copy</button>
+          <button class="phrase-speak" data-text="${translation}" title="Hear pronunciation" onclick="speakPhrase(this.dataset.text, '${language}'); event.stopPropagation();" style="flex:1;padding:0.5rem;background:var(--accent);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.85rem;">🔊 Speak</button>
+        </div>
+      </div>`;
+    }
+    
+    html += '</div>';
+  }
+  
+  // Add tips section
+  if (data.generalTips && Array.isArray(data.generalTips)) {
+    html += `<div style="margin-top:1.5rem;padding:1rem;background:rgba(255,193,7,0.1);border-radius:8px;border-left:4px solid #ffc107;">
+      <h5 style="margin:0 0 0.75rem 0;color:var(--text-primary);">💡 Translation Tips</h5>
+      <ul style="margin:0;padding-left:1.5rem;color:var(--text-muted);font-size:0.9rem;">`;
+    data.generalTips.forEach(tip => {
+      html += `<li style="margin-bottom:0.5rem;">${tip}</li>`;
+    });
+    html += `</ul>
+    </div>`;
+  }
+  
+  html += `<div style="text-align:center;color:var(--text-muted);font-size:0.85rem;margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);">
+    <small>🤖 Translated using Groq AI</small>
+  </div>`;
+  
+  document.getElementById('translationOutput').innerHTML = html;
 }
 
 /* ─────────────────────────────────────────────────────────
-   31. SCROLL ANIMATIONS & COUNTERS
+   30. SCROLL ANIMATIONS & COUNTERS
 ───────────────────────────────────────────────────────── */
 const counterObserver = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
@@ -1439,44 +2365,296 @@ document.querySelectorAll('.destination-card,.exp-card,.step-card,.guide-card,.t
    32. DOMCONTENTLOADED INIT
 ───────────────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', () => {
-  // AOS
-  if (window.AOS) AOS.init({ duration:700, easing:'ease-in-out', once:true, offset:80 });
+  // AOS animations - MUST be first to reveal hidden elements
+  if (window.AOS) {
+    AOS.init({ 
+      duration: 700, 
+      easing: 'ease-in-out', 
+      once: true, 
+      offset: 80 
+    });
+    console.log('[INIT] AOS initialized successfully');
+  } else {
+    console.warn('[INIT] AOS library not loaded');
+  }
+
+  // Build currency ticker
+  buildTicker();
 
   // Dark mode
   const toggle = document.getElementById('darkModeToggle');
   if (toggle) {
-    if (localStorage.getItem('wl_dark')==='1') document.body.classList.add('dark-mode');
+    if (localStorage.getItem('wl_dark') === '1') {
+      document.body.classList.add('dark-mode');
+    }
     toggle.addEventListener('click', () => {
       document.body.classList.toggle('dark-mode');
-      localStorage.setItem('wl_dark', document.body.classList.contains('dark-mode')?'1':'0');
+      localStorage.setItem('wl_dark', 
+        document.body.classList.contains('dark-mode') ? '1' : '0');
     });
   }
 
-  // Date inputs
+  // Load live currency rates
+  loadLiveRates();
+
+  // Load saved trips
+  loadSavedTrips();
+
+  // Set min dates for date pickers
   const today = new Date().toISOString().split('T')[0];
-  ['checkin','checkout'].forEach(id => { const el=document.getElementById(id); if(el) el.min=today; });
+  ['checkin', 'checkout'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.min = today;
+  });
+  
+  // Update checkout min date when checkin changes
   document.getElementById('checkin')?.addEventListener('change', function() {
     const co = document.getElementById('checkout');
     if (co) co.min = this.value;
   });
 
-  // Load saved data
-  loadSavedTrips();
-
-  // Hero video
+  // Hero video autoplay
   const vid = document.querySelector('.hero-video');
-  if (vid) vid.play().catch(()=>{});
+  if (vid) vid.play().catch(() => {});
 
-  // Keyboard: Escape to close modals
+  // Escape key closes modals
   document.addEventListener('keydown', e => {
-    if (e.key==='Escape') {
-      document.querySelectorAll('.modal-overlay.open').forEach(m => closeModal(m.id));
-      closeMapModal(); closeDestinationMap();
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.modal-overlay.open')
+        .forEach(m => closeModal(m.id));
+      closeMapModal();
+      closeDestinationMap();
     }
   });
 
-  // Search input enter key
-  document.getElementById('heroSearch')?.addEventListener('keypress', e => {
-    if (e.key==='Enter') handleHeroSearch();
-  });
+  // Hero search enter key
+  document.getElementById('heroSearch')
+    ?.addEventListener('keypress', e => {
+      if (e.key === 'Enter') handleHeroSearch();
+    });
+
+  console.log('[INIT] Page initialization complete');
 });
+
+/* ─────────────────────────────────────────────────────────
+   33. LIVE FLIGHT TRACKER
+───────────────────────────────────────────────────────── */
+let currentTrackerRegion = 'usa';
+
+function switchTrackerTab(tab) {
+  // Hide all tabs
+  document.querySelectorAll('.tracker-tab-content').forEach(t => t.style.display = 'none');
+  document.querySelectorAll('.tracker-tab').forEach(t => t.classList.remove('active'));
+
+  // Show selected
+  if (tab === 'livemap') {
+    document.getElementById('trackerLivemapTab').style.display = 'block';
+    document.getElementById('tabLiveMap').classList.add('active');
+  } else if (tab === 'search') {
+    document.getElementById('trackerSearchTab').style.display = 'block';
+    document.getElementById('tabSearch').classList.add('active');
+  } else if (tab === 'airports') {
+    document.getElementById('trackerAirportsTab').style.display = 'block';
+    document.getElementById('tabAirports').classList.add('active');
+    loadAirportGrid();
+  }
+}
+
+async function loadLiveFlights(region, btnEl) {
+  currentTrackerRegion = region;
+  
+  // Update active button
+  document.querySelectorAll('.region-btn').forEach(b => b.classList.remove('active'));
+  if (btnEl) btnEl.classList.add('active');
+
+  const list = document.getElementById('liveFlightsList');
+  const stats = document.getElementById('trackerStatsBar');
+  
+  list.innerHTML = '<p style="text-align:center;padding:2rem;opacity:.6">🛩️ Loading live flights over ' + region.toUpperCase() + '...</p>';
+
+  try {
+    const res = await fetch(`${API_BASE}/api/flighttracker/live?region=${region}`);
+    const data = await res.json();
+
+    if (!data.aircraft?.length) {
+      list.innerHTML = '<p style="text-align:center;padding:2rem;opacity:.6">No aircraft data available right now. Try again in a moment.</p>';
+      return;
+    }
+
+    // Stats bar
+    const avgAlt = Math.round(data.aircraft.reduce((s,a) => s + a.altitude, 0) / data.aircraft.length);
+    const avgSpd = Math.round(data.aircraft.reduce((s,a) => s + a.speed, 0) / data.aircraft.length);
+
+    stats.innerHTML = `
+      <div class="tracker-stat-box">
+        <span class="tracker-stat-number">${data.aircraft.length}</span>
+        <span class="tracker-stat-label">Live Aircraft</span>
+      </div>
+      <div class="tracker-stat-box">
+        <span class="tracker-stat-number">${data.total || 0}</span>
+        <span class="tracker-stat-label">Total Tracked</span>
+      </div>
+      <div class="tracker-stat-box">
+        <span class="tracker-stat-number">${avgAlt.toLocaleString()}</span>
+        <span class="tracker-stat-label">Avg Altitude (m)</span>
+      </div>
+      <div class="tracker-stat-box">
+        <span class="tracker-stat-number">${avgSpd}</span>
+        <span class="tracker-stat-label">Avg Speed (kts)</span>
+      </div>`;
+
+    // Aircraft list
+    list.innerHTML = data.aircraft.map(a => {
+      const headingArrow = getHeadingArrow(a.heading);
+      const altFt = Math.round(a.altitude * 3.28084);
+      return `
+        <div class="aircraft-card">
+          <div>
+            <div class="aircraft-callsign">✈️ ${a.callsign || 'Unknown'}</div>
+            <div class="aircraft-country">${a.country}</div>
+          </div>
+          <div class="aircraft-stats">
+            <div class="aircraft-stat-item">
+              <span class="aircraft-stat-value">${a.speed} kts</span>
+              <span class="aircraft-stat-label">Speed</span>
+            </div>
+            <div class="aircraft-stat-item">
+              <span class="aircraft-stat-value">${altFt.toLocaleString()} ft</span>
+              <span class="aircraft-stat-label">Altitude</span>
+            </div>
+            <div class="aircraft-stat-item">
+              <span class="aircraft-stat-value" style="font-size:1.4rem">${headingArrow}</span>
+              <span class="aircraft-stat-label">Heading</span>
+            </div>
+          </div>
+          <div class="aircraft-altitude-badge">
+            ${a.altitude > 10000 ? 'Cruising' : a.altitude > 3000 ? 'Climbing' : 'Approach'}
+          </div>
+        </div>`;
+    }).join('');
+
+    showToast(`✈️ ${data.aircraft.length} aircraft loaded`, 'info');
+
+  } catch (err) {
+    console.error('[TRACKER]', err);
+    list.innerHTML = '<p style="text-align:center;padding:2rem;color:var(--text-muted)">Could not load live flights. Check server is running.</p>';
+  }
+}
+
+function getHeadingArrow(heading) {
+  if (!heading && heading !== 0) return '➡️';
+  const dirs = ['⬆️','↗️','➡️','↘️','⬇️','↙️','⬅️','↖️'];
+  return dirs[Math.round(heading / 45) % 8];
+}
+
+function refreshLiveFlights() {
+  const activeBtn = document.querySelector('.region-btn.active');
+  loadLiveFlights(currentTrackerRegion, activeBtn);
+}
+
+async function searchFlightTracker() {
+  const flight = document.getElementById('trackFlightInput')?.value?.trim().toUpperCase().replace(/\s/g, '');
+  
+  if (!flight) {
+    showToast('Please enter a flight number', 'warning');
+    return;
+  }
+
+  const out = document.getElementById('flightSearchResult');
+  out.innerHTML = '<p style="text-align:center;padding:2rem;opacity:.6">🔍 Searching for flight ' + flight + '...</p>';
+
+  try {
+    const res = await fetch(`${API_BASE}/api/flighttracker/search?flight=${flight}`);
+    const data = await res.json();
+
+    if (!data.found) {
+      out.innerHTML = `
+        <div style="text-align:center;padding:2rem;color:var(--text-muted)">
+          <div style="font-size:3rem;margin-bottom:1rem">✈️</div>
+          <p>Flight ${flight} not found in current data</p>
+          <p style="font-size:.82rem;margin-top:.5rem">
+            OpenSky updates every 10 seconds. Try a currently active flight number.
+          </p>
+        </div>`;
+      return;
+    }
+
+    out.innerHTML = `
+      <div style="background:var(--bg-card);border:1.5px solid var(--honey-bronze);border-radius:var(--r-lg);padding:1.75rem;margin-top:1rem">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem">
+          <div>
+            <h3 style="font-size:1.75rem;margin-bottom:.3rem;font-family:var(--font-display)">✈️ ${data.flightNumber}</h3>
+            <p style="font-size:.88rem;color:var(--text-muted);font-family:var(--font-body)">Callsign: ${data.callsign}</p>
+          </div>
+          <div style="background:rgba(39,174,96,.1);border:1px solid rgba(39,174,96,.3);color:#27ae60;padding:.5rem 1.25rem;border-radius:50px;font-weight:700;font-size:.9rem;font-family:var(--font-body)">
+            ${data.status}
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:1rem;align-items:center;background:var(--bg-sand);padding:1.25rem;border-radius:var(--r-md);margin-bottom:1rem">
+          <div>
+            <div style="font-size:2.2rem;font-weight:700;color:var(--spicy-paprika);font-family:var(--font-display)">
+              ${data.origin}
+            </div>
+            <div style="font-size:.8rem;color:var(--text-muted);font-family:var(--font-body)">
+              ${data.departureTime}
+            </div>
+          </div>
+          <div style="text-align:center;font-size:1.75rem">✈️</div>
+          <div style="text-align:right">
+            <div style="font-size:2.2rem;font-weight:700;color:var(--spicy-paprika);font-family:var(--font-display)">
+              ${data.destination}
+            </div>
+            <div style="font-size:.8rem;color:var(--text-muted);font-family:var(--font-body)">
+              ${data.arrivalTime}
+            </div>
+          </div>
+        </div>
+        <p style="font-size:.78rem;color:var(--text-muted);text-align:center;font-family:var(--font-body)">
+          Data from OpenSky Network · Updates every 10 seconds
+        </p>
+      </div>`;
+
+  } catch (err) {
+    console.error('[TRACKER SEARCH]', err);
+    out.innerHTML = '<p style="text-align:center;padding:2rem;color:var(--text-muted)">Could not search for flight. Try again.</p>';
+  }
+}
+
+function quickTrackFlight(flightNum) {
+  document.getElementById('trackFlightInput').value = flightNum;
+  searchFlightTracker();
+}
+
+async function loadAirportGrid() {
+  const grid = document.getElementById('airportGrid');
+  if (!grid || grid.innerHTML.trim() !== '') return;
+
+  const airports = ['JFK','LAX','ORD','ATL','DFW','DEN','SFO','SEA','MIA','BOS','LAS','MCO','PHX','HNL'];
+
+  grid.innerHTML = airports.map(code => `
+    <div class="airport-card" onclick="lookupAirport('${code}')">
+      <div class="airport-code">${code}</div>
+      <div class="airport-name" id="airportName_${code}">Loading...</div>
+      <div class="airport-city" id="airportCity_${code}"></div>
+    </div>`).join('');
+
+  // Load airport details
+  for (const code of airports) {
+    try {
+      const res = await fetch(`${API_BASE}/api/flighttracker/airport?code=${code}`);
+      const data = await res.json();
+      const nameEl = document.getElementById(`airportName_${code}`);
+      const cityEl = document.getElementById(`airportCity_${code}`);
+      if (nameEl) nameEl.textContent = data.name;
+      if (cityEl) cityEl.textContent = `📍 ${data.city} · ${data.timezone}`;
+    } catch (err) {
+      console.error(`Airport ${code}:`, err);
+    }
+  }
+}
+
+function lookupAirport(code) {
+  switchTrackerTab('search');
+  document.getElementById('trackFlightInput').value = '';
+  showToast(`Looking up flights from ${code}...`, 'info');
+}

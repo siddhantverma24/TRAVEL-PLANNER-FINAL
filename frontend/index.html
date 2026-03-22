@@ -3,34 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Wanderlust — Discover Your Next Adventure</title>
+  <title>Visit USA</title>  
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+  <style>
+    /* Fallback: ensure images don't break layout */
+    img { background: #e0e0e0; }
+  </style>
 </head>
 <body>
-
-<!-- ══════════════════════════════════════════
-     PRELOADER
-══════════════════════════════════════════ -->
-<div class="preloader" id="preloader">
-  <div class="preloader-content">
-    <div class="preloader-globe">🌍</div>
-    <h2 class="preloader-text">WANDERLUST</h2>
-    <div class="preloader-bar"><div class="preloader-progress"></div></div>
-  </div>
-</div>
 
 <!-- ══════════════════════════════════════════
      TOAST NOTIFICATION
 ══════════════════════════════════════════ -->
 <div class="toast" id="toast">
-  <span class="toast-icon" id="toastIcon">✅</span>
   <span id="toastMsg">Message here</span>
 </div>
 
@@ -80,7 +72,7 @@
 </div>
 
 <!-- ══════════════════════════════════════════
-     PACKING LIST MODAL  [NEW FEATURE 1]
+     PACKING LIST MODAL
 ══════════════════════════════════════════ -->
 <div class="modal-overlay" id="packingModal">
   <div class="modal-box medium">
@@ -89,22 +81,30 @@
       <button class="modal-close" onclick="closeModal('packingModal')">✕</button>
     </div>
     <div class="modal-body-scroll">
-      <div class="packing-controls">
-        <select id="packingDestType" onchange="generatePackingList()">
-          <option value="beach">🏖️ Beach / Tropical</option>
-          <option value="mountain">🏔️ Mountain / Hiking</option>
-          <option value="city">🏙️ City Break</option>
-          <option value="winter">❄️ Winter / Snow</option>
-          <option value="business">💼 Business Trip</option>
-        </select>
-        <select id="packingDays" onchange="generatePackingList()">
-          <option value="3">3 Days</option>
-          <option value="7">1 Week</option>
-          <option value="14">2 Weeks</option>
-          <option value="30">1 Month+</option>
-        </select>
+      <!-- Destination Input Section -->
+      <div class="packing-destination-section">
+        <label for="packingDestination" style="display:block;margin-bottom:8px;font-weight:600;color:var(--text-primary);">📍 Where are you going?</label>
+        <input type="text" id="packingDestination" placeholder="e.g., Paris, Tokyo, Costa Rica, Bali, Mount Kilimanjaro..." onkeyup="generatePackingList()">
+        <small style="display:block;color:var(--text-muted);margin-top:6px;">AI will analyze your destination and generate a personalized packing list</small>
       </div>
-      <div id="packingListOutput"></div>
+      
+      <!-- Trip Details Section -->
+      <div class="packing-details-section">
+        <div class="packing-detail-group">
+          <label for="packingDays" style="display:block;margin-bottom:8px;font-weight:600;color:var(--text-primary);">📅 How long is your trip?</label>
+          <select id="packingDays" onchange="generatePackingList()">
+            <option value="3">3 Days</option>
+            <option value="7">1 Week</option>
+            <option value="14">2 Weeks</option>
+            <option value="30">1 Month+</option>
+          </select>
+        </div>
+      </div>
+      
+      <!-- Packing List Output -->
+      <div id="packingListOutput" style="margin-top:24px;"></div>
+      
+      <!-- Action Buttons -->
       <div class="packing-footer">
         <button class="btn btn-primary" onclick="printPackingList()">🖨️ Print List</button>
         <button class="btn btn-outline" onclick="copyPackingList()">📋 Copy List</button>
@@ -114,81 +114,143 @@
 </div>
 
 <!-- ══════════════════════════════════════════
-     CURRENCY CONVERTER MODAL  [NEW FEATURE 2]
+     CURRENCY CONVERTER MODAL
 ══════════════════════════════════════════ -->
 <div class="modal-overlay" id="currencyModal">
-  <div class="modal-box small">
+  <div class="modal-box medium">
     <div class="modal-head">
       <h2>💱 Currency Converter</h2>
       <button class="modal-close" onclick="closeModal('currencyModal')">✕</button>
     </div>
     <div class="modal-body-scroll">
       <div class="currency-converter">
-        <div class="conv-row">
-          <input type="number" id="convAmount" value="100" oninput="convertCurrency()">
-          <select id="convFrom" onchange="convertCurrency()">
-            <option value="USD">🇺🇸 USD</option>
-            <option value="EUR">🇪🇺 EUR</option>
-            <option value="GBP">🇬🇧 GBP</option>
-            <option value="JPY">🇯🇵 JPY</option>
-            <option value="AUD">🇦🇺 AUD</option>
-            <option value="CAD">🇨🇦 CAD</option>
-            <option value="INR">🇮🇳 INR</option>
-            <option value="CHF">🇨🇭 CHF</option>
+        <!-- Exchange Rate Header Info -->
+        <div class="converter-header">
+          <div class="exchange-rate-display">
+            <span class="rate-label">Exchange Rate</span>
+            <p class="conv-rate" id="convRate">Loading...</p>
+          </div>
+        </div>
+
+        <!-- FROM Currency Card -->
+        <div class="currency-card from-card">
+          <label class="card-label">From</label>
+          <div class="amount-section">
+            <input type="number" id="convAmount" value="100" oninput="convertCurrency()" class="amount-input" placeholder="Enter amount">
+          </div>
+          <select id="convFrom" onchange="convertCurrency()" class="currency-select">
+            <option value="USD">🇺🇸 USD - US Dollar</option>
+            <option value="EUR">🇪🇺 EUR - Euro</option>
+            <option value="GBP">🇬🇧 GBP - British Pound</option>
+            <option value="JPY">🇯🇵 JPY - Japanese Yen</option>
+            <option value="AUD">🇦🇺 AUD - Australian Dollar</option>
+            <option value="CAD">🇨🇦 CAD - Canadian Dollar</option>
+            <option value="INR">🇮🇳 INR - Indian Rupee</option>
+            <option value="CHF">🇨🇭 CHF - Swiss Franc</option>
           </select>
         </div>
-        <button class="swap-btn" onclick="swapCurrencies()">⇅ Swap</button>
-        <div class="conv-row">
-          <input type="number" id="convResult" readonly>
-          <select id="convTo" onchange="convertCurrency()">
-            <option value="EUR">🇪🇺 EUR</option>
-            <option value="USD">🇺🇸 USD</option>
-            <option value="GBP">🇬🇧 GBP</option>
-            <option value="JPY">🇯🇵 JPY</option>
-            <option value="AUD">🇦🇺 AUD</option>
-            <option value="CAD">🇨🇦 CAD</option>
-            <option value="INR">🇮🇳 INR</option>
-            <option value="CHF">🇨🇭 CHF</option>
+
+        <!-- Swap Button -->
+        <button class="swap-button" onclick="swapCurrencies()" title="Swap currencies">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/>
+          </svg>
+        </button>
+
+        <!-- TO Currency Card -->
+        <div class="currency-card to-card">
+          <label class="card-label">To</label>
+          <div class="amount-section">
+            <input type="number" id="convResult" readonly class="amount-input result-input" placeholder="Converted amount">
+          </div>
+          <select id="convTo" onchange="convertCurrency()" class="currency-select">
+            <option value="EUR">🇪🇺 EUR - Euro</option>
+            <option value="USD">🇺🇸 USD - US Dollar</option>
+            <option value="GBP">🇬🇧 GBP - British Pound</option>
+            <option value="JPY">🇯🇵 JPY - Japanese Yen</option>
+            <option value="AUD">🇦🇺 AUD - Australian Dollar</option>
+            <option value="CAD">🇨🇦 CAD - Canadian Dollar</option>
+            <option value="INR">🇮🇳 INR - Indian Rupee</option>
+            <option value="CHF">🇨🇭 CHF - Swiss Franc</option>
           </select>
         </div>
-        <p class="conv-rate" id="convRate"></p>
-        <div id="convAllRates" class="all-rates"></div>
+
+        <!-- All Rates Section -->
+        <div class="rates-section">
+          <h3 class="rates-title">All Exchange Rates</h3>
+          <div id="convAllRates" class="all-rates"></div>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
 <!-- ══════════════════════════════════════════
-     TRIP BUDGET TRACKER MODAL  [NEW FEATURE 3]
+     TRIP BUDGET TRACKER MODAL
 ══════════════════════════════════════════ -->
 <div class="modal-overlay" id="budgetModal">
-  <div class="modal-box medium">
+  <div class="modal-box large">
     <div class="modal-head">
       <h2>📊 Trip Budget Tracker</h2>
       <button class="modal-close" onclick="closeModal('budgetModal')">✕</button>
     </div>
     <div class="modal-body-scroll">
       <div class="budget-setup">
-        <div class="form-row">
-          <div class="form-group">
-            <label>Trip Name</label>
-            <input type="text" id="budgetTripName" placeholder="e.g. NYC Adventure">
-          </div>
-          <div class="form-group">
-            <label>Total Budget ($)</label>
-            <input type="number" id="totalBudget" placeholder="e.g. 2000">
+        <div class="budget-header-setup">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Trip Name</label>
+              <input type="text" id="budgetTripName" placeholder="e.g. NYC Adventure" onchange="renderBudget()">
+            </div>
+            <div class="form-group">
+              <label>Total Budget ($)</label>
+              <input type="number" id="totalBudget" placeholder="e.g. 2000" min="0" onchange="renderBudget()">
+            </div>
           </div>
         </div>
-        <div class="budget-categories" id="budgetCategories"></div>
-        <button class="btn btn-primary" onclick="addBudgetEntry()">➕ Add Expense</button>
+
+        <div class="budget-add-expense">
+          <h4>Add New Expense</h4>
+          <div class="form-row">
+            <div class="form-group">
+              <input type="text" id="budgetExpenseName" placeholder="Expense description (e.g. Flight)">
+            </div>
+            <div class="form-group">
+              <input type="number" id="budgetExpenseAmount" placeholder="Amount ($)" min="0" step="0.01">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <select id="budgetExpenseCategory">
+                <option value="flight">✈️ Flight</option>
+                <option value="hotel">🏨 Hotel</option>
+                <option value="food">🍽️ Food</option>
+                <option value="transport">🚗 Transport</option>
+                <option value="activity">🎭 Activity</option>
+                <option value="shopping">🛍️ Shopping</option>
+                <option value="other">📌 Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <input type="date" id="budgetExpenseDate">
+            </div>
+          </div>
+          <button class="btn btn-primary btn-full" onclick="addBudgetEntry()">➕ Add Expense</button>
+        </div>
+
         <div id="budgetSummary" class="budget-summary"></div>
+
+        <div class="budget-list-wrapper">
+          <h4>Expenses</h4>
+          <div class="budget-categories" id="budgetCategories"></div>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
 <!-- ══════════════════════════════════════════
-     WEATHER MODAL  [NEW FEATURE 4]
+     WEATHER MODAL
 ══════════════════════════════════════════ -->
 <div class="modal-overlay" id="weatherModal">
   <div class="modal-box medium">
@@ -218,7 +280,7 @@
 </div>
 
 <!-- ══════════════════════════════════════════
-     FLIGHT SEARCH MODAL  [NEW FEATURE 5]
+     FLIGHT SEARCH MODAL
 ══════════════════════════════════════════ -->
 <div class="modal-overlay" id="flightModal">
   <div class="modal-box medium">
@@ -281,64 +343,261 @@
 </div>
 
 <!-- ══════════════════════════════════════════
-     HOTEL SEARCH MODAL  [NEW FEATURE 6]
+     LIVE FLIGHT TRACKER MODAL
 ══════════════════════════════════════════ -->
-<div class="modal-overlay" id="hotelModal">
-  <div class="modal-box medium">
-    <div class="modal-head">
-      <h2>🏨 Find Hotels</h2>
-      <button class="modal-close" onclick="closeModal('hotelModal')">✕</button>
-    </div>
-    <div class="modal-body-scroll">
-      <div class="hotel-form">
-        <div class="form-group">
-          <label>Destination</label>
-          <input type="text" id="hotelCity" placeholder="City or hotel name" value="New York">
+<div class="modal-overlay" id="flightTrackerModal">
+  <div class="modal-box large">
+    <div class="modal-head" style="background:var(--grad-green)">
+      <div style="display:flex;align-items:center;gap:1rem;flex:1">
+        <div style="font-size:2.5rem;background:rgba(255,255,255,.15);width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.2)">🛩️</div>
+        <div>
+          <h2 style="color:#fff;margin-bottom:.2rem;font-family:var(--font-display)">Live Flight Tracker</h2>
+          <p style="color:rgba(255,255,255,.7);font-size:.82rem;margin:0;font-family:var(--font-body)">Real-time aircraft · OpenSky Network</p>
         </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Check-in</label>
-            <input type="date" id="hotelCheckin">
-          </div>
-          <div class="form-group">
-            <label>Check-out</label>
-            <input type="date" id="hotelCheckout">
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Guests</label>
-            <select id="hotelGuests">
-              <option>1 Guest</option>
-              <option>2 Guests</option>
-              <option>3 Guests</option>
-              <option>4+ Guests</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Star Rating</label>
-            <select id="hotelStars">
-              <option value="any">Any</option>
-              <option value="3">3+ Stars</option>
-              <option value="4">4+ Stars</option>
-              <option value="5">5 Stars</option>
-            </select>
-          </div>
-        </div>
-        <button class="btn btn-primary full-w" onclick="searchHotels()">🔍 Search Hotels</button>
       </div>
-      <div id="hotelResults"></div>
+      <button class="modal-close" onclick="closeModal('flightTrackerModal')">✕</button>
+    </div>
+    <div class="modal-body-scroll" style="padding:0">
+      <!-- Tab navigation -->
+      <div style="display:flex;border-bottom:2px solid var(--border);background:var(--bg-sand)">
+        <button class="tracker-tab active" id="tabLiveMap" onclick="switchTrackerTab('livemap')">🗺️ Live Map</button>
+        <button class="tracker-tab" id="tabSearch" onclick="switchTrackerTab('search')">🔍 Track Flight</button>
+        <button class="tracker-tab" id="tabAirports" onclick="switchTrackerTab('airports')">🏢 Airports</button>
+      </div>
+
+      <!-- LIVE MAP TAB -->
+      <div id="trackerLivemapTab" class="tracker-tab-content">
+        <!-- Region selector -->
+        <div style="padding:1.25rem 1.5rem;background:var(--bg-sand);border-bottom:1px solid var(--border);display:flex;gap:.75rem;align-items:center;flex-wrap:wrap">
+          <span style="font-size:.82rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em">Region:</span>
+          <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+            <button class="region-btn active" onclick="loadLiveFlights('usa',this)">🇺🇸 All USA</button>
+            <button class="region-btn" onclick="loadLiveFlights('eastcoast',this)">East Coast</button>
+            <button class="region-btn" onclick="loadLiveFlights('westcoast',this)">West Coast</button>
+            <button class="region-btn" onclick="loadLiveFlights('midwest',this)">Midwest</button>
+          </div>
+          <button class="btn btn-primary" style="padding:.5rem 1rem;font-size:.82rem;margin-left:auto" onclick="refreshLiveFlights()">🔄 Refresh</button>
+        </div>
+
+        <!-- Stats bar -->
+        <div id="trackerStatsBar" style="display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-bottom:1px solid var(--border)"></div>
+
+        <!-- Aircraft list -->
+        <div id="liveFlightsList" style="max-height:450px;overflow-y:auto;padding:1rem 1.5rem">
+          <p style="text-align:center;padding:2rem;opacity:.6">Click a region to load live flights</p>
+        </div>
+      </div>
+
+      <!-- SEARCH TAB -->
+      <div id="trackerSearchTab" class="tracker-tab-content" style="display:none;padding:1.5rem">
+        <div style="margin-bottom:1.5rem">
+          <label style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);display:block;margin-bottom:.55rem">Flight Number</label>
+          <div style="display:flex;gap:.75rem">
+            <input type="text" id="trackFlightInput" placeholder="e.g. AA100, DL204, UA1" style="flex:1;text-transform:uppercase" onkeypress="if(event.key==='Enter') searchFlightTracker()">
+            <button class="btn btn-primary" onclick="searchFlightTracker()">🔍 Track</button>
+          </div>
+        </div>
+
+        <div style="margin-bottom:1.5rem">
+          <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:.6rem">Popular flights:</p>
+          <div style="display:flex;flex-wrap:wrap;gap:.5rem">
+            <button onclick="quickTrackFlight('AA100')" style="background:var(--bg-sand);border:1px solid var(--border);padding:.4rem .9rem;border-radius:50px;cursor:pointer;font-size:.82rem;font-weight:600;font-family:var(--font-body);transition:all .2s" onmouseover="this.style.borderColor='var(--honey-bronze)'" onmouseout="this.style.borderColor='var(--border)'">AA100</button>
+            <button onclick="quickTrackFlight('DL1')" style="background:var(--bg-sand);border:1px solid var(--border);padding:.4rem .9rem;border-radius:50px;cursor:pointer;font-size:.82rem;font-weight:600;font-family:var(--font-body);transition:all .2s" onmouseover="this.style.borderColor='var(--honey-bronze)'" onmouseout="this.style.borderColor='var(--border)'">DL1</button>
+            <button onclick="quickTrackFlight('UA1')" style="background:var(--bg-sand);border:1px solid var(--border);padding:.4rem .9rem;border-radius:50px;cursor:pointer;font-size:.82rem;font-weight:600;font-family:var(--font-body);transition:all .2s" onmouseover="this.style.borderColor='var(--honey-bronze)'" onmouseout="this.style.borderColor='var(--border)'">UA1</button>
+            <button onclick="quickTrackFlight('SW1')" style="background:var(--bg-sand);border:1px solid var(--border);padding:.4rem .9rem;border-radius:50px;cursor:pointer;font-size:.82rem;font-weight:600;font-family:var(--font-body);transition:all .2s" onmouseover="this.style.borderColor='var(--honey-bronze)'" onmouseout="this.style.borderColor='var(--border)'">SW1</button>
+          </div>
+        </div>
+
+        <div id="flightSearchResult"></div>
+      </div>
+
+      <!-- AIRPORTS TAB -->
+      <div id="trackerAirportsTab" class="tracker-tab-content" style="display:none;padding:1.5rem">
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:.75rem" id="airportGrid"></div>
+      </div>
     </div>
   </div>
 </div>
 
 <!-- ══════════════════════════════════════════
-     TRAVEL QUIZ MODAL  [NEW FEATURE 7]
+     HOTEL SEARCH MODAL
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="hotelModal">
+    <div class="modal-box medium">
+        <div class="modal-head">
+            <div style="display:flex;align-items:center;
+                gap:1rem">
+                <div style="font-size:2.5rem;
+                    background:rgba(255,255,255,.15);
+                    width:52px;height:52px;
+                    border-radius:50%;
+                    display:flex;align-items:center;
+                    justify-content:center">
+                    🏨
+                </div>
+                <div>
+                    <h2 style="color:#fff;margin-bottom:.2rem">
+                        Find Hotels
+                    </h2>
+                    <p style="color:rgba(255,255,255,.7);
+                        font-size:.82rem;margin:0">
+                        Real hotels · Hotels.com via RapidAPI
+                    </p>
+                </div>
+            </div>
+            <button class="modal-close"
+                onclick="closeModal('hotelModal')">✕
+            </button>
+        </div>
+        <div class="modal-body-scroll">
+
+            <!-- Quick city chips -->
+            <div style="padding:1rem 0 .5rem">
+                <p style="font-size:.78rem;font-weight:700;
+                    text-transform:uppercase;
+                    letter-spacing:.08em;
+                    color:var(--text-muted);
+                    margin-bottom:.6rem">
+                    Popular destinations
+                </p>
+                <div style="display:flex;
+                    flex-wrap:wrap;gap:.5rem;
+                    margin-bottom:1.25rem">
+                    <button onclick="setHotelCity('New York')"
+                        style="background:var(--bg-sand);
+                            border:1px solid var(--border);
+                            padding:.4rem .9rem;
+                            border-radius:50px;
+                            cursor:pointer;
+                            font-size:.8rem;
+                            font-weight:600;
+                            color:var(--text-primary);
+                            transition:all .2s ease">
+                        🗽 New York
+                    </button>
+                    <button onclick="setHotelCity('Las Vegas')"
+                        style="background:var(--bg-sand);
+                            border:1px solid var(--border);
+                            padding:.4rem .9rem;
+                            border-radius:50px;
+                            cursor:pointer;
+                            font-size:.8rem;
+                            font-weight:600;
+                            color:var(--text-primary);
+                            transition:all .2s ease">
+                        🎰 Las Vegas
+                    </button>
+                    <button onclick="setHotelCity('Miami')"
+                        style="background:var(--bg-sand);
+                            border:1px solid var(--border);
+                            padding:.4rem .9rem;
+                            border-radius:50px;
+                            cursor:pointer;
+                            font-size:.8rem;
+                            font-weight:600;
+                            color:var(--text-primary);
+                            transition:all .2s ease">
+                        🌴 Miami
+                    </button>
+                    <button onclick="setHotelCity('San Francisco')"
+                        style="background:var(--bg-sand);
+                            border:1px solid var(--border);
+                            padding:.4rem .9rem;
+                            border-radius:50px;
+                            cursor:pointer;
+                            font-size:.8rem;
+                            font-weight:600;
+                            color:var(--text-primary);
+                            transition:all .2s ease">
+                        🌁 San Francisco
+                    </button>
+                    <button onclick="setHotelCity('Hawaii')"
+                        style="background:var(--bg-sand);
+                            border:1px solid var(--border);
+                            padding:.4rem .9rem;
+                            border-radius:50px;
+                            cursor:pointer;
+                            font-size:.8rem;
+                            font-weight:600;
+                            color:var(--text-primary);
+                            transition:all .2s ease">
+                        🌺 Hawaii
+                    </button>
+                    <button onclick="setHotelCity('Chicago')"
+                        style="background:var(--bg-sand);
+                            border:1px solid var(--border);
+                            padding:.4rem .9rem;
+                            border-radius:50px;
+                            cursor:pointer;
+                            font-size:.8rem;
+                            font-weight:600;
+                            color:var(--text-primary);
+                            transition:all .2s ease">
+                        🏙️ Chicago
+                    </button>
+                </div>
+            </div>
+
+            <div class="hotel-form">
+                <div class="form-group">
+                    <label>Destination</label>
+                    <input type="text" 
+                        id="hotelCity"
+                        placeholder="City or hotel name"
+                        value="New York">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Check-in</label>
+                        <input type="date" 
+                            id="hotelCheckin">
+                    </div>
+                    <div class="form-group">
+                        <label>Check-out</label>
+                        <input type="date" 
+                            id="hotelCheckout">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Guests</label>
+                        <select id="hotelGuests">
+                            <option>1 Guest</option>
+                            <option>2 Guests</option>
+                            <option>3 Guests</option>
+                            <option>4+ Guests</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Star Rating</label>
+                        <select id="hotelStars">
+                            <option value="any">
+                                Any Rating
+                            </option>
+                            <option value="3">3+ Stars</option>
+                            <option value="4">4+ Stars</option>
+                            <option value="5">5 Stars</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn btn-primary full-w"
+                    onclick="searchHotels()">
+                    🔍 Search Hotels
+                </button>
+            </div>
+
+            <div id="hotelResults"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     TRAVEL QUIZ MODAL
 ══════════════════════════════════════════ -->
 <div class="modal-overlay" id="quizModal">
   <div class="modal-box medium">
     <div class="modal-head">
-      <h2>🧭 Find Your Destination</h2>
+      <h2>★ Find Your Destination</h2>
       <button class="modal-close" onclick="closeModal('quizModal')">✕</button>
     </div>
     <div class="modal-body-scroll">
@@ -348,12 +607,12 @@
 </div>
 
 <!-- ══════════════════════════════════════════
-     VISA INFO MODAL  [NEW FEATURE 8]
+     VISA INFO MODAL
 ══════════════════════════════════════════ -->
 <div class="modal-overlay" id="visaModal">
   <div class="modal-box medium">
     <div class="modal-head">
-      <h2>🛂 Visa Requirements</h2>
+      <h2>✓ Visa Requirements</h2>
       <button class="modal-close" onclick="closeModal('visaModal')">✕</button>
     </div>
     <div class="modal-body-scroll">
@@ -393,7 +652,7 @@
 </div>
 
 <!-- ══════════════════════════════════════════
-     TRIP COUNTDOWN MODAL  [NEW FEATURE 9]
+     TRIP COUNTDOWN MODAL
 ══════════════════════════════════════════ -->
 <div class="modal-overlay" id="countdownModal">
   <div class="modal-box small">
@@ -419,77 +678,122 @@
 </div>
 
 <!-- ══════════════════════════════════════════
-     PHRASE BOOK MODAL  [NEW FEATURE 10]
+     LANGUAGE TRANSLATOR MODAL
 ══════════════════════════════════════════ -->
 <div class="modal-overlay" id="phraseModal">
-  <div class="modal-box medium">
-    <div class="modal-head">
-      <h2>🗣️ Travel Phrase Book</h2>
+  <div class="modal-box large">
+    <div class="translator-modal-head">
+      <div class="translator-header-content">
+        <div class="translator-header-icon">🌐</div>
+        <div>
+          <h2>AI Language Translator</h2>
+          <p class="translator-header-sub">Powered by Groq AI · Instant Translation</p>
+        </div>
+      </div>
       <button class="modal-close" onclick="closeModal('phraseModal')">✕</button>
     </div>
-    <div class="modal-body-scroll">
-      <div class="phrase-controls">
-        <select id="phraseLanguage" onchange="loadPhrases()">
-          <option value="es">🇪🇸 Spanish</option>
-          <option value="fr">🇫🇷 French</option>
-          <option value="jp">🇯🇵 Japanese</option>
-          <option value="de">🇩🇪 German</option>
-          <option value="it">🇮🇹 Italian</option>
-          <option value="pt">🇧🇷 Portuguese</option>
-          <option value="zh">🇨🇳 Mandarin</option>
-          <option value="ar">🇦🇪 Arabic</option>
-        </select>
-        <select id="phraseCategory" onchange="loadPhrases()">
-          <option value="essentials">Essential Phrases</option>
-          <option value="food">Food & Dining</option>
-          <option value="transport">Transport</option>
-          <option value="hotel">Hotel</option>
-          <option value="emergency">Emergency</option>
-        </select>
+    <div class="modal-body-scroll translator-modal-body">
+      <!-- Input Section -->
+      <div class="translator-input-section">
+        <label class="translator-label">📝 Text to Translate</label>
+        <textarea id="translateSentence" class="translator-textarea" placeholder="Type any sentence or phrase here..."></textarea>
+        <div class="translator-footer">
+          <span id="charCount" class="translator-charcount">0 characters</span>
+          <div class="translator-quick-buttons">
+            <button class="translator-quick-btn" onclick="setQuickText('Hello, how are you?')">Hi there</button>
+            <button class="translator-quick-btn" onclick="setQuickText('Where is the nearest restaurant?')">Restaurant</button>
+            <button class="translator-quick-btn" onclick="setQuickText('Thank you very much')">Thanks</button>
+          </div>
+        </div>
       </div>
-      <div id="phraseOutput"></div>
+
+      <!-- Languages Section -->
+      <div class="translator-lang-section">
+        <div class="translator-lang-header">
+          <label class="translator-label">🌍 Select Languages</label>
+          <button class="translator-toggle-btn" onclick="toggleAllLanguages()">Show All (30+)</button>
+        </div>
+        
+        <!-- Popular Languages Grid -->
+        <div class="translator-popular-wrap">
+          <p class="translator-section-label">⭐ Popular</p>
+          <div class="translator-lang-grid">
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="Spanish"> <span class="translator-lang-flag">🇪🇸</span> <span class="translator-lang-name">Spanish</span></label>
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="French"> <span class="translator-lang-flag">🇫🇷</span> <span class="translator-lang-name">French</span></label>
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="German"> <span class="translator-lang-flag">🇩🇪</span> <span class="translator-lang-name">German</span></label>
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="Japanese"> <span class="translator-lang-flag">🇯🇵</span> <span class="translator-lang-name">Japanese</span></label>
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="Mandarin Chinese"> <span class="translator-lang-flag">🇨🇳</span> <span class="translator-lang-name">Mandarin</span></label>
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="Korean"> <span class="translator-lang-flag">🇰🇷</span> <span class="translator-lang-name">Korean</span></label>
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="Portuguese"> <span class="translator-lang-flag">🇧🇷</span> <span class="translator-lang-name">Portuguese</span></label>
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="Russian"> <span class="translator-lang-flag">🇷🇺</span> <span class="translator-lang-name">Russian</span></label>
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="Italian"> <span class="translator-lang-flag">🇮🇹</span> <span class="translator-lang-name">Italian</span></label>
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="Arabic"> <span class="translator-lang-flag">🇦🇪</span> <span class="translator-lang-name">Arabic</span></label>
+          </div>
+        </div>
+
+        <!-- All Languages (Hidden by default) -->
+        <div id="allLanguagesSection" class="translator-all-wrap" style="display:none">
+          <p class="translator-section-label">📚 All Languages</p>
+          <div class="translator-lang-grid translator-all-grid">
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="Hindi"> <span class="translator-lang-flag">🇮🇳</span> <span class="translator-lang-name">Hindi</span></label>
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="Thai"> <span class="translator-lang-flag">🇹🇭</span> <span class="translator-lang-name">Thai</span></label>
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="Vietnamese"> <span class="translator-lang-flag">🇻🇳</span> <span class="translator-lang-name">Vietnamese</span></label>
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="Turkish"> <span class="translator-lang-flag">🇹🇷</span> <span class="translator-lang-name">Turkish</span></label>
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="Dutch"> <span class="translator-lang-flag">🇳🇱</span> <span class="translator-lang-name">Dutch</span></label>
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="Swedish"> <span class="translator-lang-flag">🇸🇪</span> <span class="translator-lang-name">Swedish</span></label>
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="Polish"> <span class="translator-lang-flag">🇵🇱</span> <span class="translator-lang-name">Polish</span></label>
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="Greek"> <span class="translator-lang-flag">🇬🇷</span> <span class="translator-lang-name">Greek</span></label>
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="Hebrew"> <span class="translator-lang-flag">🇮🇱</span> <span class="translator-lang-name">Hebrew</span></label>
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="Indonesian"> <span class="translator-lang-flag">🇮🇩</span> <span class="translator-lang-name">Indonesian</span></label>
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="Tagalog"> <span class="translator-lang-flag">🇵🇭</span> <span class="translator-lang-name">Tagalog</span></label>
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="Swahili"> <span class="translator-lang-flag">🇰🇪</span> <span class="translator-lang-name">Swahili</span></label>
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="Afrikaans"> <span class="translator-lang-flag">🇿🇦</span> <span class="translator-lang-name">Afrikaans</span></label>
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="Finnish"> <span class="translator-lang-flag">🇫🇮</span> <span class="translator-lang-name">Finnish</span></label>
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="Urdu"> <span class="translator-lang-flag">🇵🇰</span> <span class="translator-lang-name">Urdu</span></label>
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="Czech"> <span class="translator-lang-flag">🇨🇿</span> <span class="translator-lang-name">Czech</span></label>
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="Hungarian"> <span class="translator-lang-flag">🇭🇺</span> <span class="translator-lang-name">Hungarian</span></label>
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="Danish"> <span class="translator-lang-flag">🇩🇰</span> <span class="translator-lang-name">Danish</span></label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Translate Button -->
+      <button class="translator-translate-btn" onclick="translateSentence()">
+        <span>✨ Translate Now</span>
+      </button>
+      
+      <!-- Translation Results -->
+      <div id="translationOutput" class="translator-output"></div>
     </div>
   </div>
 </div>
 
+
+
 <!-- ══════════════════════════════════════════
-     PHOTO DIARY MODAL  [NEW FEATURE 11]
+     LIVE FLIGHT TRACKER MODAL
 ══════════════════════════════════════════ -->
-<div class="modal-overlay" id="diaryModal">
+<div class="modal-overlay" id="flightTrackerModal">
   <div class="modal-box medium">
     <div class="modal-head">
-      <h2>📖 Travel Diary</h2>
-      <button class="modal-close" onclick="closeModal('diaryModal')">✕</button>
+      <h2>🛩️ Live Flight Tracker</h2>
+      <button class="modal-close" onclick="closeModal('flightTrackerModal')">✕</button>
     </div>
     <div class="modal-body-scroll">
-      <div class="diary-add">
-        <div class="form-row">
-          <div class="form-group">
-            <label>Destination</label>
-            <input type="text" id="diaryCity" placeholder="Where are you?">
-          </div>
-          <div class="form-group">
-            <label>Date</label>
-            <input type="date" id="diaryDate">
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Mood</label>
-          <div class="mood-picker" id="moodPicker">
-            <button class="mood-btn active" data-mood="😊">😊</button>
-            <button class="mood-btn" data-mood="🤩">🤩</button>
-            <button class="mood-btn" data-mood="😌">😌</button>
-            <button class="mood-btn" data-mood="😴">😴</button>
-            <button class="mood-btn" data-mood="🥵">🥵</button>
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Journal Entry</label>
-          <textarea id="diaryText" rows="4" placeholder="What happened today?"></textarea>
-        </div>
-        <button class="btn btn-primary full-w" onclick="saveDiaryEntry()">💾 Save Entry</button>
+      <div class="flight-tracker-search" style="margin-bottom:1.5rem">
+        <input type="text" id="flightNumberInput" placeholder="Enter flight number e.g. AA100, DL204" style="width:100%;margin-bottom:1rem;padding:.75rem;border:1px solid var(--border);border-radius:8px;font-size:.95rem">
+        <button class="btn btn-primary full-w" onclick="trackFlight()">🔍 Track Flight</button>
       </div>
-      <div id="diaryEntries" class="diary-entries"></div>
+      <div class="tracker-quick">
+        <p style="font-size:.82rem;color:var(--text-muted);margin:.75rem 0 .5rem">Popular routes:</p>
+        <div class="city-chips" style="display:flex;gap:.5rem;flex-wrap:wrap">
+          <button onclick="quickTrack('AA100')" style="padding:.5rem .75rem;background:var(--bg-sand);border:1px solid var(--border);border-radius:20px;cursor:pointer;font-size:.85rem">AA100</button>
+          <button onclick="quickTrack('DL1')" style="padding:.5rem .75rem;background:var(--bg-sand);border:1px solid var(--border);border-radius:20px;cursor:pointer;font-size:.85rem">DL1</button>
+          <button onclick="quickTrack('UA1')" style="padding:.5rem .75rem;background:var(--bg-sand);border:1px solid var(--border);border-radius:20px;cursor:pointer;font-size:.85rem">UA1</button>
+          <button onclick="quickTrack('BA112')" style="padding:.5rem .75rem;background:var(--bg-sand);border:1px solid var(--border);border-radius:20px;cursor:pointer;font-size:.85rem">BA112</button>
+        </div>
+      </div>
+      <div id="flightTrackerOutput"></div>
     </div>
   </div>
 </div>
@@ -498,7 +802,7 @@
      NAVBAR
 ══════════════════════════════════════════ -->
 <nav id="navbar">
-  <div class="logo">WANDERLUST</div>
+  <div class="logo">VISIT USA</div>
   <ul class="nav-links">
     <li>
       <a class="dropdown-toggle">Destinations ▾</a>
@@ -508,28 +812,34 @@
             <div class="dropdown-section">
               <h3>United States</h3>
               <div class="dropdown-items">
+                <!-- California: Golden Gate / Pacific Coast -->
                 <a class="dropdown-item" onclick="showMap('California')">
-                  <img src="https://images.unsplash.com/photo-1506146332389-18140dc7b2fb?w=400&h=260&fit=crop" alt="California" class="dropdown-item-image">
+                  <img src="https://images.unsplash.com/photo-1449034446853-66c86144b0ad?w=400&h=260&fit=crop" alt="California" class="dropdown-item-image" onerror="this.src='https://placehold.co/400x260/44355b/ffffff?text=California'">
                   <div class="dropdown-item-overlay">California</div>
                 </a>
+                <!-- Texas: Houston skyline or Texas landscape -->
                 <a class="dropdown-item" onclick="showMap('Texas')">
-                  <img src="https://images.unsplash.com/photo-1531218150217-54595bc2b934?w=400&h=260&fit=crop" alt="Texas" class="dropdown-item-image">
+                  <img src="https://images.unsplash.com/photo-1531218150217-54595bc2b934?w=400&h=260&fit=crop" alt="Texas" class="dropdown-item-image" onerror="this.src='https://placehold.co/400x260/44355b/ffffff?text=Texas'">
                   <div class="dropdown-item-overlay">Texas</div>
                 </a>
+                <!-- Florida: Miami beach / palm trees -->
                 <a class="dropdown-item" onclick="showMap('Florida')">
-                  <img src="https://images.unsplash.com/photo-1505142468610-359e7d316be0?w=400&h=260&fit=crop" alt="Florida" class="dropdown-item-image">
+                  <img src="https://images.unsplash.com/photo-1589083130544-0d6a2926e519?w=400&h=260&fit=crop" alt="Florida" class="dropdown-item-image" onerror="this.src='https://placehold.co/400x260/44355b/ffffff?text=Florida'">
                   <div class="dropdown-item-overlay">Florida</div>
                 </a>
+                <!-- New York: Manhattan skyline / Times Square -->
                 <a class="dropdown-item" onclick="showMap('New York')">
-                  <img src="https://images.unsplash.com/photo-1546436836-07a91091f160?w=400&h=260&fit=crop" alt="New York" class="dropdown-item-image">
+                  <img src="https://images.unsplash.com/photo-1538970272646-f61fabb3a8a2?w=400&h=260&fit=crop" alt="New York" class="dropdown-item-image" onerror="this.src='https://placehold.co/400x260/44355b/ffffff?text=New+York'">
                   <div class="dropdown-item-overlay">New York</div>
                 </a>
+                <!-- Hawaii: tropical beach / volcanic landscape -->
                 <a class="dropdown-item" onclick="showMap('Hawaii')">
-                  <img src="https://images.unsplash.com/photo-1542259009477-d625272157b7?w=400&h=260&fit=crop" alt="Hawaii" class="dropdown-item-image">
+                  <img src="https://images.unsplash.com/photo-1507876466758-0b7a79b0b76d?w=400&h=260&fit=crop" alt="Hawaii" class="dropdown-item-image" onerror="this.src='https://placehold.co/400x260/44355b/ffffff?text=Hawaii'">
                   <div class="dropdown-item-overlay">Hawaii</div>
                 </a>
+                <!-- Nevada: Las Vegas strip at night -->
                 <a class="dropdown-item" onclick="showMap('Nevada')">
-                  <img src="https://images.unsplash.com/photo-1605833556294-ea5c7a74f97a?w=400&h=260&fit=crop" alt="Nevada" class="dropdown-item-image">
+                  <img src="https://images.unsplash.com/photo-1605833556294-ea5c7a74f97a?w=400&h=260&fit=crop" alt="Nevada" class="dropdown-item-image" onerror="this.src='https://placehold.co/400x260/44355b/ffffff?text=Nevada'">
                   <div class="dropdown-item-overlay">Nevada</div>
                 </a>
               </div>
@@ -537,21 +847,23 @@
             <div class="dropdown-section">
               <h3>Territories & DC</h3>
               <div class="dropdown-items territories">
+                <!-- Puerto Rico: Old San Juan colorful buildings or Caribbean beach -->
                 <a class="dropdown-item" onclick="showMap('Puerto Rico')">
-                  <img src="https://images.unsplash.com/photo-1580655653885-65763b2597d0?w=400&h=260&fit=crop" alt="Puerto Rico" class="dropdown-item-image">
+                  <img src="https://images.unsplash.com/photo-1580655653885-65763b2597d0?w=400&h=260&fit=crop" alt="Puerto Rico" class="dropdown-item-image" onerror="this.src='https://placehold.co/400x260/44355b/ffffff?text=Puerto+Rico'">
                   <div class="dropdown-item-overlay">Puerto Rico</div>
                 </a>
+                <!-- Washington DC: Capitol / Lincoln Memorial -->
                 <a class="dropdown-item" onclick="showMap('Washington D.C.')">
-                  <img src="https://images.unsplash.com/photo-1617581629397-a72507c3de9e?w=400&h=260&fit=crop" alt="Washington D.C." class="dropdown-item-image">
+                  <img src="https://images.unsplash.com/photo-1501466044931-62695aada8e9?w=400&h=260&fit=crop" alt="Washington D.C." class="dropdown-item-image" onerror="this.src='https://placehold.co/400x260/44355b/ffffff?text=Washington+DC'">
                   <div class="dropdown-item-overlay">Washington D.C.</div>
                 </a>
               </div>
               <h3 style="margin-top:1.5rem">Quick Tools</h3>
               <div class="dropdown-tools">
-                <button onclick="openModal('weatherModal'); loadWeatherModal()">🌤️ Weather Check</button>
-                <button onclick="openModal('currencyModal'); convertCurrency()">💱 Currency</button>
-                <button onclick="openModal('visaModal')">🛂 Visa Info</button>
-                <button onclick="openModal('phraseModal'); loadPhrases()">🗣️ Phrases</button>
+                <button onclick="openModal('weatherModal'); loadWeatherModal()">Weather Check</button>
+                <button onclick="openModal('currencyModal'); loadLiveRates()">Currency</button>
+                <button onclick="openModal('visaModal')">Visa Info</button>
+                <button onclick="openModal('phraseModal')">Translator</button>
               </div>
             </div>
           </div>
@@ -587,7 +899,7 @@
 <section class="hero">
   <div class="hero-video-container">
     <video class="hero-video" autoplay muted loop playsinline
-      poster="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&h=1080&fit=crop">
+      poster="https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1920&h=1080&fit=crop">
       <source src="./video/hero.mp4" type="video/mp4">
     </video>
   </div>
@@ -598,18 +910,17 @@
     <p data-aos="fade-up" data-aos-delay="200">Handcrafted itineraries, real-time tools, and expert guidance for travelers who demand more than ordinary.</p>
     <div class="cta-buttons" data-aos="fade-up" data-aos-delay="300">
       <a href="#plan" class="btn btn-primary" onclick="event.preventDefault(); scrollTo('plan')">✦ Start Planning</a>
-      <button class="btn btn-glass" onclick="openModal('quizModal'); startQuiz()">🧭 Find My Destination</button>
+      <button class="btn btn-glass" onclick="openModal('quizModal'); startQuiz()">★ Find My Destination</button>
     </div>
   </div>
   <div class="hero-search" data-aos="fade-up" data-aos-delay="400">
     <div class="search-tabs">
       <button class="stab active" onclick="setSearchTab(this,'flights')">✈️ Flights</button>
       <button class="stab" onclick="setSearchTab(this,'hotels')">🏨 Hotels</button>
-      <button class="stab" onclick="setSearchTab(this,'experiences')">🎯 Experiences</button>
     </div>
-    <div class="search-bar-wrap">
-      <input type="text" class="hero-input" id="heroSearch" placeholder="Search destinations, cities, airports…">
-      <button class="search-btn" onclick="handleHeroSearch()">Search</button>
+    <div class="search-bar-wrap" style="display:flex;gap:1rem;margin-top:1.5rem;align-items:stretch">
+      <input type="text" class="hero-input" id="heroSearch" placeholder="Where to? Enter a destination, city, or airport…" style="flex:1;padding:0.95rem 1.25rem;font-size:1rem;border:2px solid rgba(255,255,255,0.25);border-radius:12px;background:rgba(255,255,255,0.95);color:#1a1a1a;transition:all 0.3s ease">
+      <button class="search-btn" onclick="handleHeroSearch()" style="padding:0.95rem 2rem;background:linear-gradient(135deg,#ff6b6b,#ee5a6f);color:#fff;border:none;border-radius:12px;font-weight:700;font-size:0.95rem;cursor:pointer;transition:all 0.3s ease;white-space:nowrap">🔍 Search</button>
     </div>
   </div>
   <div class="scroll-cue">Scroll to explore ↓</div>
@@ -626,8 +937,13 @@
       <p>Explore America's most sought-after locations, from coastal cities to national wonders.</p>
     </div>
     <div class="destinations-grid">
+
+      <!-- New York City: iconic Manhattan skyline with Empire State Building -->
       <div class="destination-card" data-aos="fade-up" onclick="openDestinationMap('New York City')">
-        <img src="https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=800&h=600&fit=crop" alt="New York City">
+        <img
+          src="https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=800&h=600&fit=crop"
+          alt="New York City skyline"
+          onerror="this.src='https://images.unsplash.com/photo-1534430480872-3498386e7856?w=800&h=600&fit=crop'">
         <div class="dest-overlay">
           <span class="dest-tag">Urban Paradise</span>
           <h3>New York City</h3>
@@ -640,8 +956,13 @@
           <button class="dest-btn" onclick="event.stopPropagation(); openDestinationMap('New York City')">Explore Map →</button>
         </div>
       </div>
+
+      <!-- San Francisco: Golden Gate Bridge -->
       <div class="destination-card" data-aos="fade-up" data-aos-delay="80" onclick="openDestinationMap('San Francisco')">
-        <img src="https://images.unsplash.com/photo-1501594907352-04cda38ebc29?w=800&h=600&fit=crop" alt="San Francisco">
+        <img
+          src="https://images.unsplash.com/photo-1449034446853-66c86144b0ad?w=800&h=600&fit=crop"
+          alt="San Francisco Golden Gate Bridge"
+          onerror="this.src='https://images.unsplash.com/photo-1501594907352-04cda38ebc29?w=800&h=600&fit=crop'">
         <div class="dest-overlay">
           <span class="dest-tag">Coastal Charm</span>
           <h3>San Francisco</h3>
@@ -654,8 +975,13 @@
           <button class="dest-btn" onclick="event.stopPropagation(); openDestinationMap('San Francisco')">Explore Map →</button>
         </div>
       </div>
+
+      <!-- Grand Canyon: aerial canyon view with Colorado River -->
       <div class="destination-card" data-aos="fade-up" data-aos-delay="160" onclick="openDestinationMap('Grand Canyon')">
-        <img src="https://images.unsplash.com/photo-1474044159687-1ee9f3a51722?w=800&h=600&fit=crop" alt="Grand Canyon">
+        <img
+          src="https://images.unsplash.com/photo-1474044159687-1ee9f3a51722?w=800&h=600&fit=crop"
+          alt="Grand Canyon aerial view"
+          onerror="this.src='https://images.unsplash.com/photo-1615551043360-33de8b5f410c?w=800&h=600&fit=crop'">
         <div class="dest-overlay">
           <span class="dest-tag">Adventure</span>
           <h3>Grand Canyon</h3>
@@ -668,8 +994,13 @@
           <button class="dest-btn" onclick="event.stopPropagation(); openDestinationMap('Grand Canyon')">Explore Map →</button>
         </div>
       </div>
+
+      <!-- Miami Beach: South Beach aerial with turquoise ocean -->
       <div class="destination-card" data-aos="fade-up" data-aos-delay="240" onclick="openDestinationMap('Miami')">
-        <img src="https://images.unsplash.com/photo-1533106418989-88406c7cc8ca?w=800&h=600&fit=crop" alt="Miami">
+        <img
+          src="https://images.unsplash.com/photo-1533106418989-88406c7cc8ca?w=800&h=600&fit=crop"
+          alt="Miami Beach South Beach"
+          onerror="this.src='https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop'">
         <div class="dest-overlay">
           <span class="dest-tag">Beach Life</span>
           <h3>Miami Beach</h3>
@@ -682,8 +1013,13 @@
           <button class="dest-btn" onclick="event.stopPropagation(); openDestinationMap('Miami')">Explore Map →</button>
         </div>
       </div>
+
+      <!-- Las Vegas: The Strip at night with neon lights -->
       <div class="destination-card" data-aos="fade-up" data-aos-delay="320" onclick="openDestinationMap('Las Vegas')">
-        <img src="https://images.unsplash.com/photo-1605833556294-ea5c7a74f97a?w=800&h=600&fit=crop" alt="Las Vegas">
+        <img
+          src="https://images.unsplash.com/photo-1605833556294-ea5c7a74f97a?w=800&h=600&fit=crop"
+          alt="Las Vegas Strip at night"
+          onerror="this.src='https://images.unsplash.com/photo-1581351721010-8cf859cb14a4?w=800&h=600&fit=crop'">
         <div class="dest-overlay">
           <span class="dest-tag">Nightlife</span>
           <h3>Las Vegas</h3>
@@ -696,8 +1032,13 @@
           <button class="dest-btn" onclick="event.stopPropagation(); openDestinationMap('Las Vegas')">Explore Map →</button>
         </div>
       </div>
+
+      <!-- Yellowstone: Grand Prismatic Spring / Old Faithful geyser -->
       <div class="destination-card" data-aos="fade-up" data-aos-delay="400" onclick="openDestinationMap('Yellowstone')">
-        <img src="https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?w=800&h=600&fit=crop" alt="Yellowstone">
+        <img
+          src="https://images.unsplash.com/photo-1590492359745-f7e5dc0ef4b6?w=800&h=600&fit=crop"
+          alt="Yellowstone Grand Prismatic Spring"
+          onerror="this.src='https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?w=800&h=600&fit=crop'">
         <div class="dest-overlay">
           <span class="dest-tag">Nature</span>
           <h3>Yellowstone</h3>
@@ -710,38 +1051,13 @@
           <button class="dest-btn" onclick="event.stopPropagation(); openDestinationMap('Yellowstone')">Explore Map →</button>
         </div>
       </div>
+
     </div>
   </div>
 </section>
 
 <!-- ══════════════════════════════════════════
-     STATS
-══════════════════════════════════════════ -->
-<section class="stats-counter">
-  <div class="container">
-    <div class="stats-grid">
-      <div class="stat-item" data-aos="fade-up">
-        <span class="stat-number" data-target="50000">0</span>
-        <span class="stat-label">Happy Travelers</span>
-      </div>
-      <div class="stat-item" data-aos="fade-up" data-aos-delay="100">
-        <span class="stat-number" data-target="200">0</span>
-        <span class="stat-label">Destinations</span>
-      </div>
-      <div class="stat-item" data-aos="fade-up" data-aos-delay="200">
-        <span class="stat-number" data-target="15">0</span>
-        <span class="stat-label">Years Experience</span>
-      </div>
-      <div class="stat-item last-stat" data-aos="fade-up" data-aos-delay="300">
-        <span class="stat-number" data-target="98">0</span>
-        <span class="stat-label">Satisfaction Rate</span>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ══════════════════════════════════════════
-     TRAVEL TOOLS  [NEW SECTION]
+     TRAVEL TOOLS
 ══════════════════════════════════════════ -->
 <section id="tools" class="travel-tools">
   <div class="container">
@@ -757,7 +1073,7 @@
         <p>Real-time weather for any destination worldwide</p>
         <span class="tool-cta">Check Now →</span>
       </div>
-      <div class="tool-card" data-aos="fade-up" data-aos-delay="80" onclick="openModal('currencyModal'); convertCurrency()">
+      <div class="tool-card" data-aos="fade-up" data-aos-delay="80" onclick="openModal('currencyModal'); loadLiveRates()">
         <div class="tool-icon">💱</div>
         <h3>Currency Converter</h3>
         <p>Live exchange rates for 150+ currencies</p>
@@ -770,7 +1086,7 @@
         <span class="tool-cta">Pack Smart →</span>
       </div>
       <div class="tool-card" data-aos="fade-up" data-aos-delay="240" onclick="openModal('visaModal')">
-        <div class="tool-icon">🛂</div>
+        <div class="tool-icon">✓</div>
         <h3>Visa Requirements</h3>
         <p>Instant visa info for 190+ country combinations</p>
         <span class="tool-cta">Check Visa →</span>
@@ -781,17 +1097,23 @@
         <p>Find and compare flights across major airlines</p>
         <span class="tool-cta">Search Flights →</span>
       </div>
+      <div class="tool-card" data-aos="fade-up" data-aos-delay="360" onclick="openModal('flightTrackerModal')">
+        <div class="tool-icon">🛩️</div>
+        <h3>Live Flight Tracker</h3>
+        <p>Track live aircraft over the USA in real time with altitude, speed and heading data</p>
+        <span class="tool-cta">Track Live →</span>
+      </div>
       <div class="tool-card" data-aos="fade-up" data-aos-delay="400" onclick="openModal('hotelModal'); setHotelDates()">
         <div class="tool-icon">🏨</div>
         <h3>Hotel Finder</h3>
         <p>Discover hotels that match your style and budget</p>
         <span class="tool-cta">Find Hotels →</span>
       </div>
-      <div class="tool-card" data-aos="fade-up" data-aos-delay="480" onclick="openModal('phraseModal'); loadPhrases()">
-        <div class="tool-icon">🗣️</div>
-        <h3>Phrase Book</h3>
-        <p>Essential phrases in 8 languages for travelers</p>
-        <span class="tool-cta">Learn Phrases →</span>
+      <div class="tool-card" data-aos="fade-up" data-aos-delay="480" onclick="openModal('phraseModal')">
+        <div class="tool-icon">🌐</div>
+        <h3>Language Translator</h3>
+        <p>Translate any text to 30+ languages instantly with pronunciation & tips</p>
+        <span class="tool-cta">Translate →</span>
       </div>
       <div class="tool-card" data-aos="fade-up" data-aos-delay="560" onclick="openModal('countdownModal'); renderCountdowns()">
         <div class="tool-icon">⏳</div>
@@ -805,14 +1127,9 @@
         <p>Track spending and stay on budget while traveling</p>
         <span class="tool-cta">Track Budget →</span>
       </div>
-      <div class="tool-card" data-aos="fade-up" data-aos-delay="720" onclick="openModal('diaryModal'); loadDiaryEntries()">
-        <div class="tool-icon">📖</div>
-        <h3>Travel Diary</h3>
-        <p>Log memories, moods, and moments from your trips</p>
-        <span class="tool-cta">Start Writing →</span>
-      </div>
+
       <div class="tool-card" data-aos="fade-up" data-aos-delay="800" onclick="openModal('quizModal'); startQuiz()">
-        <div class="tool-icon">🧭</div>
+        <div class="tool-icon">★</div>
         <h3>Destination Quiz</h3>
         <p>Answer 5 questions, get your perfect destination match</p>
         <span class="tool-cta">Take Quiz →</span>
@@ -839,16 +1156,21 @@
     </div>
     <div class="exp-filter" data-aos="fade-up">
       <button class="filter-btn active" onclick="filterExp('all', this)">All</button>
-      <button class="filter-btn" onclick="filterExp('adventure', this)">🧗 Adventure</button>
+      <button class="filter-btn" onclick="filterExp('adventure', this)">▲ Adventure</button>
       <button class="filter-btn" onclick="filterExp('culture', this)">🏛️ Culture</button>
       <button class="filter-btn" onclick="filterExp('food', this)">🍽️ Food & Wine</button>
-      <button class="filter-btn" onclick="filterExp('relaxation', this)">🧘 Relaxation</button>
-      <button class="filter-btn" onclick="filterExp('wildlife', this)">🦁 Wildlife</button>
+      <button class="filter-btn" onclick="filterExp('relaxation', this)">◉ Relaxation</button>
+      <button class="filter-btn" onclick="filterExp('wildlife', this)">🌿 Wildlife</button>
     </div>
     <div class="experiences-grid">
+
+      <!-- Mountain Hiking: Rocky Mountains trail with hikers -->
       <div class="exp-card" data-category="adventure" data-aos="fade-up">
         <div class="exp-img">
-          <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=400&fit=crop" alt="Hiking">
+          <img
+            src="https://images.unsplash.com/photo-1551632811-561732d1e306?w=600&h=400&fit=crop"
+            alt="Mountain Hiking Adventures"
+            onerror="this.src='https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=400&fit=crop'">
           <span class="exp-badge">🔥 Popular</span>
         </div>
         <div class="exp-body">
@@ -862,9 +1184,14 @@
           <button class="btn btn-outline full-w" onclick="bookExperience('Mountain Hiking Adventures','$299')">Book Now</button>
         </div>
       </div>
+
+      <!-- Historic City Tours: Washington DC / historic landmark -->
       <div class="exp-card" data-category="culture" data-aos="fade-up" data-aos-delay="80">
         <div class="exp-img">
-          <img src="https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=600&h=400&fit=crop" alt="Museum">
+          <img
+            src="https://images.unsplash.com/photo-1501466044931-62695aada8e9?w=600&h=400&fit=crop"
+            alt="Historic City Tours"
+            onerror="this.src='https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=600&h=400&fit=crop'">
           <span class="exp-badge new">✨ New</span>
         </div>
         <div class="exp-body">
@@ -878,9 +1205,14 @@
           <button class="btn btn-outline full-w" onclick="bookExperience('Historic City Tours','$89')">Book Now</button>
         </div>
       </div>
+
+      <!-- Culinary Adventures: Restaurant / fine dining table setting -->
       <div class="exp-card" data-category="food" data-aos="fade-up" data-aos-delay="160">
         <div class="exp-img">
-          <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&h=400&fit=crop" alt="Food">
+          <img
+            src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&h=400&fit=crop"
+            alt="Culinary Adventures"
+            onerror="this.src='https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&h=400&fit=crop'">
         </div>
         <div class="exp-body">
           <h3>Culinary Adventures</h3>
@@ -893,9 +1225,14 @@
           <button class="btn btn-outline full-w" onclick="bookExperience('Culinary Adventures','$149')">Book Now</button>
         </div>
       </div>
+
+      <!-- Whitewater Rafting: Colorado River / river rafting action shot -->
       <div class="exp-card" data-category="adventure" data-aos="fade-up" data-aos-delay="240">
         <div class="exp-img">
-          <img src="https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=600&h=400&fit=crop" alt="Rafting">
+          <img
+            src="https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=600&h=400&fit=crop"
+            alt="Whitewater Rafting"
+            onerror="this.src='https://images.unsplash.com/photo-1530866495561-507c9faab2ed?w=600&h=400&fit=crop'">
           <span class="exp-badge trend">📈 Trending</span>
         </div>
         <div class="exp-body">
@@ -909,9 +1246,14 @@
           <button class="btn btn-outline full-w" onclick="bookExperience('Whitewater Rafting','$179')">Book Now</button>
         </div>
       </div>
+
+      <!-- Luxury Spa Retreats: spa pool / wellness center -->
       <div class="exp-card" data-category="relaxation" data-aos="fade-up" data-aos-delay="320">
         <div class="exp-img">
-          <img src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=600&h=400&fit=crop" alt="Spa">
+          <img
+            src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=600&h=400&fit=crop"
+            alt="Luxury Spa Retreats"
+            onerror="this.src='https://images.unsplash.com/photo-1600334129128-685c5582fd35?w=600&h=400&fit=crop'">
         </div>
         <div class="exp-body">
           <h3>Luxury Spa Retreats</h3>
@@ -924,9 +1266,14 @@
           <button class="btn btn-outline full-w" onclick="bookExperience('Luxury Spa Retreats','$499')">Book Now</button>
         </div>
       </div>
+
+      <!-- Wildlife Safari: Yellowstone bison or wolf / national park wildlife -->
       <div class="exp-card" data-category="wildlife" data-aos="fade-up" data-aos-delay="400">
         <div class="exp-img">
-          <img src="https://images.unsplash.com/photo-1564760055775-d63b17a55c44?w=600&h=400&fit=crop" alt="Wildlife">
+          <img
+            src="https://images.unsplash.com/photo-1474511320723-9a56873867b5?w=600&h=400&fit=crop"
+            alt="Wildlife Safari Tours"
+            onerror="this.src='https://images.unsplash.com/photo-1564760055775-d63b17a55c44?w=600&h=400&fit=crop'">
           <span class="exp-badge">🔥 Popular</span>
         </div>
         <div class="exp-body">
@@ -940,6 +1287,7 @@
           <button class="btn btn-outline full-w" onclick="bookExperience('Wildlife Safari Tours','$399')">Book Now</button>
         </div>
       </div>
+
     </div>
   </div>
 </section>
@@ -980,50 +1328,6 @@
         <p>Confirm your booking and get ready with detailed itineraries and 24/7 support.</p>
       </div>
     </div>
-    <div class="trip-form" data-aos="fade-up">
-      <h3>📋 Request Your Itinerary</h3>
-      <form id="tripPlanningForm" onsubmit="submitTripForm(event)">
-        <div class="form-row">
-          <div class="form-group">
-            <label>Destination</label>
-            <select id="destination" required>
-              <option value="">Select a destination</option>
-              <option value="california">California</option>
-              <option value="new-york">New York</option>
-              <option value="florida">Florida</option>
-              <option value="texas">Texas</option>
-              <option value="hawaii">Hawaii</option>
-              <option value="colorado">Colorado</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Number of Travelers</label>
-            <input type="number" id="travelers" min="1" max="20" value="2" required>
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Check-in Date</label>
-            <input type="date" id="checkin" required>
-          </div>
-          <div class="form-group">
-            <label>Check-out Date</label>
-            <input type="date" id="checkout" required>
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Interests</label>
-          <div class="checkbox-group">
-            <label><input type="checkbox" name="interests" value="adventure"> 🧗 Adventure</label>
-            <label><input type="checkbox" name="interests" value="culture"> 🏛️ Culture</label>
-            <label><input type="checkbox" name="interests" value="food"> 🍽️ Food & Wine</label>
-            <label><input type="checkbox" name="interests" value="relaxation"> 🧘 Relaxation</label>
-            <label><input type="checkbox" name="interests" value="nature"> 🌿 Nature</label>
-          </div>
-        </div>
-        <button type="submit" class="btn btn-primary full-w">✦ Get My Personalised Itinerary</button>
-      </form>
-    </div>
   </div>
 </section>
 
@@ -1039,6 +1343,7 @@
     </div>
     <div class="itinerary-form-wrapper">
       <form id="itineraryForm" class="itinerary-form" onsubmit="handleItinerarySubmit(event)" data-aos="fade-up">
+        <div class="form-section-title">Trip Details</div>
         <div class="form-row">
           <div class="form-group">
             <label>Destination City</label>
@@ -1062,8 +1367,8 @@
               <option value="">Select style</option>
               <option value="luxury">💎 Luxury</option>
               <option value="budget">💸 Budget-Friendly</option>
-              <option value="adventure">🧗 Adventure</option>
-              <option value="relaxation">🧘 Relaxation</option>
+              <option value="adventure">▲ Adventure</option>
+              <option value="relaxation">◉ Relaxation</option>
               <option value="cultural">🏛️ Cultural</option>
             </select>
           </div>
@@ -1072,7 +1377,7 @@
             <input type="number" id="daily-budget" placeholder="e.g. 200" min="50" required>
           </div>
         </div>
-        <button type="submit" class="btn btn-primary full-w">
+        <button type="submit" class="btn btn-primary btn-full">
           <span class="btn-text">✨ Generate My Itinerary</span>
           <span class="btn-loader" style="display:none">⏳ Generating…</span>
         </button>
@@ -1082,15 +1387,28 @@
         <div class="itinerary-header">
           <h3 id="itinerary-title"></h3>
           <div class="itinerary-actions">
-            <button class="action-btn" onclick="saveTrip()">💾 Save</button>
-            <button class="action-btn" onclick="exportPDF()">📄 PDF</button>
-            <button class="action-btn" onclick="shareItinerary()">🔗 Share</button>
+            <button class="action-btn save-btn" onclick="saveTrip()">💾 Save</button>
+            <button class="action-btn pdf-btn" onclick="exportPDF()">📄 PDF</button>
+            <button class="action-btn share-btn" onclick="shareItinerary()">🔗 Share</button>
           </div>
         </div>
-        <div id="itinerary-content" class="itinerary-content"></div>
+        
+        <div class="itinerary-content-wrapper">
+          <div id="itinerary-content" class="itinerary-content"></div>
+        </div>
+
         <div class="itinerary-pricing">
           <h4>💰 Estimated Total Cost</h4>
           <div id="total-cost" class="total-cost"></div>
+        </div>
+
+        <div class="itinerary-footer">
+          <p>📌 Note: Prices are estimates based on your selected budget and travel style. Actual prices may vary by season and availability.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
         </div>
       </div>
     </div>
@@ -1122,9 +1440,14 @@
       <p>Deep-dive guides written by experienced travellers.</p>
     </div>
     <div class="guides-grid">
+
+      <!-- National Parks: Grand Teton / Yosemite / iconic park landscape -->
       <div class="guide-card featured" data-aos="fade-up" onclick="openGuide('National Parks')">
         <div class="guide-img-wrap">
-          <img src="https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800&h=500&fit=crop" alt="National Parks">
+          <img
+            src="https://images.unsplash.com/photo-1426604966848-d7adac402bff?w=800&h=500&fit=crop"
+            alt="National Parks Guide"
+            onerror="this.src='https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800&h=500&fit=crop'">
         </div>
         <div class="guide-content">
           <span class="guide-cat">⭐ Featured Guide</span>
@@ -1133,8 +1456,15 @@
           <a href="#" class="read-more" onclick="event.preventDefault(); openGuide('National Parks')">Read Full Guide →</a>
         </div>
       </div>
+
+      <!-- Budget Travel: backpacker with map / airport lounge -->
       <div class="guide-card" data-aos="fade-up" onclick="openGuide('Budget Travel')">
-        <div class="guide-img-wrap"><img src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=600&h=400&fit=crop" alt="Budget"></div>
+        <div class="guide-img-wrap">
+          <img
+            src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=600&h=400&fit=crop"
+            alt="Budget Travel Guide"
+            onerror="this.src='https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=600&h=400&fit=crop'">
+        </div>
         <div class="guide-content">
           <span class="guide-cat">💸 Budget Travel</span>
           <h3>Travel Smart: Budget Tips</h3>
@@ -1142,8 +1472,15 @@
           <a href="#" class="read-more" onclick="event.preventDefault(); openGuide('Budget Travel')">Read Guide →</a>
         </div>
       </div>
+
+      <!-- Packing Tips: open suitcase with neatly folded clothes -->
       <div class="guide-card" data-aos="fade-up" data-aos-delay="80" onclick="openGuide('Packing Tips')">
-        <div class="guide-img-wrap"><img src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=600&h=400&fit=crop" alt="Packing"></div>
+        <div class="guide-img-wrap">
+          <img
+            src="https://images.unsplash.com/photo-1553361371-9b22f78e8b1d?w=600&h=400&fit=crop"
+            alt="Packing Tips Guide"
+            onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=600&h=400&fit=crop'">
+        </div>
         <div class="guide-content">
           <span class="guide-cat">🎒 Packing Tips</span>
           <h3>Essential Packing Guide</h3>
@@ -1151,15 +1488,23 @@
           <a href="#" class="read-more" onclick="event.preventDefault(); openGuide('Packing Tips')">Read Guide →</a>
         </div>
       </div>
+
+      <!-- Road Trips: car on scenic highway, desert or mountain road -->
       <div class="guide-card" data-aos="fade-up" data-aos-delay="160" onclick="openGuide('Road Trips')">
-        <div class="guide-img-wrap"><img src="https://images.unsplash.com/photo-1530841377377-3ff06c0ca713?w=600&h=400&fit=crop" alt="Road Trip"></div>
+        <div class="guide-img-wrap">
+          <img
+            src="https://images.unsplash.com/photo-1501700493788-fa1a4fc9fe62?w=600&h=400&fit=crop"
+            alt="Road Trips Guide"
+            onerror="this.src='https://images.unsplash.com/photo-1530841377377-3ff06c0ca713?w=600&h=400&fit=crop'">
+        </div>
         <div class="guide-content">
-          <span class="guide-cat">🚗 Road Trips</span>
+          <span class="guide-cat">◆ Road Trips</span>
           <h3>Best American Road Trips</h3>
           <p>Hit the open road with our top scenic routes — from Route 66 to the Pacific Coast Highway.</p>
           <a href="#" class="read-more" onclick="event.preventDefault(); openGuide('Road Trips')">Read Guide →</a>
         </div>
       </div>
+
     </div>
   </div>
 </section>
@@ -1181,7 +1526,7 @@
           <div class="stars">★★★★★</div>
           <p>"An absolutely incredible experience! The itinerary was perfectly planned, and we discovered places we never would have found on our own. Highly recommend to anyone who wants more than just a typical holiday."</p>
           <div class="testimonial-author">
-            <img src="https://i.pravatar.cc/100?img=1" alt="Sarah M.">
+            <img src="https://i.pravatar.cc/100?img=1" alt="Sarah M." onerror="this.style.display='none'">
             <div>
               <strong>Sarah M.</strong>
               <span>California Road Trip • August 2024</span>
@@ -1192,7 +1537,7 @@
           <div class="stars">★★★★★</div>
           <p>"From booking to the actual trip, everything was seamless. The customer service was exceptional, and the experiences exceeded our expectations in every possible way!"</p>
           <div class="testimonial-author">
-            <img src="https://i.pravatar.cc/100?img=5" alt="James L.">
+            <img src="https://i.pravatar.cc/100?img=5" alt="James L." onerror="this.style.display='none'">
             <div>
               <strong>James L.</strong>
               <span>Grand Canyon Adventure • June 2024</span>
@@ -1203,7 +1548,7 @@
           <div class="stars">★★★★★</div>
           <p>"Best vacation planning service we've ever used. They took care of every detail and helped us create memories that will last a lifetime. The kids absolutely loved it!"</p>
           <div class="testimonial-author">
-            <img src="https://i.pravatar.cc/100?img=9" alt="Emily R.">
+            <img src="https://i.pravatar.cc/100?img=9" alt="Emily R." onerror="this.style.display='none'">
             <div>
               <strong>Emily R.</strong>
               <span>Hawaii Family Vacation • July 2024</span>
@@ -1214,7 +1559,7 @@
           <div class="stars">★★★★★</div>
           <p>"The attention to detail was remarkable. Every restaurant, hotel, and activity was perfectly curated. The currency converter and packing tools saved us so much stress!"</p>
           <div class="testimonial-author">
-            <img src="https://i.pravatar.cc/100?img=12" alt="Michael T.">
+            <img src="https://i.pravatar.cc/100?img=12" alt="Michael T." onerror="this.style.display='none'">
             <div>
               <strong>Michael T.</strong>
               <span>New York City Escape • May 2024</span>
@@ -1223,9 +1568,9 @@
         </div>
         <div class="testimonial-card">
           <div class="stars">★★★★★</div>
-          <p>"I've used many travel services, but this stands out. The personalised approach and local insights made our trip truly special — and the travel diary feature is brilliant!"</p>
+          <p>"I've used many travel services, but this stands out. The personalised approach, AI-powered itineraries, and local insights made our trip truly special!"</p>
           <div class="testimonial-author">
-            <img src="https://i.pravatar.cc/100?img=15" alt="Jennifer K.">
+            <img src="https://i.pravatar.cc/100?img=15" alt="Jennifer K." onerror="this.style.display='none'">
             <div>
               <strong>Jennifer K.</strong>
               <span>Pacific Northwest Tour • September 2024</span>
@@ -1326,18 +1671,16 @@
         <p>We're passionate about making travel accessible, enjoyable, and unforgettable for everyone. With over 15 years in the travel industry, we've helped thousands of travellers discover their dream destinations.</p>
         <p>Our team of travel experts curate unique experiences, negotiate the best deals, and provide personalised service to ensure your journey is everything you've imagined — and more.</p>
         <div class="about-ctas">
-          <button class="btn btn-primary" onclick="openModal('quizModal'); startQuiz()">🧭 Find My Destination</button>
-          <button class="btn btn-outline" onclick="openModal('currencyModal'); convertCurrency()">💱 Currency Tools</button>
-        </div>
-        <div class="about-stats">
-          <div class="astat"><strong>50K+</strong><span>Travellers</span></div>
-          <div class="astat"><strong>200+</strong><span>Destinations</span></div>
-          <div class="astat"><strong>15</strong><span>Years</span></div>
-          <div class="astat"><strong>98%</strong><span>Satisfaction</span></div>
+          <button class="btn btn-primary" onclick="openModal('quizModal'); startQuiz()">★ Find My Destination</button>
+          <button class="btn btn-outline" onclick="openModal('currencyModal'); loadLiveRates()">💱 Currency Tools</button>
         </div>
       </div>
+      <!-- About image: travel/exploration themed -->
       <div class="about-image" data-aos="fade-left">
-        <img src="https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=700&h=800&fit=crop" alt="About Wanderlust">
+        <img
+          src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=700&h=800&fit=crop"
+          alt="About Visit USA — travel exploration"
+          onerror="this.src='https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=700&h=800&fit=crop'">
       </div>
     </div>
   </div>
@@ -1350,14 +1693,14 @@
   <div class="container">
     <div class="footer-grid">
       <div class="footer-section">
-        <h3>WANDERLUST</h3>
+        <h3>VISIT USA</h3>
         <p>Your trusted partner for unforgettable journeys. Expertly crafted travel experiences since 2009.</p>
         <div class="social-links">
-          <a href="https://facebook.com" target="_blank" aria-label="Facebook" title="Facebook">📘</a>
-          <a href="https://instagram.com" target="_blank" aria-label="Instagram" title="Instagram">📷</a>
-          <a href="https://twitter.com" target="_blank" aria-label="Twitter" title="Twitter">🐦</a>
-          <a href="https://youtube.com" target="_blank" aria-label="YouTube" title="YouTube">▶️</a>
-          <a href="https://pinterest.com" target="_blank" aria-label="Pinterest" title="Pinterest">📌</a>
+          <a href="https://facebook.com" target="_blank" aria-label="Facebook" title="Facebook">FB</a>
+          <a href="https://instagram.com" target="_blank" aria-label="Instagram" title="Instagram">IG</a>
+          <a href="https://twitter.com" target="_blank" aria-label="Twitter" title="Twitter">TW</a>
+          <a href="https://youtube.com" target="_blank" aria-label="YouTube" title="YouTube">YT</a>
+          <a href="https://pinterest.com" target="_blank" aria-label="Pinterest" title="Pinterest">PT</a>
         </div>
       </div>
       <div class="footer-section">
@@ -1374,29 +1717,29 @@
         <h4>Tools</h4>
         <ul>
           <li><a href="#" onclick="openModal('weatherModal'); loadWeatherModal(); return false">Weather Checker</a></li>
-          <li><a href="#" onclick="openModal('currencyModal'); convertCurrency(); return false">Currency Converter</a></li>
+          <li><a href="#" onclick="openModal('currencyModal'); loadLiveRates(); return false">Currency Converter</a></li>
           <li><a href="#" onclick="openModal('packingModal'); generatePackingList(); return false">Packing Assistant</a></li>
           <li><a href="#" onclick="openModal('visaModal'); return false">Visa Requirements</a></li>
-          <li><a href="#" onclick="openModal('phraseModal'); loadPhrases(); return false">Phrase Book</a></li>
+          <li><a href="#" onclick="openModal('phraseModal'); return false">Translator</a></li>
         </ul>
       </div>
       <div class="footer-section">
         <h4>Contact</h4>
         <ul>
-          <li><a href="mailto:hello@wanderlust.travel">📧 hello@wanderlust.travel</a></li>
-          <li><a href="tel:+18007282553">📞 1-800-WANDER</a></li>
-          <li>📍 123 Adventure Ave, New York, NY 10001</li>
-          <li><a href="#" onclick="openModal('countdownModal'); renderCountdowns(); return false">⏳ Trip Countdown</a></li>
-          <li><a href="#" onclick="openModal('diaryModal'); loadDiaryEntries(); return false">📖 Travel Diary</a></li>
+          <li><a href="mailto:hello@visitusa.travel">Email: hello@visitusa.travel</a></li>
+          <li><a href="tel:+18007282553">Phone: 1-800-WANDER</a></li>
+          <li>Address: 123 Adventure Ave, New York, NY 10001</li>
+          <li><a href="#" onclick="openModal('countdownModal'); renderCountdowns(); return false">Trip Countdown</a></li>
+
         </ul>
       </div>
     </div>
     <div class="footer-bottom">
-      <p>© 2025 Wanderlust Travel. All rights reserved.</p>
+      <p>© 2025 Visit USA Travel. All rights reserved.</p>
       <div class="footer-links">
-        <a href="#" onclick="showToast('📄 Privacy Policy coming soon','info'); return false">Privacy Policy</a>
-        <a href="#" onclick="showToast('📄 Terms of Service coming soon','info'); return false">Terms of Service</a>
-        <a href="#" onclick="showToast('🍪 Cookie settings updated','success'); return false">Cookie Settings</a>
+        <a href="#" onclick="showToast('Privacy Policy coming soon','info'); return false">Privacy Policy</a>
+        <a href="#" onclick="showToast('Terms of Service coming soon','info'); return false">Terms of Service</a>
+        <a href="#" onclick="showToast('Cookie settings updated','success'); return false">Cookie Settings</a>
       </div>
     </div>
   </div>
