@@ -89,6 +89,29 @@ function toggleMobileMenu() {
   document.getElementById('mobileMenu').classList.toggle('open');
 }
 
+/* Set active nav link based on current page */
+function setActiveNavLink() {
+  const currentPage = window.location.pathname;
+  const currentFile = currentPage.split('/').pop() || 'index.html';
+  
+  // Remove active class from all nav links
+  document.querySelectorAll('.nav-links a, .mobile-menu a').forEach(link => {
+    link.classList.remove('active');
+  });
+  
+  // Add active class to current page link
+  document.querySelectorAll('.nav-links a, .mobile-menu a').forEach(link => {
+    const href = link.getAttribute('href');
+    if (href) {
+      const linkFile = href.split('/').pop() || 'index.html';
+      if (linkFile === currentFile || 
+          (currentFile === '' && linkFile === 'index.html')) {
+        link.classList.add('active');
+      }
+    }
+  });
+}
+
 function scrollTo(id) {
   const el = document.getElementById(id);
   if (el) window.scrollTo({ top: el.offsetTop - 80, behavior: 'smooth' });
@@ -1849,81 +1872,329 @@ function setHotelDates() {
 /* ─────────────────────────────────────────────────────────
    26. FEATURE 7: DESTINATION QUIZ
 ───────────────────────────────────────────────────────── */
-const quizQuestions = [
+/* ─────────────────────────────────────────────────────────
+   26. FEATURE 7: DESTINATION QUIZ (AI-Powered)
+───────────────────────────────────────────────────────── */
+
+let quizAnswers = {};
+let currentQuestion = 0;
+
+const QUIZ_QUESTIONS = [
   {
-    q:'What type of scenery do you love most?',
-    opts:[{e:'🏖️',l:'Beaches & Oceans'},{e:'🏔️',l:'Mountains & Forests'},{e:'🏙️',l:'Cities & Culture'},{e:'🌵',l:'Deserts & Canyons'}]
+    id: 'climate',
+    question: 'What climate do you prefer?',
+    options: [
+      { emoji: '☀️', label: 'Hot & Sunny', value: 'hot and sunny' },
+      { emoji: '❄️', label: 'Cool & Crisp', value: 'cool and crisp' },
+      { emoji: '🌤️', label: 'Mild & Pleasant', value: 'mild and pleasant' },
+      { emoji: '🌧️', label: 'Any Weather', value: 'no preference' }
+    ]
   },
   {
-    q:'How do you like to spend your days?',
-    opts:[{e:'◆',l:'Active & Outdoorsy'},{e:'◉',l:'Eating & Drinking'},{e:'■',l:'Museums & History'},{e:'◯',l:'Relaxing & Unwinding'}]
+    id: 'activity',
+    question: 'What is your ideal activity?',
+    options: [
+      { emoji: '🏖️', label: 'Beach & Water', value: 'beach and water sports' },
+      { emoji: '🏔️', label: 'Hiking & Nature', value: 'hiking and nature' },
+      { emoji: '🏙️', label: 'City & Culture', value: 'city sightseeing and culture' },
+      { emoji: '🎉', label: 'Nightlife & Food', value: 'nightlife and fine dining' }
+    ]
   },
   {
-    q:"What's your ideal trip length?",
-    opts:[{e:'⚡',l:'Long Weekend (3–4 days)'},{e:'📅',l:'1 Week'},{e:'🗓️',l:'2 Weeks'},{e:'🌍',l:'1 Month+'}]
+    id: 'budget',
+    question: 'What is your daily budget?',
+    options: [
+      { emoji: '💸', label: 'Budget ($50-100)', value: 'budget under $100/day' },
+      { emoji: '💰', label: 'Moderate ($100-200)', value: 'moderate $100-200/day' },
+      { emoji: '💎', label: 'Luxury ($200-400)', value: 'luxury $200-400/day' },
+      { emoji: '🤑', label: 'No Limit', value: 'no budget constraint' }
+    ]
   },
   {
-    q:'What matters most to you when travelling?',
-    opts:[{e:'💰',l:'Best Value for Money'},{e:'✨',l:'Luxury & Comfort'},{e:'🌿',l:'Eco-Friendly & Sustainable'},{e:'🔮',l:'Hidden Gems & Unique Finds'}]
+    id: 'group',
+    question: 'Who are you travelling with?',
+    options: [
+      { emoji: '🧍', label: 'Solo', value: 'solo traveller' },
+      { emoji: '👫', label: 'Couple', value: 'couple' },
+      { emoji: '👨‍👩‍👧', label: 'Family', value: 'family with children' },
+      { emoji: '👯', label: 'Friends', value: 'group of friends' }
+    ]
   },
   {
-    q:"What's your travel style?",
-    opts:[{e:'🎯',l:'Planned & Organised'},{e:'🎲',l:'Spontaneous & Flexible'},{e:'👨‍👩‍👧',l:'Family-Friendly'},{e:'💑',l:'Romantic & Couples'}]
+    id: 'style',
+    question: 'What is your travel style?',
+    options: [
+      { emoji: '🗺️', label: 'Explorer', value: 'adventurous explorer' },
+      { emoji: '😌', label: 'Relaxed', value: 'relaxed and slow-paced' },
+      { emoji: '📸', label: 'Photographer', value: 'photography and scenic viewing' },
+      { emoji: '🍽️', label: 'Foodie', value: 'food and culinary experiences' }
+    ]
   }
 ];
 
-const quizResults = [
-  {dest:'Hawaii', desc:'White sand beaches, volcanic landscapes, and aloha spirit — Hawaii is your perfect match. You love the outdoors but also appreciate luxury and relaxation.'},
-  {dest:'New York City', desc:'You crave culture, world-class food, and non-stop energy. NYC\'s neighbourhoods, museums, and iconic skyline were made for you.'},
-  {dest:'Grand Canyon', desc:'You seek awe-inspiring natural wonders and adventure. The Grand Canyon will blow your mind with its sheer scale and beauty.'},
-  {dest:'San Francisco', desc:'Creative, diverse, and beautiful — SF\'s blend of coastal scenery, incredible food, and vibrant culture suits you perfectly.'},
-  {dest:'Yellowstone', desc:'A nature-lover at heart, you\'ll find paradise in Yellowstone\'s geysers, wildlife, and pristine wilderness.'},
-];
-
-let quizStep = 0, quizAnswers = [];
-
 function startQuiz() {
-  quizStep = 0; quizAnswers = [];
-  const c = document.getElementById('quizContent');
-  c.innerHTML = `
-    <div class="quiz-intro">
-      <h3>Find Your Perfect Destination</h3>
-      <p>Answer 5 quick questions and we'll reveal your ideal travel match.</p>
-      <button class="btn btn-primary" onclick="renderQuizQuestion()">Let's Go</button>
-    </div>`;
-}
-
-function renderQuizQuestion() {
-  if (quizStep >= quizQuestions.length) { showQuizResult(); return; }
-  const q = quizQuestions[quizStep];
-  const c = document.getElementById('quizContent');
-  const progress = quizQuestions.map((_,i) =>
-    `<div class="quiz-progress-step${i<quizStep?' done':''}"></div>`).join('');
-  c.innerHTML = `
-    <div class="quiz-progress">${progress}</div>
-    <p style="font-size:.82rem;color:var(--text-muted);text-align:center;margin-bottom:.5rem">Question ${quizStep+1} of ${quizQuestions.length}</p>
-    <div class="quiz-question">${q.q}</div>
-    <div class="quiz-options">
-      ${q.opts.map((o,i) => `<button class="quiz-opt" onclick="answerQuiz(${i})"><span>${o.e}</span>${o.l}</button>`).join('')}
-    </div>`;
-}
-
-function answerQuiz(i) {
-  quizAnswers.push(i); quizStep++;
+  quizAnswers = {};
+  currentQuestion = 0;
   renderQuizQuestion();
 }
 
-function showQuizResult() {
-  const r = quizResults[quizAnswers.reduce((s,a)=>s+a,0) % quizResults.length];
-  const c = document.getElementById('quizContent');
-  c.innerHTML = `
-    <div class="quiz-result">
-      <h3>Your Perfect Destination Is…<br>${r.dest}</h3>
-      <p>${r.desc}</p>
-      <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
-        <button class="btn btn-primary" onclick="closeModal('quizModal'); scrollTo('destinations')">Explore Now</button>
-        <button class="btn btn-outline" onclick="startQuiz()">Try Again</button>
+function renderQuizQuestion() {
+  const container = document.getElementById('quizContainer');
+  if (!container) return;
+
+  if (currentQuestion >= QUIZ_QUESTIONS.length) {
+    submitQuiz();
+    return;
+  }
+
+  const q = QUIZ_QUESTIONS[currentQuestion];
+  const progress = Math.round(
+    (currentQuestion / QUIZ_QUESTIONS.length) * 100
+  );
+
+  const progressDots = QUIZ_QUESTIONS
+    .map((_, i) => `
+      <div style="width:${i === currentQuestion ? '24px' : '8px'};
+        height:8px;border-radius:4px;background:${
+        i < currentQuestion 
+          ? '#464655' 
+          : i === currentQuestion 
+            ? '#94958b' 
+            : 'rgba(183,182,193,0.25)'
+      };transition:all .3s ease"></div>`)
+    .join('');
+
+  container.innerHTML = `
+    <div style="padding:1rem 0">
+      <div style="display:flex;gap:.4rem;margin-bottom:2rem;align-items:center">
+        ${progressDots}
+        <span style="font-size:.75rem;color:var(--text-muted);margin-left:.5rem;white-space:nowrap">
+          ${currentQuestion + 1} / ${QUIZ_QUESTIONS.length}
+        </span>
       </div>
+
+      <h3 style="font-family:var(--font-display);font-size:1.4rem;font-weight:800;
+        color:var(--text-primary);text-align:center;margin-bottom:.5rem;line-height:1.3">
+        ${q.question}
+      </h3>
+      <p style="text-align:center;color:var(--text-muted);font-size:.85rem;margin-bottom:1.75rem">
+        Choose one option
+      </p>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+        ${q.options.map(opt => `
+          <div onclick="selectQuizAnswer('${q.id}', '${opt.value}', this)"
+            style="background:var(--bg-card);border:2px solid var(--border);border-radius:16px;
+              padding:1.25rem 1rem;text-align:center;cursor:pointer;
+              transition:all .25s cubic-bezier(.34,1.56,.64,1)">
+            <div style="font-size:2rem;margin-bottom:.5rem">
+              ${opt.emoji}
+            </div>
+            <div style="font-size:.88rem;font-weight:700;color:var(--text-primary)">
+              ${opt.label}
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+function selectQuizAnswer(id, value, el) {
+  // Store answer
+  quizAnswers[id] = value;
+  console.log(`[QUIZ] Answer: ${id} = ${value}`);
+
+  // Visual feedback
+  el.style.background = '#464655';
+  el.style.borderColor = '#464655';
+  el.querySelectorAll('div').forEach(d => {
+    d.style.color = '#ffffff';
+  });
+
+  // Go to next question after short delay
+  setTimeout(() => {
+    currentQuestion++;
+    renderQuizQuestion();
+  }, 400);
+}
+
+async function submitQuiz() {
+  const container = document.getElementById('quizContainer');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div style="text-align:center;padding:2rem">
+      <div style="font-size:3rem;animation:spin 2s linear infinite;
+        display:inline-block;margin-bottom:1rem">✨</div>
+      <p style="font-weight:700;font-size:1.1rem;color:var(--text-primary);margin-bottom:.5rem">
+        AI is finding your perfect destination...
+      </p>
+      <p style="color:var(--text-muted);font-size:.85rem">
+        Analysing your preferences with Groq AI
+      </p>
+    </div>`;
+
+  console.log('[QUIZ] Submitting answers:', quizAnswers);
+
+  try {
+    const res = await fetch(`${API_BASE}/api/quiz`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        answers: quizAnswers,
+        budget: quizAnswers.budget || 'moderate',
+        style: quizAnswers.style || 'mixed',
+        group: quizAnswers.group || 'couple',
+        climate: quizAnswers.climate || 'warm',
+        activity: quizAnswers.activity || 'sightseeing'
+      })
+    });
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    const data = await res.json();
+    console.log('[QUIZ] Result:', data);
+
+    displayQuizResult(data);
+
+  } catch(err) {
+    console.error('[QUIZ] Error:', err);
+    container.innerHTML = `
+      <div style="text-align:center;padding:2rem;color:var(--text-muted)">
+        <p>⚠️ Could not get recommendation.</p>
+        <p style="font-size:.85rem;margin-top:.5rem">${err.message}</p>
+      </div>`;
+  }
+}
+
+function displayQuizResult(data) {
+  const container = document.getElementById('quizResult');
+  if (!container) return;
+
+  const isAI = data.source === 'groq';
+  const sourceBadge = isAI
+    ? `<span style="background:rgba(107,203,119,0.12);color:#1a7a28;border:1px solid rgba(107,203,119,0.28);padding:.3rem .8rem;border-radius:50px;font-size:.72rem;font-weight:800">✨ AI Matched</span>`
+    : `<span style="background:rgba(183,182,193,0.12);color:var(--text-muted);border:1px solid var(--border);padding:.3rem .8rem;border-radius:50px;font-size:.72rem;font-weight:800">📋 Sample</span>`;
+
+  const highlightsHTML = (data.highlights || [])
+    .map(h => `
+      <div style="display:flex;align-items:center;gap:.6rem;padding:.6rem 0;
+        border-bottom:1px solid var(--border);font-size:.88rem;color:var(--text-secondary)">
+        <span style="color:#94958b">→</span>
+        ${h}
+      </div>`)
+    .join('');
+
+  const alternativesHTML = (data.alternatives || [])
+    .map(a => `
+      <span style="background:var(--bg-sand);border:1px solid var(--border);
+        padding:.35rem .85rem;border-radius:50px;font-size:.80rem;font-weight:600;color:var(--text-primary)">
+        ${a}
+      </span>`)
+    .join('');
+
+  container.innerHTML = `
+    <div style="animation:slideInUp .5s ease">
+      <div style="background:linear-gradient(135deg,#33323f,#464655);border-radius:20px;
+        padding:2rem;text-align:center;margin-bottom:1rem;position:relative;overflow:hidden">
+        <div style="font-size:4rem;margin-bottom:.75rem;display:block">
+          ${data.emoji || '🗺️'}
+        </div>
+        <div style="font-family:var(--font-display);font-size:2rem;font-weight:900;
+          color:#fff;margin-bottom:.3rem;letter-spacing:-.03em">
+          ${data.destination}
+        </div>
+        <div style="color:rgba(255,255,255,.6);font-size:.88rem;margin-bottom:1rem">
+          ${data.state || 'United States'}
+        </div>
+        <div style="display:inline-block;background:rgba(255,255,255,.12);color:rgba(255,255,255,.9);
+          padding:.4rem 1.2rem;border-radius:50px;font-size:.82rem;font-weight:600;margin-bottom:1rem;
+          border:1px solid rgba(255,255,255,.2)">
+          ${data.tagline || ''}
+        </div>
+        <div style="display:flex;justify-content:center;gap:2rem;margin-top:1rem">
+          <div style="text-align:center">
+            <div style="font-family:var(--font-display);font-size:2rem;font-weight:900;color:#d5cfe1">
+              ${data.match || 90}%
+            </div>
+            <div style="font-size:.68rem;text-transform:uppercase;letter-spacing:.10em;color:rgba(255,255,255,.4)">
+              Match
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+        ${sourceBadge}
+        <span style="font-size:.78rem;color:var(--text-muted);font-style:italic">
+          ${data.vibe || ''}
+        </span>
+      </div>
+
+      ${data.why ? `
+      <div style="background:rgba(213,207,225,0.10);border:1px solid rgba(183,182,193,0.18);
+        border-radius:14px;padding:1.1rem 1.25rem;margin-bottom:1rem">
+        <p style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;
+          color:#94958b;margin-bottom:.5rem">
+          Why this matches you
+        </p>
+        <p style="font-size:.92rem;line-height:1.7;color:var(--text-secondary);margin:0">
+          ${data.why}
+        </p>
+      </div>` : ''}
+
+      ${highlightsHTML ? `
+      <div style="margin-bottom:1rem">
+        <p style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;
+          color:#94958b;margin-bottom:.75rem">
+          Top highlights
+        </p>
+        ${highlightsHTML}
+      </div>` : ''}
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1rem">
+        <div style="background:var(--bg-sand);border:1px solid var(--border);border-radius:12px;
+          padding:1rem;text-align:center">
+          <span style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.10em;
+            color:var(--text-muted);display:block;margin-bottom:.4rem">
+            Daily Budget
+          </span>
+          <span style="font-family:var(--font-display);font-size:.95rem;font-weight:800;color:var(--text-primary)">
+            ${data.budget || 'Varies'}
+          </span>
+        </div>
+        <div style="background:var(--bg-sand);border:1px solid var(--border);border-radius:12px;
+          padding:1rem;text-align:center">
+          <span style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.10em;
+            color:var(--text-muted);display:block;margin-bottom:.4rem">
+            Best Time
+          </span>
+          <span style="font-family:var(--font-display);font-size:.95rem;font-weight:800;color:var(--text-primary)">
+            ${data.best_time || 'Year round'}
+          </span>
+        </div>
+      </div>
+
+      ${alternativesHTML ? `
+      <div style="margin-bottom:1.25rem">
+        <p style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;
+          color:#94958b;margin-bottom:.75rem">
+          You might also like
+        </p>
+        <div style="display:flex;flex-wrap:wrap;gap:.5rem">
+          ${alternativesHTML}
+        </div>
+      </div>` : ''}
+
+      <button onclick="startQuiz()"
+        style="width:100%;padding:1rem;background:linear-gradient(135deg,#464655,#33323f);
+          color:#fff;border:none;border-radius:14px;font-family:var(--font-display);font-size:.95rem;
+          font-weight:700;cursor:pointer;transition:all .25s ease"
+        onmouseover="this.style.transform='translateY(-2px)'"
+        onmouseout="this.style.transform='none'">
+        🔄 Retake Quiz
+      </button>
     </div>`;
 }
 
@@ -1951,38 +2222,150 @@ const visaDB = {
   'AU→JP': {status:'free',    label:'Visa-Free', duration:'90 days',processing:'N/A',cost:'Free',notes:'Australian passport holders enter Japan visa-free for tourism and business.'},
 };
 
-function checkVisa() {
-  const from = document.getElementById('visaFrom').value;
-  const to   = document.getElementById('visaTo').value;
-  const key  = `${from}→${to}`;
-  const data = visaDB[key];
-  const out  = document.getElementById('visaOutput');
-  if (!data) {
-    out.innerHTML = `<div class="visa-card">
-      <div class="visa-status required">⚠️ Please verify requirements</div>
-      <div class="visa-details">
-        <h4>Requirements for ${from} → ${to}</h4>
-        <p style="font-size:.88rem;color:var(--text-secondary)">We don't have specific data for this combination. Please check the official embassy website or a service like iVisa.com for the most current requirements.</p>
-        <div style="margin-top:1rem"><a href="https://www.iata.org/en/publications/timatic/" target="_blank" style="color:var(--spicy-paprika);font-weight:700">Check IATA Timatic (Official)</a></div>
-      </div>
-    </div>`;
+async function checkVisa() {
+  const fromCode = document.getElementById('visaFrom').value.trim();
+  const toCode = document.getElementById('visaTo').value.trim();
+  const fromSelect = document.getElementById('visaFrom');
+  const toSelect = document.getElementById('visaTo');
+  const fromName = fromSelect.options[fromSelect.selectedIndex].text.split('🚩 ')[1] || fromCode;
+  const toName = toSelect.options[toSelect.selectedIndex].text.split('🚩 ')[1] || toCode;
+  const out = document.getElementById('visaOutput');
+
+  if (!fromCode || !toCode) {
+    showToast('Please select both passport and destination', 'warning');
     return;
   }
-  const countryNames = {US:'🇺🇸 USA',UK:'🇬🇧 UK',EU:'🇪🇺 EU',IN:'🇮🇳 India',CN:'🇨🇳 China',AU:'🇦🇺 Australia',CA:'🇨🇦 Canada',JP:'🇯🇵 Japan',FR:'🇫🇷 France',TH:'🇹🇭 Thailand',AE:'🇦🇪 UAE',SG:'🇸🇬 Singapore',MX:'🇲🇽 Mexico',BR:'🇧🇷 Brazil',ZA:'🇿🇦 South Africa'};
-  out.innerHTML = `
-    <div class="visa-card">
-      <div class="visa-status ${data.status}">${data.status==='free'?'✓':data.status==='on-arrival'?'◐':'!'} ${data.label}</div>
-      <div class="visa-details">
-        <h4>${countryNames[from]||from} → ${countryNames[to]||to}</h4>
-        <div class="visa-detail-row"><span>Duration of Stay</span><span>${data.duration}</span></div>
-        <div class="visa-detail-row"><span>Processing Time</span><span>${data.processing}</span></div>
-        <div class="visa-detail-row"><span>Visa Cost</span><span>${data.cost}</span></div>
-        <div style="margin-top:1rem;padding:1rem;background:var(--bg-sand);border-radius:var(--r-sm);font-size:.88rem;color:var(--text-secondary)">
-          <strong style="color:var(--text-primary)">📋 Important Notes:</strong><br><br>${data.notes}
+
+  // Show loading state
+  out.innerHTML = `<div class="visa-card"><div style="text-align:center;padding:2rem">
+    <div class="spinner" style="width:40px;height:40px;border:3px solid var(--accent-600);border-top:3px solid var(--primary);border-radius:50%;animation:spin 0.8s linear infinite"></div>
+    <p style="margin-top:1rem;color:var(--text-secondary)">Checking visa requirements with AI...</p>
+  </div></div>`;
+
+  try {
+    const response = await fetch(
+      `${API_BASE}/api/visa?from=${fromCode}&to=${toCode}&from_name=${encodeURIComponent(fromName)}&to_name=${encodeURIComponent(toName)}`
+    );
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(
+        '[VISA] HTTP Error:',
+        response.status,
+        response.statusText,
+        errorText
+      );
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    
+    // Map status to color
+    const statusColorMap = {
+      'VISA FREE': 'free',
+      'ON ARRIVAL': 'on-arrival',
+      'EVISA': 'evisa',
+      'VISA REQUIRED': 'required',
+      'DOMESTIC': 'domestic'
+    };
+    const statusClass = statusColorMap[data.status?.toUpperCase()] || 'required';
+    const statusIcon = 
+      statusClass === 'free' ? '✓' :
+      statusClass === 'on-arrival' ? '◐' :
+      statusClass === 'evisa' ? '📱' :
+      statusClass === 'domestic' ? '→' : '!';
+
+    // Build requirements list
+    const reqsList = (data.requirements || []).map(r => `<li>${r}</li>`).join('');
+
+    // Build insider tips
+    const tipsList = (data.insider_tips || []).map(t => `<li>${t}</li>`).join('');
+
+    // Format cost string
+    const costStr = data.cost || 'Variable';
+
+    out.innerHTML = `
+      <div class="visa-card">
+        <div class="visa-status ${statusClass}" style="display:flex;align-items:center;gap:0.75rem">
+          <span style="font-size:1.5rem">${statusIcon}</span>
+          <div>
+            <div style="font-weight:700;font-size:1.1rem">${data.status || 'UNKNOWN'}</div>
+            <div style="font-size:0.9rem;opacity:0.9">${data.label || ''}</div>
+          </div>
         </div>
-        <p style="font-size:.75rem;color:var(--text-muted);margin-top:.75rem">⚠️ Information is indicative only. Always verify with the official embassy before travel.</p>
+        <div class="visa-details">
+          <h4 style="margin:1.5rem 0 1rem 0">${fromName} 🔄 ${toName}</h4>
+          
+          <div class="visa-detail-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1.5rem 0">
+            <div style="background:var(--bg-card);padding:1rem;border-radius:var(--r-sm)">
+              <div style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:0.3rem">Duration of Stay</div>
+              <div style="font-weight:600;color:var(--text-primary)">${data.duration || 'N/A'}</div>
+            </div>
+            <div style="background:var(--bg-card);padding:1rem;border-radius:var(--r-sm)">
+              <div style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:0.3rem">Processing Time</div>
+              <div style="font-weight:600;color:var(--text-primary)">${data.processing || 'N/A'}</div>
+            </div>
+            <div style="background:var(--bg-card);padding:1rem;border-radius:var(--r-sm)">
+              <div style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:0.3rem">Visa Cost</div>
+              <div style="font-weight:600;color:var(--text-primary)">${costStr}</div>
+            </div>
+            <div style="background:var(--bg-card);padding:1rem;border-radius:var(--r-sm)">
+              <div style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:0.3rem">Status</div>
+              <div style="font-weight:600;color:${statusClass === 'free' ? 'var(--success)' : statusClass === 'required' ? 'var(--error)' : 'var(--warning)'}">${data.status || 'UNKNOWN'}</div>
+            </div>
+          </div>
+
+          ${reqsList ? `<div style="margin:1.5rem 0">
+            <h5 style="margin:0 0 0.75rem 0;color:var(--text-primary);font-size:0.95rem">📋 Requirements</h5>
+            <ul style="list-style:none;padding:0;margin:0">
+              ${reqsList}
+            </ul>
+          </div>` : ''}
+
+          ${tipsList ? `<div style="margin:1.5rem 0;padding:1rem;background:var(--accent-200);border-radius:var(--r-sm);border-left:3px solid var(--accent)">
+            <h5 style="margin:0 0 0.75rem 0;color:var(--text-primary);font-size:0.95rem">💡 Insider Tips</h5>
+            <ul style="list-style:none;padding:0;margin:0;font-size:0.9rem">
+              ${tipsList}
+            </ul>
+          </div>` : ''}
+
+          ${data.official_apply_link ? `<div style="margin:1.5rem 0;padding:1rem;background:var(--bg-card);border-radius:var(--r-sm);text-align:center">
+            <a href="${data.official_apply_link}" target="_blank" rel="noopener noreferrer" 
+               style="display:inline-block;background:var(--primary);color:white;padding:0.75rem 1.5rem;border-radius:var(--r-sm);text-decoration:none;font-weight:600;transition:0.3s">
+              🔗 Official Application Link
+            </a>
+          </div>` : ''}
+
+          <p style="font-size:0.75rem;color:var(--text-muted);margin-top:1.5rem;padding:1rem;background:var(--bg-sand);border-radius:var(--r-sm)">
+            ⚠️ <strong>Disclaimer:</strong> This information is provided via Groq AI and should be verified with official embassy sources before making travel decisions. Visa requirements change frequently.
+          </p>
+        </div>
       </div>
-    </div>`;
+    `;
+    showToast('Visa information loaded successfully!', 'success');
+    
+  } catch (error) {
+    console.error('Visa check error:', error);
+    out.innerHTML = `
+      <div class="visa-card">
+        <div class="visa-status required">⚠️ Error Loading Visa Info</div>
+        <div class="visa-details">
+          <h4>Unable to fetch visa information</h4>
+          <p style="font-size:0.9rem;color:var(--text-secondary);margin:1rem 0">
+            ${error.message || 'An error occurred while checking visa requirements.'}
+          </p>
+          <p style="font-size:0.85rem;color:var(--text-secondary)">Please try again or check the official embassy website.</p>
+          <div style="margin-top:1rem">
+            <a href="https://travel.state.gov" target="_blank" 
+               style="color:var(--primary);font-weight:600;text-decoration:none">
+              Check Official Travel Resources →
+            </a>
+          </div>
+        </div>
+      </div>
+    `;
+    showToast('Error loading visa information', 'error');
+  }
 }
 
 /* ─────────────────────────────────────────────────────────
@@ -2225,110 +2608,6 @@ function speakPhrase(text, language) {
   }
 }
 
-async function translateSentence() {
-  const sentence = document.getElementById('translateSentence')?.value.trim();
-  const output = document.getElementById('translationOutput');
-  
-  if (!sentence) {
-    showToast('⚠️ Please enter a sentence to translate', 'warning');
-    return;
-  }
-  
-  // Get selected languages
-  const selectedLangs = Array.from(document.querySelectorAll('input[name="transLang"]:checked'))
-    .map(checkbox => checkbox.value);
-  
-  if (selectedLangs.length === 0) {
-    showToast('⚠️ Please select at least one language', 'warning');
-    return;
-  }
-  
-  try {
-    output.innerHTML = '<div style="text-align:center;padding:20px;"><p>🔄 Translating to ' + selectedLangs.length + ' languages...</p><div style="width:100%;height:4px;background:var(--border);border-radius:2px;margin-top:10px;overflow:hidden;"><div style="height:100%;background:var(--accent);animation:progress 1.5s infinite;"></div></div></div>';
-    
-    const response = await fetch(`${API_BASE}/api/phrases/translate`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        sentence: sentence,
-        languages: selectedLangs,
-        context: 'travel'
-      })
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-    
-    const data = await response.json();
-    renderTranslationResults(data);
-    showToast('✅ Translation complete!', 'success');
-    
-  } catch (err) {
-    console.error('[TRANSLATE] API call failed:', err.message);
-    output.innerHTML = '<div style="background:#f8d7da;border:1px solid #f5c6cb;padding:15px;border-radius:8px;color:#721c24;"><strong>⚠️ Error:</strong> Could not translate. Please check your API key and try again. Error: ' + err.message + '</div>';
-  }
-}
-
-function renderTranslationResults(data) {
-  let html = '';
-  
-  // Header with original sentence
-  if (data.original) {
-    html += `<div style="background:var(--bg-secondary);padding:1rem;border-radius:8px;margin-bottom:1.5rem;border-left:4px solid var(--accent);">
-      <p style="margin:0;color:var(--text-muted);font-size:0.85rem;">ORIGINAL</p>
-      <h4 style="margin:0.5rem 0 0 0;color:var(--text-primary);">"${data.original}"</h4>
-    </div>`;
-  }
-  
-  // Render translations by language
-  if (data.translations && typeof data.translations === 'object') {
-    html += '<div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:1rem;">';
-    
-    for (const [language, transData] of Object.entries(data.translations)) {
-      const translation = transData.translation || transData;
-      const pronunciation = transData.pronunciation || '';
-      const usage = transData.usage || '';
-      const tip = transData.tip || '';
-      
-      html += `<div style="background:var(--bg-secondary);padding:1rem;border-radius:8px;border:1px solid var(--border);">
-        <h5 style="margin:0 0 0.5rem 0;color:var(--accent);">🌐 ${language}</h5>
-        <div style="background:var(--bg-primary);padding:0.75rem;border-radius:6px;margin-bottom:0.75rem;">
-          <p style="margin:0;color:var(--text-primary);font-weight:600;word-break:break-word;">${translation}</p>
-        </div>
-        ${pronunciation ? `<p style="margin:0.5rem 0;font-size:0.85rem;color:var(--text-muted);"><strong>📢 Pronunciation:</strong> ${pronunciation}</p>` : ''}
-        ${usage ? `<p style="margin:0.5rem 0;font-size:0.85rem;color:var(--text-muted);"><strong>💡 Usage:</strong> ${usage}</p>` : ''}
-        ${tip ? `<p style="margin:0.5rem 0;font-size:0.85rem;background:rgba(255,193,7,0.1);padding:0.5rem;border-radius:4px;color:var(--text-primary);"><strong>⭐ Tip:</strong> ${tip}</p>` : ''}
-        <div style="display:flex;gap:0.5rem;margin-top:0.75rem;">
-          <button class="phrase-copy" data-text="${translation}" title="Copy translation" onclick="copyPhrase(this.dataset.text); event.stopPropagation();" style="flex:1;padding:0.5rem;background:var(--accent);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.85rem;">📋 Copy</button>
-          <button class="phrase-speak" data-text="${translation}" title="Hear pronunciation" onclick="speakPhrase(this.dataset.text, '${language}'); event.stopPropagation();" style="flex:1;padding:0.5rem;background:var(--accent);color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.85rem;">🔊 Speak</button>
-        </div>
-      </div>`;
-    }
-    
-    html += '</div>';
-  }
-  
-  // Add tips section
-  if (data.generalTips && Array.isArray(data.generalTips)) {
-    html += `<div style="margin-top:1.5rem;padding:1rem;background:rgba(255,193,7,0.1);border-radius:8px;border-left:4px solid #ffc107;">
-      <h5 style="margin:0 0 0.75rem 0;color:var(--text-primary);">💡 Translation Tips</h5>
-      <ul style="margin:0;padding-left:1.5rem;color:var(--text-muted);font-size:0.9rem;">`;
-    data.generalTips.forEach(tip => {
-      html += `<li style="margin-bottom:0.5rem;">${tip}</li>`;
-    });
-    html += `</ul>
-    </div>`;
-  }
-  
-  html += `<div style="text-align:center;color:var(--text-muted);font-size:0.85rem;margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);">
-    <small>🤖 Translated using Groq AI</small>
-  </div>`;
-  
-  document.getElementById('translationOutput').innerHTML = html;
-}
 
 /* ─────────────────────────────────────────────────────────
    30. SCROLL ANIMATIONS & COUNTERS
@@ -2432,6 +2711,9 @@ document.addEventListener('DOMContentLoaded', () => {
     ?.addEventListener('keypress', e => {
       if (e.key === 'Enter') handleHeroSearch();
     });
+
+  // Set active nav link based on current page
+  setActiveNavLink();
 
   console.log('[INIT] Page initialization complete');
 });

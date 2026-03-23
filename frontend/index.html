@@ -601,7 +601,8 @@
       <button class="modal-close" onclick="closeModal('quizModal')">✕</button>
     </div>
     <div class="modal-body-scroll">
-      <div id="quizContent"></div>
+      <div id="quizContainer"></div>
+      <div id="quizResult"></div>
     </div>
   </div>
 </div>
@@ -611,40 +612,83 @@
 ══════════════════════════════════════════ -->
 <div class="modal-overlay" id="visaModal">
   <div class="modal-box medium">
-    <div class="modal-head">
-      <h2>✓ Visa Requirements</h2>
+    <div class="modal-head" style="text-align:center">
+      <h2 style="display:flex;align-items:center;justify-content:center;gap:0.5rem">🛂 Visa Requirements Check</h2>
       <button class="modal-close" onclick="closeModal('visaModal')">✕</button>
     </div>
-    <div class="modal-body-scroll">
-      <div class="visa-form">
-        <div class="form-row">
-          <div class="form-group">
-            <label>Your Passport</label>
-            <select id="visaFrom">
-              <option value="US">🇺🇸 United States</option>
-              <option value="UK">🇬🇧 United Kingdom</option>
-              <option value="EU">🇪🇺 EU (Schengen)</option>
-              <option value="IN">🇮🇳 India</option>
-              <option value="CN">🇨🇳 China</option>
-              <option value="AU">🇦🇺 Australia</option>
-              <option value="CA">🇨🇦 Canada</option>
+    <div class="modal-body-scroll" style="padding:1.5rem">
+      <div class="visa-form" style="background:var(--bg-card);padding:1.5rem;border-radius:var(--r-md);margin-bottom:1.5rem">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+          <div class="form-group" style="margin:0">
+            <label style="display:block;margin-bottom:0.5rem;font-weight:600;font-size:0.9rem">Your Passport</label>
+            <select id="visaFrom" style="width:100%">
+              <option value="">Select passport...</option>
+              <option value="US" data-name="United States">🇺🇸 United States</option>
+              <option value="GB" data-name="United Kingdom">🇬🇧 United Kingdom</option>
+              <option value="IN" data-name="India">🇮🇳 India</option>
+              <option value="CN" data-name="China">🇨🇳 China</option>
+              <option value="AU" data-name="Australia">🇦🇺 Australia</option>
+              <option value="CA" data-name="Canada">🇨🇦 Canada</option>
+              <option value="DE" data-name="Germany">🇩🇪 Germany</option>
+              <option value="FR" data-name="France">🇫🇷 France</option>
+              <option value="JP" data-name="Japan">🇯🇵 Japan</option>
+              <option value="KR" data-name="South Korea">🇰🇷 South Korea</option>
+              <option value="SG" data-name="Singapore">🇸🇬 Singapore</option>
+              <option value="BR" data-name="Brazil">🇧🇷 Brazil</option>
+              <option value="MX" data-name="Mexico">🇲🇽 Mexico</option>
+              <option value="ZA" data-name="South Africa">🇿🇦 South Africa</option>
+              <option value="NG" data-name="Nigeria">🇳🇬 Nigeria</option>
+              <option value="PK" data-name="Pakistan">🇵🇰 Pakistan</option>
+              <option value="BD" data-name="Bangladesh">🇧🇩 Bangladesh</option>
+              <option value="RU" data-name="Russia">🇷🇺 Russia</option>
+              <option value="IT" data-name="Italy">🇮🇹 Italy</option>
+              <option value="ES" data-name="Spain">🇪🇸 Spain</option>
+              <option value="NL" data-name="Netherlands">🇳🇱 Netherlands</option>
+              <option value="AE" data-name="UAE">🇦🇪 UAE</option>
+              <option value="SA" data-name="Saudi Arabia">🇸🇦 Saudi Arabia</option>
+              <option value="PH" data-name="Philippines">🇵🇭 Philippines</option>
+              <option value="ID" data-name="Indonesia">🇮🇩 Indonesia</option>
             </select>
           </div>
-          <div class="form-group">
-            <label>Destination Country</label>
-            <select id="visaTo">
-              <option value="JP">🇯🇵 Japan</option>
-              <option value="FR">🇫🇷 France</option>
-              <option value="TH">🇹🇭 Thailand</option>
-              <option value="AE">🇦🇪 UAE / Dubai</option>
-              <option value="SG">🇸🇬 Singapore</option>
-              <option value="MX">🇲🇽 Mexico</option>
-              <option value="BR">🇧🇷 Brazil</option>
-              <option value="ZA">🇿🇦 South Africa</option>
+          <div class="form-group" style="margin:0">
+            <label style="display:block;margin-bottom:0.5rem;font-weight:600;font-size:0.9rem">Destination Country</label>
+            <select id="visaTo" style="width:100%">
+              <option value="">Select destination...</option>
+              <option value="US" data-name="United States">🇺🇸 United States</option>
+              <option value="GB" data-name="United Kingdom">🇬🇧 United Kingdom</option>
+              <option value="FR" data-name="France">🇫🇷 France</option>
+              <option value="JP" data-name="Japan">🇯🇵 Japan</option>
+              <option value="TH" data-name="Thailand">🇹🇭 Thailand</option>
+              <option value="AE" data-name="UAE">🇦🇪 UAE</option>
+              <option value="SG" data-name="Singapore">🇸🇬 Singapore</option>
+              <option value="AU" data-name="Australia">🇦🇺 Australia</option>
+              <option value="CA" data-name="Canada">🇨🇦 Canada</option>
+              <option value="IN" data-name="India">🇮🇳 India</option>
+              <option value="DE" data-name="Germany">🇩🇪 Germany</option>
+              <option value="IT" data-name="Italy">🇮🇹 Italy</option>
+              <option value="ES" data-name="Spain">🇪🇸 Spain</option>
+              <option value="MX" data-name="Mexico">🇲🇽 Mexico</option>
+              <option value="BR" data-name="Brazil">🇧🇷 Brazil</option>
+              <option value="ID" data-name="Indonesia">🇮🇩 Indonesia</option>
+              <option value="TR" data-name="Turkey">🇹🇷 Turkey</option>
+              <option value="GR" data-name="Greece">🇬🇷 Greece</option>
+              <option value="PT" data-name="Portugal">🇵🇹 Portugal</option>
+              <option value="NL" data-name="Netherlands">🇳🇱 Netherlands</option>
+              <option value="CH" data-name="Switzerland">🇨🇭 Switzerland</option>
+              <option value="ZA" data-name="South Africa">🇿🇦 South Africa</option>
+              <option value="KE" data-name="Kenya">🇰🇪 Kenya</option>
+              <option value="EG" data-name="Egypt">🇪🇬 Egypt</option>
+              <option value="MA" data-name="Morocco">🇲🇦 Morocco</option>
+              <option value="NZ" data-name="New Zealand">🇳🇿 New Zealand</option>
+              <option value="VN" data-name="Vietnam">🇻🇳 Vietnam</option>
+              <option value="KH" data-name="Cambodia">🇰🇭 Cambodia</option>
+              <option value="LK" data-name="Sri Lanka">🇱🇰 Sri Lanka</option>
+              <option value="NP" data-name="Nepal">🇳🇵 Nepal</option>
+              <option value="MV" data-name="Maldives">🇲🇻 Maldives</option>
             </select>
           </div>
         </div>
-        <button class="btn btn-primary full-w" onclick="checkVisa()">🔍 Check Requirements</button>
+        <button class="btn btn-primary" style="width:100%;padding:0.75rem;font-size:0.95rem;font-weight:600" onclick="checkVisa()">🤖 Check with AI</button>
       </div>
       <div id="visaOutput"></div>
     </div>
@@ -929,216 +973,36 @@
 <!-- ══════════════════════════════════════════
      DESTINATIONS
 ══════════════════════════════════════════ -->
-<section id="destinations" class="popular-destinations">
+<section class="page-teaser destinations-teaser">
   <div class="container">
-    <div class="section-header" data-aos="fade-up">
-      <span class="section-eyebrow">Where to next?</span>
-      <h2>Popular Destinations</h2>
-      <p>Explore America's most sought-after locations, from coastal cities to national wonders.</p>
-    </div>
-    <div class="destinations-grid">
-
-      <!-- New York City: iconic Manhattan skyline with Empire State Building -->
-      <div class="destination-card" data-aos="fade-up" onclick="openDestinationMap('New York City')">
-        <img
-          src="https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=800&h=600&fit=crop"
-          alt="New York City skyline"
-          onerror="this.src='https://images.unsplash.com/photo-1534430480872-3498386e7856?w=800&h=600&fit=crop'">
-        <div class="dest-overlay">
-          <span class="dest-tag">Urban Paradise</span>
-          <h3>New York City</h3>
-          <p>The city that never sleeps</p>
-          <div class="dest-meta">
-            <span>⭐ 4.9</span>
-            <span>🌡️ 18°C</span>
-            <span>🕐 Best: Sep–Nov</span>
-          </div>
-          <button class="dest-btn" onclick="event.stopPropagation(); openDestinationMap('New York City')">Explore Map →</button>
+    <div class="teaser-grid" style="grid-template-columns: 1fr 1fr; align-items: center;">
+      <div class="teaser-content">
+        <span class="section-eyebrow">Where to Next?</span>
+        <h2>Explore Popular Destinations</h2>
+        <p>From iconic cities to natural wonders, discover America's most sought-after locations. Browse our curated collection of 6 amazing destinations with insider tips, best times to visit, and real-time weather updates.</p>
+        <a href="./destinations.html" class="btn btn-primary" style="display:inline-block">Explore Destinations →</a>
+      </div>
+      <div class="teaser-cards" style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+        <div style="text-align:center;padding:1.5rem;background:var(--bg-sand);border-radius:12px">
+          <div style="font-size:3rem;margin-bottom:.5rem">🗽</div>
+          <h3 style="font-size:1.1rem;margin:.5rem 0">New York</h3>
+          <p style="font-size:.85rem;color:var(--text-muted)">Urban Paradise</p>
         </div>
-      </div>
-
-      <!-- San Francisco: Golden Gate Bridge -->
-      <div class="destination-card" data-aos="fade-up" data-aos-delay="80" onclick="openDestinationMap('San Francisco')">
-        <img
-          src="https://images.unsplash.com/photo-1449034446853-66c86144b0ad?w=800&h=600&fit=crop"
-          alt="San Francisco Golden Gate Bridge"
-          onerror="this.src='https://images.unsplash.com/photo-1501594907352-04cda38ebc29?w=800&h=600&fit=crop'">
-        <div class="dest-overlay">
-          <span class="dest-tag">Coastal Charm</span>
-          <h3>San Francisco</h3>
-          <p>Golden Gate & tech hub</p>
-          <div class="dest-meta">
-            <span>⭐ 4.8</span>
-            <span>🌡️ 14°C</span>
-            <span>🕐 Best: Sep–Nov</span>
-          </div>
-          <button class="dest-btn" onclick="event.stopPropagation(); openDestinationMap('San Francisco')">Explore Map →</button>
+        <div style="text-align:center;padding:1.5rem;background:var(--bg-sand);border-radius:12px">
+          <div style="font-size:3rem;margin-bottom:.5rem">🏜️</div>
+          <h3 style="font-size:1.1rem;margin:.5rem 0">Grand Canyon</h3>
+          <p style="font-size:.85rem;color:var(--text-muted)">Nature's Wonder</p>
         </div>
-      </div>
-
-      <!-- Grand Canyon: aerial canyon view with Colorado River -->
-      <div class="destination-card" data-aos="fade-up" data-aos-delay="160" onclick="openDestinationMap('Grand Canyon')">
-        <img
-          src="https://images.unsplash.com/photo-1474044159687-1ee9f3a51722?w=800&h=600&fit=crop"
-          alt="Grand Canyon aerial view"
-          onerror="this.src='https://images.unsplash.com/photo-1615551043360-33de8b5f410c?w=800&h=600&fit=crop'">
-        <div class="dest-overlay">
-          <span class="dest-tag">Adventure</span>
-          <h3>Grand Canyon</h3>
-          <p>Nature's masterpiece</p>
-          <div class="dest-meta">
-            <span>⭐ 4.9</span>
-            <span>🌡️ 22°C</span>
-            <span>🕐 Best: Mar–May</span>
-          </div>
-          <button class="dest-btn" onclick="event.stopPropagation(); openDestinationMap('Grand Canyon')">Explore Map →</button>
+        <div style="text-align:center;padding:1.5rem;background:var(--bg-sand);border-radius:12px">
+          <div style="font-size:3rem;margin-bottom:.5rem">🏖️</div>
+          <h3 style="font-size:1.1rem;margin:.5rem 0">Miami Beach</h3>
+          <p style="font-size:.85rem;color:var(--text-muted)">Tropical Paradise</p>
         </div>
-      </div>
-
-      <!-- Miami Beach: South Beach aerial with turquoise ocean -->
-      <div class="destination-card" data-aos="fade-up" data-aos-delay="240" onclick="openDestinationMap('Miami')">
-        <img
-          src="https://images.unsplash.com/photo-1533106418989-88406c7cc8ca?w=800&h=600&fit=crop"
-          alt="Miami Beach South Beach"
-          onerror="this.src='https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop'">
-        <div class="dest-overlay">
-          <span class="dest-tag">Beach Life</span>
-          <h3>Miami Beach</h3>
-          <p>Tropical paradise</p>
-          <div class="dest-meta">
-            <span>⭐ 4.7</span>
-            <span>🌡️ 28°C</span>
-            <span>🕐 Best: Dec–Apr</span>
-          </div>
-          <button class="dest-btn" onclick="event.stopPropagation(); openDestinationMap('Miami')">Explore Map →</button>
+        <div style="text-align:center;padding:1.5rem;background:var(--bg-sand);border-radius:12px">
+          <div style="font-size:3rem;margin-bottom:.5rem">🎰</div>
+          <h3 style="font-size:1.1rem;margin:.5rem 0">Las Vegas</h3>
+          <p style="font-size:.85rem;color:var(--text-muted)">Entertainment Hub</p>
         </div>
-      </div>
-
-      <!-- Las Vegas: The Strip at night with neon lights -->
-      <div class="destination-card" data-aos="fade-up" data-aos-delay="320" onclick="openDestinationMap('Las Vegas')">
-        <img
-          src="https://images.unsplash.com/photo-1605833556294-ea5c7a74f97a?w=800&h=600&fit=crop"
-          alt="Las Vegas Strip at night"
-          onerror="this.src='https://images.unsplash.com/photo-1581351721010-8cf859cb14a4?w=800&h=600&fit=crop'">
-        <div class="dest-overlay">
-          <span class="dest-tag">Nightlife</span>
-          <h3>Las Vegas</h3>
-          <p>Entertainment capital</p>
-          <div class="dest-meta">
-            <span>⭐ 4.6</span>
-            <span>🌡️ 32°C</span>
-            <span>🕐 Best: Mar–May</span>
-          </div>
-          <button class="dest-btn" onclick="event.stopPropagation(); openDestinationMap('Las Vegas')">Explore Map →</button>
-        </div>
-      </div>
-
-      <!-- Yellowstone: Grand Prismatic Spring / Old Faithful geyser -->
-      <div class="destination-card" data-aos="fade-up" data-aos-delay="400" onclick="openDestinationMap('Yellowstone')">
-        <img
-          src="https://images.unsplash.com/photo-1590492359745-f7e5dc0ef4b6?w=800&h=600&fit=crop"
-          alt="Yellowstone Grand Prismatic Spring"
-          onerror="this.src='https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?w=800&h=600&fit=crop'">
-        <div class="dest-overlay">
-          <span class="dest-tag">Nature</span>
-          <h3>Yellowstone</h3>
-          <p>Wildlife & geysers</p>
-          <div class="dest-meta">
-            <span>⭐ 4.9</span>
-            <span>🌡️ 12°C</span>
-            <span>🕐 Best: Jun–Aug</span>
-          </div>
-          <button class="dest-btn" onclick="event.stopPropagation(); openDestinationMap('Yellowstone')">Explore Map →</button>
-        </div>
-      </div>
-
-    </div>
-  </div>
-</section>
-
-<!-- ══════════════════════════════════════════
-     TRAVEL TOOLS
-══════════════════════════════════════════ -->
-<section id="tools" class="travel-tools">
-  <div class="container">
-    <div class="section-header" data-aos="fade-up">
-      <span class="section-eyebrow">Everything you need</span>
-      <h2>Essential Travel Tools</h2>
-      <p>From packing to currency conversion — all your travel utilities in one place.</p>
-    </div>
-    <div class="tools-grid">
-      <div class="tool-card" data-aos="fade-up" onclick="openModal('weatherModal'); loadWeatherModal()">
-        <div class="tool-icon">🌤️</div>
-        <h3>Weather Forecast</h3>
-        <p>Real-time weather for any destination worldwide</p>
-        <span class="tool-cta">Check Now →</span>
-      </div>
-      <div class="tool-card" data-aos="fade-up" data-aos-delay="80" onclick="openModal('currencyModal'); loadLiveRates()">
-        <div class="tool-icon">💱</div>
-        <h3>Currency Converter</h3>
-        <p>Live exchange rates for 150+ currencies</p>
-        <span class="tool-cta">Convert →</span>
-      </div>
-      <div class="tool-card" data-aos="fade-up" data-aos-delay="160" onclick="openModal('packingModal'); generatePackingList()">
-        <div class="tool-icon">🎒</div>
-        <h3>Packing Assistant</h3>
-        <p>Smart packing lists tailored to your trip type</p>
-        <span class="tool-cta">Pack Smart →</span>
-      </div>
-      <div class="tool-card" data-aos="fade-up" data-aos-delay="240" onclick="openModal('visaModal')">
-        <div class="tool-icon">✓</div>
-        <h3>Visa Requirements</h3>
-        <p>Instant visa info for 190+ country combinations</p>
-        <span class="tool-cta">Check Visa →</span>
-      </div>
-      <div class="tool-card" data-aos="fade-up" data-aos-delay="320" onclick="openModal('flightModal'); setFlightDates()">
-        <div class="tool-icon">✈️</div>
-        <h3>Flight Search</h3>
-        <p>Find and compare flights across major airlines</p>
-        <span class="tool-cta">Search Flights →</span>
-      </div>
-      <div class="tool-card" data-aos="fade-up" data-aos-delay="360" onclick="openModal('flightTrackerModal')">
-        <div class="tool-icon">🛩️</div>
-        <h3>Live Flight Tracker</h3>
-        <p>Track live aircraft over the USA in real time with altitude, speed and heading data</p>
-        <span class="tool-cta">Track Live →</span>
-      </div>
-      <div class="tool-card" data-aos="fade-up" data-aos-delay="400" onclick="openModal('hotelModal'); setHotelDates()">
-        <div class="tool-icon">🏨</div>
-        <h3>Hotel Finder</h3>
-        <p>Discover hotels that match your style and budget</p>
-        <span class="tool-cta">Find Hotels →</span>
-      </div>
-      <div class="tool-card" data-aos="fade-up" data-aos-delay="480" onclick="openModal('phraseModal')">
-        <div class="tool-icon">🌐</div>
-        <h3>Language Translator</h3>
-        <p>Translate any text to 30+ languages instantly with pronunciation & tips</p>
-        <span class="tool-cta">Translate →</span>
-      </div>
-      <div class="tool-card" data-aos="fade-up" data-aos-delay="560" onclick="openModal('countdownModal'); renderCountdowns()">
-        <div class="tool-icon">⏳</div>
-        <h3>Trip Countdown</h3>
-        <p>Count down to your next adventure in real-time</p>
-        <span class="tool-cta">Add Trip →</span>
-      </div>
-      <div class="tool-card" data-aos="fade-up" data-aos-delay="640" onclick="openModal('budgetModal'); initBudget()">
-        <div class="tool-icon">📊</div>
-        <h3>Budget Tracker</h3>
-        <p>Track spending and stay on budget while traveling</p>
-        <span class="tool-cta">Track Budget →</span>
-      </div>
-
-      <div class="tool-card" data-aos="fade-up" data-aos-delay="800" onclick="openModal('quizModal'); startQuiz()">
-        <div class="tool-icon">★</div>
-        <h3>Destination Quiz</h3>
-        <p>Answer 5 questions, get your perfect destination match</p>
-        <span class="tool-cta">Take Quiz →</span>
-      </div>
-      <div class="tool-card" data-aos="fade-up" data-aos-delay="880" onclick="window.open('https://www.google.com/maps','_blank')">
-        <div class="tool-icon">🗺️</div>
-        <h3>Interactive Maps</h3>
-        <p>Explore destinations with detailed satellite maps</p>
-        <span class="tool-cta">Open Maps →</span>
       </div>
     </div>
   </div>
@@ -1147,364 +1011,85 @@
 <!-- ══════════════════════════════════════════
      EXPERIENCES
 ══════════════════════════════════════════ -->
-<section id="experiences" class="experiences">
+<section class="page-teaser experiences-teaser" style="background:var(--grad-green);color:#fff">
   <div class="container">
-    <div class="section-header" data-aos="fade-up">
-      <span class="section-eyebrow">Curated for you</span>
-      <h2>Unforgettable Experiences</h2>
-      <p>Handpicked activities and adventures for every type of traveler.</p>
-    </div>
-    <div class="exp-filter" data-aos="fade-up">
-      <button class="filter-btn active" onclick="filterExp('all', this)">All</button>
-      <button class="filter-btn" onclick="filterExp('adventure', this)">▲ Adventure</button>
-      <button class="filter-btn" onclick="filterExp('culture', this)">🏛️ Culture</button>
-      <button class="filter-btn" onclick="filterExp('food', this)">🍽️ Food & Wine</button>
-      <button class="filter-btn" onclick="filterExp('relaxation', this)">◉ Relaxation</button>
-      <button class="filter-btn" onclick="filterExp('wildlife', this)">🌿 Wildlife</button>
-    </div>
-    <div class="experiences-grid">
-
-      <!-- Mountain Hiking: Rocky Mountains trail with hikers -->
-      <div class="exp-card" data-category="adventure" data-aos="fade-up">
-        <div class="exp-img">
-          <img
-            src="https://images.unsplash.com/photo-1551632811-561732d1e306?w=600&h=400&fit=crop"
-            alt="Mountain Hiking Adventures"
-            onerror="this.src='https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=400&fit=crop'">
-          <span class="exp-badge">🔥 Popular</span>
+    <div class="teaser-grid" style="grid-template-columns: 1fr 1fr; align-items: center; gap:4rem">
+      <div class="teaser-cards" style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;order:2">
+        <div style="text-align:center;padding:1.5rem;background:rgba(255,255,255,.1);border-radius:12px;color:#fff">
+          <div style="font-size:3rem;margin-bottom:.5rem">▲</div>
+          <h3 style="font-size:1.1rem;margin:.5rem 0">Adventure</h3>
+          <p style="font-size:.85rem">Hiking, Rafting</p>
         </div>
-        <div class="exp-body">
-          <h3>Mountain Hiking Adventures</h3>
-          <p>Conquer breathtaking peaks and witness stunning vistas across the Rocky Mountains.</p>
-          <div class="exp-meta">
-            <span>🕐 3–5 days</span>
-            <span>⚡ Moderate</span>
-            <span class="exp-price">From $299</span>
-          </div>
-          <button class="btn btn-outline full-w" onclick="bookExperience('Mountain Hiking Adventures','$299')">Book Now</button>
+        <div style="text-align:center;padding:1.5rem;background:rgba(255,255,255,.1);border-radius:12px;color:#fff">
+          <div style="font-size:3rem;margin-bottom:.5rem">🏛️</div>
+          <h3 style="font-size:1.1rem;margin:.5rem 0">Culture</h3>
+          <p style="font-size:.85rem">Historic Tours</p>
+        </div>
+        <div style="text-align:center;padding:1.5rem;background:rgba(255,255,255,.1);border-radius:12px;color:#fff">
+          <div style="font-size:3rem;margin-bottom:.5rem">🍽️</div>
+          <h3 style="font-size:1.1rem;margin:.5rem 0">Food</h3>
+          <p style="font-size:.85rem">Culinary Tours</p>
+        </div>
+        <div style="text-align:center;padding:1.5rem;background:rgba(255,255,255,.1);border-radius:12px;color:#fff">
+          <div style="font-size:3rem;margin-bottom:.5rem">◉</div>
+          <h3 style="font-size:1.1rem;margin:.5rem 0">Relaxation</h3>
+          <p style="font-size:.85rem">Spa Retreats</p>
         </div>
       </div>
-
-      <!-- Historic City Tours: Washington DC / historic landmark -->
-      <div class="exp-card" data-category="culture" data-aos="fade-up" data-aos-delay="80">
-        <div class="exp-img">
-          <img
-            src="https://images.unsplash.com/photo-1501466044931-62695aada8e9?w=600&h=400&fit=crop"
-            alt="Historic City Tours"
-            onerror="this.src='https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=600&h=400&fit=crop'">
-          <span class="exp-badge new">✨ New</span>
-        </div>
-        <div class="exp-body">
-          <h3>Historic City Tours</h3>
-          <p>Explore America's rich history through guided tours of iconic landmarks and museums.</p>
-          <div class="exp-meta">
-            <span>🕐 1–2 days</span>
-            <span>⚡ Easy</span>
-            <span class="exp-price">From $89</span>
-          </div>
-          <button class="btn btn-outline full-w" onclick="bookExperience('Historic City Tours','$89')">Book Now</button>
-        </div>
-      </div>
-
-      <!-- Culinary Adventures: Restaurant / fine dining table setting -->
-      <div class="exp-card" data-category="food" data-aos="fade-up" data-aos-delay="160">
-        <div class="exp-img">
-          <img
-            src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&h=400&fit=crop"
-            alt="Culinary Adventures"
-            onerror="this.src='https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&h=400&fit=crop'">
-        </div>
-        <div class="exp-body">
-          <h3>Culinary Adventures</h3>
-          <p>Savor regional cuisines and wine tastings in America's most celebrated food destinations.</p>
-          <div class="exp-meta">
-            <span>🕐 4–6 hours</span>
-            <span>⚡ Easy</span>
-            <span class="exp-price">From $149</span>
-          </div>
-          <button class="btn btn-outline full-w" onclick="bookExperience('Culinary Adventures','$149')">Book Now</button>
-        </div>
-      </div>
-
-      <!-- Whitewater Rafting: Colorado River / river rafting action shot -->
-      <div class="exp-card" data-category="adventure" data-aos="fade-up" data-aos-delay="240">
-        <div class="exp-img">
-          <img
-            src="https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=600&h=400&fit=crop"
-            alt="Whitewater Rafting"
-            onerror="this.src='https://images.unsplash.com/photo-1530866495561-507c9faab2ed?w=600&h=400&fit=crop'">
-          <span class="exp-badge trend">📈 Trending</span>
-        </div>
-        <div class="exp-body">
-          <h3>Whitewater Rafting</h3>
-          <p>Experience the thrill of rapids on America's most exciting rivers and waterways.</p>
-          <div class="exp-meta">
-            <span>🕐 Full day</span>
-            <span>⚡ Challenging</span>
-            <span class="exp-price">From $179</span>
-          </div>
-          <button class="btn btn-outline full-w" onclick="bookExperience('Whitewater Rafting','$179')">Book Now</button>
-        </div>
-      </div>
-
-      <!-- Luxury Spa Retreats: spa pool / wellness center -->
-      <div class="exp-card" data-category="relaxation" data-aos="fade-up" data-aos-delay="320">
-        <div class="exp-img">
-          <img
-            src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=600&h=400&fit=crop"
-            alt="Luxury Spa Retreats"
-            onerror="this.src='https://images.unsplash.com/photo-1600334129128-685c5582fd35?w=600&h=400&fit=crop'">
-        </div>
-        <div class="exp-body">
-          <h3>Luxury Spa Retreats</h3>
-          <p>Rejuvenate at world-class spa resorts and wellness centers across the country.</p>
-          <div class="exp-meta">
-            <span>🕐 2–3 days</span>
-            <span>⚡ Relaxing</span>
-            <span class="exp-price">From $499</span>
-          </div>
-          <button class="btn btn-outline full-w" onclick="bookExperience('Luxury Spa Retreats','$499')">Book Now</button>
-        </div>
-      </div>
-
-      <!-- Wildlife Safari: Yellowstone bison or wolf / national park wildlife -->
-      <div class="exp-card" data-category="wildlife" data-aos="fade-up" data-aos-delay="400">
-        <div class="exp-img">
-          <img
-            src="https://images.unsplash.com/photo-1474511320723-9a56873867b5?w=600&h=400&fit=crop"
-            alt="Wildlife Safari Tours"
-            onerror="this.src='https://images.unsplash.com/photo-1564760055775-d63b17a55c44?w=600&h=400&fit=crop'">
-          <span class="exp-badge">🔥 Popular</span>
-        </div>
-        <div class="exp-body">
-          <h3>Wildlife Safari Tours</h3>
-          <p>Observe majestic animals in their natural habitats across national parks and reserves.</p>
-          <div class="exp-meta">
-            <span>🕐 2–4 days</span>
-            <span>⚡ Easy</span>
-            <span class="exp-price">From $399</span>
-          </div>
-          <button class="btn btn-outline full-w" onclick="bookExperience('Wildlife Safari Tours','$399')">Book Now</button>
-        </div>
-      </div>
-
-    </div>
-  </div>
-</section>
-
-<!-- ══════════════════════════════════════════
-     PLAN TRIP
-══════════════════════════════════════════ -->
-<section id="plan" class="plan-trip">
-  <div class="container">
-    <div class="section-header light" data-aos="fade-up">
-      <span class="section-eyebrow">Step by step</span>
-      <h2>Plan Your Perfect Trip</h2>
-      <p>Let our tools create an unforgettable, personalised journey.</p>
-    </div>
-    <div class="planning-steps">
-      <div class="step-card" data-aos="flip-left">
-        <div class="step-num">01</div>
-        <div class="step-icon">🗺️</div>
-        <h3>Choose Destination</h3>
-        <p>Browse our curated destinations and find the perfect place for your adventure.</p>
-      </div>
-      <div class="step-card" data-aos="flip-left" data-aos-delay="100">
-        <div class="step-num">02</div>
-        <div class="step-icon">📅</div>
-        <h3>Pick Your Dates</h3>
-        <p>Select travel dates and discover the best deals and experiences available.</p>
-      </div>
-      <div class="step-card" data-aos="flip-left" data-aos-delay="200">
-        <div class="step-num">03</div>
-        <div class="step-icon">✨</div>
-        <h3>Customise Experience</h3>
-        <p>Add activities, accommodations, and special touches to make it uniquely yours.</p>
-      </div>
-      <div class="step-card" data-aos="flip-left" data-aos-delay="300">
-        <div class="step-num">04</div>
-        <div class="step-icon">🎫</div>
-        <h3>Book & Go</h3>
-        <p>Confirm your booking and get ready with detailed itineraries and 24/7 support.</p>
+      <div class="teaser-content" style="order:1">
+        <span class="section-eyebrow" style="color:rgba(255,255,255,.8)">Create Memories</span>
+        <h2 style="color:#fff">Unforgettable Experiences</h2>
+        <p style="color:rgba(255,255,255,.9)">Handpicked activities for every traveler. From mountain hiking to luxury spa retreats, adventure to cultural tours, we've curated the perfect experiences for your journey.</p>
+        <a href="./experiences.html" class="btn btn-outline" style="display:inline-block;color:#fff;border-color:#fff">Explore Experiences →</a>
       </div>
     </div>
   </div>
 </section>
 
 <!-- ══════════════════════════════════════════
-     AI ITINERARY GENERATOR
+     TOOLS — TEASER
 ══════════════════════════════════════════ -->
-<section class="itinerary-generator" id="itinerary-generator">
+<section id="tools" class="page-teaser tools-teaser">
   <div class="container">
-    <div class="section-header" data-aos="fade-up">
-      <span class="section-eyebrow">AI-Powered</span>
-      <h2>Itinerary Generator</h2>
-      <p>Get a personalised day-by-day travel plan in seconds.</p>
-    </div>
-    <div class="itinerary-form-wrapper">
-      <form id="itineraryForm" class="itinerary-form" onsubmit="handleItinerarySubmit(event)" data-aos="fade-up">
-        <div class="form-section-title">Trip Details</div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Destination City</label>
-            <input type="text" id="itinerary-city" placeholder="e.g. San Francisco" required>
-          </div>
-          <div class="form-group">
-            <label>Number of Days</label>
-            <select id="itinerary-days" required>
-              <option value="">Select days</option>
-              <option value="3">3 Days</option>
-              <option value="5">5 Days</option>
-              <option value="7">7 Days</option>
-              <option value="10">10 Days</option>
-            </select>
-          </div>
+    <div class="teaser-grid" style="grid-template-columns: 1fr 1fr; align-items: center;">
+      <div class="teaser-content">
+        <span class="section-eyebrow">Everything you need</span>
+        <h2>Essential Travel Tools</h2>
+        <p>8 powerful tools to plan, track and enjoy every part of your journey. From live weather and flight search to currency conversion and real-time itineraries, we've got you covered with everything needed for a seamless trip.</p>
+        <a href="./tools.html" class="btn btn-primary" style="display:inline-block">Browse Tools →</a>
+      </div>
+      <div class="teaser-cards" style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+        <div style="text-align:center;padding:1.5rem;background:var(--bg-sand);border-radius:12px;cursor:pointer" onclick="window.location='./tools.html'">
+          <div style="font-size:3rem;margin-bottom:.5rem">🌤️</div>
+          <h3 style="font-size:1.1rem;margin:.5rem 0">Weather</h3>
+          <p style="font-size:.85rem;color:var(--text-muted)">Live Forecasts</p>
         </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Travel Style</label>
-            <select id="travel-style" required>
-              <option value="">Select style</option>
-              <option value="luxury">💎 Luxury</option>
-              <option value="budget">💸 Budget-Friendly</option>
-              <option value="adventure">▲ Adventure</option>
-              <option value="relaxation">◉ Relaxation</option>
-              <option value="cultural">🏛️ Cultural</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Budget Per Day ($)</label>
-            <input type="number" id="daily-budget" placeholder="e.g. 200" min="50" required>
-          </div>
+        <div style="text-align:center;padding:1.5rem;background:var(--bg-sand);border-radius:12px;cursor:pointer" onclick="window.location='./tools.html'">
+          <div style="font-size:3rem;margin-bottom:.5rem">💱</div>
+          <h3 style="font-size:1.1rem;margin:.5rem 0">Currency</h3>
+          <p style="font-size:.85rem;color:var(--text-muted)">Exchange Rates</p>
         </div>
-        <button type="submit" class="btn btn-primary btn-full">
-          <span class="btn-text">✨ Generate My Itinerary</span>
-          <span class="btn-loader" style="display:none">⏳ Generating…</span>
-        </button>
-      </form>
-
-      <div id="itinerary-result" class="itinerary-result" style="display:none" data-aos="fade-up">
-        <div class="itinerary-header">
-          <h3 id="itinerary-title"></h3>
-          <div class="itinerary-actions">
-            <button class="action-btn save-btn" onclick="saveTrip()">💾 Save</button>
-            <button class="action-btn pdf-btn" onclick="exportPDF()">📄 PDF</button>
-            <button class="action-btn share-btn" onclick="shareItinerary()">🔗 Share</button>
-          </div>
+        <div style="text-align:center;padding:1.5rem;background:var(--bg-sand);border-radius:12px;cursor:pointer" onclick="window.location='./tools.html'">
+          <div style="font-size:3rem;margin-bottom:.5rem">✈️</div>
+          <h3 style="font-size:1.1rem;margin:.5rem 0">Flights</h3>
+          <p style="font-size:.85rem;color:var(--text-muted)">Real Prices</p>
         </div>
-        
-        <div class="itinerary-content-wrapper">
-          <div id="itinerary-content" class="itinerary-content"></div>
+        <div style="text-align:center;padding:1.5rem;background:var(--bg-sand);border-radius:12px;cursor:pointer" onclick="window.location='./tools.html'">
+          <div style="font-size:3rem;margin-bottom:.5rem">🏨</div>
+          <h3 style="font-size:1.1rem;margin:.5rem 0">Hotels</h3>
+          <p style="font-size:.85rem;color:var(--text-muted)">Best Rates</p>
         </div>
-
-        <div class="itinerary-pricing">
-          <h4>💰 Estimated Total Cost</h4>
-          <div id="total-cost" class="total-cost"></div>
+        <div style="text-align:center;padding:1.5rem;background:var(--bg-sand);border-radius:12px;cursor:pointer" onclick="window.location='./tools.html'">
+          <div style="font-size:3rem;margin-bottom:.5rem">🧳</div>
+          <h3 style="font-size:1.1rem;margin:.5rem 0">Packing</h3>
+          <p style="font-size:.85rem;color:var(--text-muted)">Smart Checklists</p>
         </div>
-
-        <div class="itinerary-footer">
-          <p>📌 Note: Prices are estimates based on your selected budget and travel style. Actual prices may vary by season and availability.</p>
+        <div style="text-align:center;padding:1.5rem;background:var(--bg-sand);border-radius:12px;cursor:pointer" onclick="window.location='./tools.html'">
+          <div style="font-size:3rem;margin-bottom:.5rem">📔</div>
+          <h3 style="font-size:1.1rem;margin:.5rem 0">Visa</h3>
+          <p style="font-size:.85rem;color:var(--text-muted)">Requirements</p>
         </div>
       </div>
-    </div>
-  </div>
-</section>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ══════════════════════════════════════════
-     SAVED TRIPS
-══════════════════════════════════════════ -->
-<section class="saved-trips" id="saved-trips">
-  <div class="container">
-    <div class="section-header" data-aos="fade-up">
-      <span class="section-eyebrow">Your collection</span>
-      <h2>My Saved Trips</h2>
-      <p>Access and manage your saved itineraries anytime.</p>
-    </div>
-    <div id="saved-trips-grid" class="saved-trips-grid" data-aos="fade-up"></div>
-  </div>
-</section>
-
-<!-- ══════════════════════════════════════════
-     TRAVEL GUIDES
-══════════════════════════════════════════ -->
-<section class="travel-guides">
-  <div class="container">
-    <div class="section-header" data-aos="fade-up">
-      <span class="section-eyebrow">Expert knowledge</span>
-      <h2>Travel Guides & Tips</h2>
-      <p>Deep-dive guides written by experienced travellers.</p>
-    </div>
-    <div class="guides-grid">
-
-      <!-- National Parks: Grand Teton / Yosemite / iconic park landscape -->
-      <div class="guide-card featured" data-aos="fade-up" onclick="openGuide('National Parks')">
-        <div class="guide-img-wrap">
-          <img
-            src="https://images.unsplash.com/photo-1426604966848-d7adac402bff?w=800&h=500&fit=crop"
-            alt="National Parks Guide"
-            onerror="this.src='https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800&h=500&fit=crop'">
-        </div>
-        <div class="guide-content">
-          <span class="guide-cat">⭐ Featured Guide</span>
-          <h3>Ultimate Guide to National Parks</h3>
-          <p>Everything you need to know about visiting America's 63 stunning national parks — from permits to hidden gems that most tourists miss.</p>
-          <a href="#" class="read-more" onclick="event.preventDefault(); openGuide('National Parks')">Read Full Guide →</a>
-        </div>
-      </div>
-
-      <!-- Budget Travel: backpacker with map / airport lounge -->
-      <div class="guide-card" data-aos="fade-up" onclick="openGuide('Budget Travel')">
-        <div class="guide-img-wrap">
-          <img
-            src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=600&h=400&fit=crop"
-            alt="Budget Travel Guide"
-            onerror="this.src='https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=600&h=400&fit=crop'">
-        </div>
-        <div class="guide-content">
-          <span class="guide-cat">💸 Budget Travel</span>
-          <h3>Travel Smart: Budget Tips</h3>
-          <p>Explore amazing destinations without breaking the bank with our tried-and-tested money-saving strategies.</p>
-          <a href="#" class="read-more" onclick="event.preventDefault(); openGuide('Budget Travel')">Read Guide →</a>
-        </div>
-      </div>
-
-      <!-- Packing Tips: open suitcase with neatly folded clothes -->
-      <div class="guide-card" data-aos="fade-up" data-aos-delay="80" onclick="openGuide('Packing Tips')">
-        <div class="guide-img-wrap">
-          <img
-            src="https://images.unsplash.com/photo-1553361371-9b22f78e8b1d?w=600&h=400&fit=crop"
-            alt="Packing Tips Guide"
-            onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=600&h=400&fit=crop'">
-        </div>
-        <div class="guide-content">
-          <span class="guide-cat">🎒 Packing Tips</span>
-          <h3>Essential Packing Guide</h3>
-          <p>Pack like a pro with our comprehensive checklist and expert tips for any trip length or climate.</p>
-          <a href="#" class="read-more" onclick="event.preventDefault(); openGuide('Packing Tips')">Read Guide →</a>
-        </div>
-      </div>
-
-      <!-- Road Trips: car on scenic highway, desert or mountain road -->
-      <div class="guide-card" data-aos="fade-up" data-aos-delay="160" onclick="openGuide('Road Trips')">
-        <div class="guide-img-wrap">
-          <img
-            src="https://images.unsplash.com/photo-1501700493788-fa1a4fc9fe62?w=600&h=400&fit=crop"
-            alt="Road Trips Guide"
-            onerror="this.src='https://images.unsplash.com/photo-1530841377377-3ff06c0ca713?w=600&h=400&fit=crop'">
-        </div>
-        <div class="guide-content">
-          <span class="guide-cat">◆ Road Trips</span>
-          <h3>Best American Road Trips</h3>
-          <p>Hit the open road with our top scenic routes — from Route 66 to the Pacific Coast Highway.</p>
-          <a href="#" class="read-more" onclick="event.preventDefault(); openGuide('Road Trips')">Read Guide →</a>
-        </div>
-      </div>
-
     </div>
   </div>
 </section>

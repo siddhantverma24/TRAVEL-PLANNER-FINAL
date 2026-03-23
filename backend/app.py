@@ -1,12 +1,16 @@
+import sys
+import os
+from pathlib import Path
+
+# Ensure routes folder is in Python path
+sys.path.insert(0, os.path.dirname(__file__))
+
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 # from db import get_db_connection  # Not needed yet
 from datetime import datetime
 import json
-import os
-import sys
 from dotenv import load_dotenv
-from pathlib import Path
 
 # Load environment variables from backend directory
 env_path = Path(__file__).parent / '.env'
@@ -16,17 +20,18 @@ load_dotenv(env_path)
 FRONTEND_DIR = os.path.join(os.path.dirname(__file__), '..', 'frontend')
 
 # Import API route blueprints
-from .routes.weather import weather_bp
-from .routes.currency import currency_bp
-from .routes.flights import flights_bp
-from .routes.hotels import hotels_bp
-from .routes.itinerary import itinerary_bp
-from .routes.maps import maps_bp
-from .routes.translate import translate_bp
-from .routes.visa import visa_bp
-from .routes.packing import packing_bp
-from .routes.phrases import phrases_bp
-from .routes.flighttracker import flighttracker_bp
+from routes.weather import weather_bp
+from routes.currency import currency_bp
+from routes.flights import flights_bp
+from routes.hotels import hotels_bp
+from routes.itinerary import itinerary_bp
+from routes.maps import maps_bp
+from routes.translate import translate_bp
+from routes.visa import visa_bp
+from routes.packing import packing_bp
+from routes.phrases import phrases_bp
+from routes.flighttracker import flighttracker_bp
+from routes.quiz import quiz_bp
 
 app = Flask(__name__, static_folder='../frontend', static_url_path='')
 CORS(app, resources={
@@ -56,6 +61,7 @@ app.register_blueprint(visa_bp, url_prefix='/api/visa')
 app.register_blueprint(packing_bp, url_prefix='/api/packing')
 app.register_blueprint(phrases_bp, url_prefix='/api/phrases')
 app.register_blueprint(flighttracker_bp, url_prefix='/api/flighttracker')
+app.register_blueprint(quiz_bp, url_prefix='/api/quiz')
 
 # ============= FRONTEND SERVING ROUTES =============
 @app.route('/index.html')
@@ -63,6 +69,57 @@ app.register_blueprint(flighttracker_bp, url_prefix='/api/flighttracker')
 def serve_index():
     """Serve the frontend index.html"""
     return send_from_directory(FRONTEND_DIR, 'index.html')
+
+# Multi-page routes
+@app.route('/destinations')
+def serve_destinations():
+    """Serve destinations page"""
+    return send_from_directory(FRONTEND_DIR, 'destinations.html')
+
+@app.route('/destinations.html')
+def serve_destinations_html():
+    """Serve destinations page with .html extension"""
+    return send_from_directory(FRONTEND_DIR, 'destinations.html')
+
+@app.route('/experiences')
+def serve_experiences():
+    """Serve experiences page"""
+    return send_from_directory(FRONTEND_DIR, 'experiences.html')
+
+@app.route('/experiences.html')
+def serve_experiences_html():
+    """Serve experiences page with .html extension"""
+    return send_from_directory(FRONTEND_DIR, 'experiences.html')
+
+@app.route('/tools')
+def serve_tools():
+    """Serve tools page"""
+    return send_from_directory(FRONTEND_DIR, 'tools.html')
+
+@app.route('/tools.html')
+def serve_tools_html():
+    """Serve tools page with .html extension"""
+    return send_from_directory(FRONTEND_DIR, 'tools.html')
+
+@app.route('/plan')
+def serve_plan():
+    """Serve plan page"""
+    return send_from_directory(FRONTEND_DIR, 'plan.html')
+
+@app.route('/plan.html')
+def serve_plan_html():
+    """Serve plan page with .html extension"""
+    return send_from_directory(FRONTEND_DIR, 'plan.html')
+
+@app.route('/about')
+def serve_about():
+    """Serve about page"""
+    return send_from_directory(FRONTEND_DIR, 'about.html')
+
+@app.route('/about.html')
+def serve_about_html():
+    """Serve about page with .html extension"""
+    return send_from_directory(FRONTEND_DIR, 'about.html')
 
 @app.route('/<path:filename>')
 def serve_static(filename):

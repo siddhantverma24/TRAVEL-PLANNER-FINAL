@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Experiences - Visit USA</title>  
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+  <style>img { background: #e0e0e0; }</style>
+</head>
+<body>
+
+<div class="toast" id="toast"><span id="toastMsg">Message here</span></div>
+<div class="currency-ticker" id="currencyTicker"><div class="ticker-track" id="tickerTrack"></div></div>
+
+<!-- MODAL: mapModal -->
+<div class="modal-overlay" id="mapModal">
+  <div class="modal-box large">
+    <div class="modal-head"><h2 id="modalTitle">Airports</h2><button class="modal-close" onclick="closeMapModal()">✕</button></div>
+    <div class="map-modal-body"><div id="map"></div><div class="map-sidebar"><h3>✈️ Major Airports</h3><div id="airportList"></div></div></div>
+  </div>
+</div>
+
+<!-- MODAL: destinationMapModal -->
+<div class="modal-overlay" id="destinationMapModal">
+  <div class="modal-box large">
+    <div class="modal-head"><h2 id="destinationMapTitle">Explore</h2><button class="modal-close" onclick="closeDestinationMap()">✕</button></div>
+    <div class="map-modal-body"><div id="destinationMap"></div><div class="map-sidebar"><h3>📍 Points of Interest</h3><div id="destinationPOIs"></div></div></div>
+  </div>
+</div>
+
+<!-- MODAL: packingModal -->
+<div class="modal-overlay" id="packingModal">
+  <div class="modal-box medium">
+    <div class="modal-head"><h2>🎒 Smart Packing List</h2><button class="modal-close" onclick="closeModal('packingModal')">✕</button></div>
+    <div class="modal-body-scroll">
+      <div class="packing-destination-section">
+        <label for="packingDestination" style="display:block;margin-bottom:8px;font-weight:600;color:var(--text-primary);">📍 Where are you going?</label>
+        <input type="text" id="packingDestination" placeholder="e.g., Paris, Tokyo, Costa Rica..." onkeyup="generatePackingList()">
+        <small style="display:block;color:var(--text-muted);margin-top:6px;">AI will analyze your destination</small>
+      </div>
+      <div class="packing-details-section">
+        <div class="packing-detail-group">
+          <label for="packingDays" style="display:block;margin-bottom:8px;font-weight:600;color:var(--text-primary);">📅 Trip length?</label>
+          <select id="packingDays" onchange="generatePackingList()">
+            <option value="3">3 Days</option><option value="7">1 Week</option><option value="14">2 Weeks</option><option value="30">1 Month+</option>
+          </select>
+        </div>
+      </div>
+      <div id="packingListOutput" style="margin-top:24px;"></div>
+      <div class="packing-footer">
+        <button class="btn btn-primary" onclick="printPackingList()">🖨️ Print</button>
+        <button class="btn btn-outline" onclick="copyPackingList()">📋 Copy</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: currencyModal -->
+<div class="modal-overlay" id="currencyModal">
+  <div class="modal-box medium">
+    <div class="modal-head"><h2>💱 Currency Converter</h2><button class="modal-close" onclick="closeModal('currencyModal')">✕</button></div>
+    <div class="modal-body-scroll">
+      <div class="currency-converter">
+        <div class="converter-header"><div class="exchange-rate-display"><span class="rate-label">Exchange Rate</span><p class="conv-rate" id="convRate">Loading...</p></div></div>
+        <div class="currency-card from-card">
+          <label class="card-label">From</label>
+          <div class="amount-section"><input type="number" id="convAmount" value="100" oninput="convertCurrency()" class="amount-input" placeholder="Enter amount"></div>
+          <select id="convFrom" onchange="convertCurrency()" class="currency-select">
+            <option value="USD">🇺🇸 USD</option><option value="EUR">🇪🇺 EUR</option><option value="GBP">🇬🇧 GBP</option><option value="JPY">🇯🇵 JPY</option><option value="AUD">🇦🇺 AUD</option><option value="CAD">🇨🇦 CAD</option><option value="INR">🇮🇳 INR</option><option value="CHF">🇨🇭 CHF</option>
+          </select>
+        </div>
+        <button class="swap-button" onclick="swapCurrencies()" title="Swap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/></svg></button>
+        <div class="currency-card to-card">
+          <label class="card-label">To</label>
+          <div class="amount-section"><input type="number" id="convResult" readonly class="amount-input result-input" placeholder="Result"></div>
+          <select id="convTo" onchange="convertCurrency()" class="currency-select">
+            <option value="EUR">🇪🇺 EUR</option><option value="USD">🇺🇸 USD</option><option value="GBP">🇬🇧 GBP</option><option value="JPY">🇯🇵 JPY</option><option value="AUD">🇦🇺 AUD</option><option value="CAD">🇨🇦 CAD</option><option value="INR">🇮🇳 INR</option><option value="CHF">🇨🇭 CHF</option>
+          </select>
+        </div>
+        <div class="rates-section"><h3 class="rates-title">All Rates</h3><div id="convAllRates" class="all-rates"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: budgetModal -->
+<div class="modal-overlay" id="budgetModal">
+  <div class="modal-box large">
+    <div class="modal-head"><h2>📊 Trip Budget</h2><button class="modal-close" onclick="closeModal('budgetModal')">✕</button></div>
+    <div class="modal-body-scroll">
+      <div class="budget-setup">
+        <div class="budget-header-setup">
+          <div class="form-row">
+            <div class="form-group"><label>Trip Name</label><input type="text" id="budgetTripName" placeholder="e.g. NYC" onchange="renderBudget()"></div>
+            <div class="form-group"><label>Budget ($)</label><input type="number" id="totalBudget" placeholder="e.g. 2000" min="0" onchange="renderBudget()"></div>
+          </div>
+        </div>
+        <div class="budget-add-expense">
+          <h4>Add Expense</h4>
+          <div class="form-row">
+            <div class="form-group"><input type="text" id="budgetExpenseName" placeholder="Description"></div>
+            <div class="form-group"><input type="number" id="budgetExpenseAmount" placeholder="Amount ($)" min="0" step="0.01"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><select id="budgetExpenseCategory"><option value="flight">✈️ Flight</option><option value="hotel">🏨 Hotel</option><option value="food">🍽️ Food</option><option value="transport">🚗 Transport</option><option value="activity">🎭 Activity</option><option value="shopping">🛍️ Shopping</option><option value="other">📌 Other</option></select></div>
+            <div class="form-group"><input type="date" id="budgetExpenseDate"></div>
+          </div>
+          <button class="btn btn-primary btn-full" onclick="addBudgetEntry()">➕ Add</button>
+        </div>
+        <div id="budgetSummary" class="budget-summary"></div>
+        <div class="budget-list-wrapper"><h4>Expenses</h4><div class="budget-categories" id="budgetCategories"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: weatherModal -->
+<div class="modal-overlay" id="weatherModal">
+  <div class="modal-box medium">
+    <div class="modal-head"><h2>🌤️ Weather</h2><button class="modal-close" onclick="closeModal('weatherModal')">✕</button></div>
+    <div class="modal-body-scroll">
+      <div class="weather-search">
+        <input type="text" id="weatherCity" placeholder="City..." onkeypress="if(event.key==='Enter') fetchWeather()">
+        <button class="btn btn-primary" onclick="fetchWeather()">Check</button>
+      </div>
+      <div id="weatherOutput"></div>
+      <div class="weather-quick-cities"><p>Quick:</p><div class="city-chips"><button onclick="quickWeather('New York')">NY</button><button onclick="quickWeather('Paris')">Paris</button><button onclick="quickWeather('Tokyo')">Tokyo</button><button onclick="quickWeather('Sydney')">Sydney</button></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: flightModal -->
+<div class="modal-overlay" id="flightModal">
+  <div class="modal-box medium">
+    <div class="modal-head">
+      <h2>?? Flight Search</h2>
+      <button class="modal-close" 
+        onclick="closeModal('flightModal')">?
+      </button>
+    </div>
+    <div class="modal-body-scroll">
+      <div class="flight-form-redesign">
+
+        <!-- Trip type toggle -->
+        <div class="flight-trip-toggle">
+          <button class="flight-toggle-btn active" 
+            id="ttOne"
+            onclick="setTripType('one')">
+            One Way
+          </button>
+          <button class="flight-toggle-btn" 
+            id="ttRound"
+            onclick="setTripType('round')">
+            Round Trip
+          </button>
+        </div>
+
+        <!-- From / To row -->
+        <div class="flight-route-row">
+          <div class="flight-input-group">
+            <label class="flight-input-label">
+              From
+            </label>
+            <input type="text" 
+              id="flightFrom"
+              class="flight-input-field"
+              placeholder="City or airport code"
+              value="New York (JFK)">
+          </div>
+
+          <div class="flight-swap-middle">
+            <button class="flight-swap-icon"
+              onclick="swapFlightRoute()">
+              ?
+            </button>
+          </div>
+
+          <div class="flight-input-group">
+            <label class="flight-input-label">
+              To
+            </label>
+            <input type="text" 
+              id="flightTo"
+              class="flight-input-field"
+              placeholder="City or airport code"
+              value="Los Angeles (LAX)">
+          </div>
+        </div>
+
+        <!-- Dates row -->
+        <div class="flight-dates-row">
+          <div class="flight-input-group">
+            <label class="flight-input-label">
+              Depart
+            </label>
+            <input type="date" 
+              id="flightDepart"
+              class="flight-input-field">
+          </div>
+          <div class="flight-input-group" 
+            id="returnGroup">
+            <label class="flight-input-label">
+              Return
+            </label>
+            <input type="date" 
+              id="flightReturn"
+              class="flight-input-field">
+          </div>
+        </div>
+
+        <!-- Passengers / Class row -->
+        <div class="flight-extras-row">
+          <div class="flight-input-group">
+            <label class="flight-input-label">
+              Passengers
+            </label>
+            <select id="flightPass" 
+              class="flight-input-field">
+              <option>1 Adult</option>
+              <option>2 Adults</option>
+              <option>2 Adults + 1 Child</option>
+              <option>2 Adults + 2 Children</option>
+              <option>Group (5+)</option>
+            </select>
+          </div>
+          <div class="flight-input-group">
+            <label class="flight-input-label">
+              Class
+            </label>
+            <select id="flightClass" 
+              class="flight-input-field">
+              <option>Economy</option>
+              <option>Premium Economy</option>
+              <option>Business</option>
+              <option>First Class</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="flight-search-btn"
+          onclick="searchFlights()">
+          ?? Search Flights
+        </button>
+
+      </div>
+
+      <div id="flightResults"></div>
+    </div>
+  </div>
+</div><div class="modal-overlay" id="flightTrackerModal">
+  <div class="modal-box large">
+    <div class="modal-head" style="background:var(--grad-green)">
+      <div style="display:flex;align-items:center;gap:1rem;flex:1">
+        <div style="font-size:2.5rem;background:rgba(255,255,255,.15);width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center">🛩️</div>
+        <div><h2 style="color:#fff;margin-bottom:.2rem">Live Flight Tracker</h2><p style="color:rgba(255,255,255,.7);font-size:.82rem;margin:0">Real-time · OpenSky</p></div>
+      </div>
+      <button class="modal-close" onclick="closeModal('flightTrackerModal')">✕</button>
+    </div>
+    <div class="modal-body-scroll" style="padding:0">
+      <div style="display:flex;border-bottom:2px solid var(--border);background:var(--bg-sand)">
+        <button class="tracker-tab active" id="tabLiveMap" onclick="switchTrackerTab('livemap')">Map</button>
+        <button class="tracker-tab" id="tabSearch" onclick="switchTrackerTab('search')">Track</button>
+        <button class="tracker-tab" id="tabAirports" onclick="switchTrackerTab('airports')">Airports</button>
+      </div>
+      <div id="trackerLivemapTab" class="tracker-tab-content">
+        <div style="padding:1.25rem 1.5rem;background:var(--bg-sand);border-bottom:1px solid var(--border);display:flex;gap:.75rem;flex-wrap:wrap">
+          <span style="font-size:.82rem;font-weight:700;color:var(--text-muted)">Region:</span>
+          <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+            <button class="region-btn active" onclick="loadLiveFlights('usa',this)">USA</button>
+            <button class="region-btn" onclick="loadLiveFlights('eastcoast',this)">East</button>
+            <button class="region-btn" onclick="loadLiveFlights('westcoast',this)">West</button>
+            <button class="region-btn" onclick="loadLiveFlights('midwest',this)">Midwest</button>
+          </div>
+          <button class="btn btn-primary" style="padding:.5rem 1rem;font-size:.82rem;margin-left:auto" onclick="refreshLiveFlights()">Refresh</button>
+        </div>
+        <div id="trackerStatsBar" style="display:grid;grid-template-columns:repeat(4,1fr);gap:0"></div>
+        <div id="liveFlightsList" style="max-height:450px;overflow-y:auto;padding:1rem 1.5rem"><p style="text-align:center;opacity:.6">Select region</p></div>
+      </div>
+      <div id="trackerSearchTab" class="tracker-tab-content" style="display:none;padding:1.5rem">
+        <div style="margin-bottom:1.5rem">
+          <label style="font-size:.78rem;font-weight:700;display:block;margin-bottom:.55rem">Flight #</label>
+          <div style="display:flex;gap:.75rem">
+            <input type="text" id="trackFlightInput" placeholder="e.g. AA100" style="flex:1;text-transform:uppercase" onkeypress="if(event.key==='Enter') searchFlightTracker()">
+            <button class="btn btn-primary" onclick="searchFlightTracker()">Track</button>
+          </div>
+        </div>
+        <div id="flightSearchResult"></div>
+      </div>
+      <div id="trackerAirportsTab" class="tracker-tab-content" style="display:none;padding:1.5rem">
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:.75rem" id="airportGrid"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: hotelModal -->
+<div class="modal-overlay" id="hotelModal">
+  <div class="modal-box medium">
+    <div class="modal-head">
+      <h2>?? Find Hotels</h2>
+      <button class="modal-close" 
+        onclick="closeModal('hotelModal')">?
+      </button>
+    </div>
+    <div class="modal-body-scroll">
+
+      <div class="hotel-form-redesign">
+
+        <!-- Destination -->
+        <div class="hotel-field-group">
+          <label class="hotel-field-label">
+            Destination City
+          </label>
+          <input type="text" 
+            id="hotelCity"
+            class="hotel-field-input"
+            placeholder="e.g. New York, Miami, Las Vegas"
+            value="New York">
+        </div>
+
+        <!-- Quick city chips -->
+        <div class="hotel-quick-cities">
+          <button type="button" onclick="setHotelCity('New York')">
+            ?? New York
+          </button>
+          <button type="button" onclick="setHotelCity('Miami')">
+            ?? Miami
+          </button>
+          <button type="button" onclick="setHotelCity('Las Vegas')">
+            ?? Las Vegas
+          </button>
+          <button type="button" onclick="setHotelCity('Los Angeles')">
+            ?? LA
+          </button>
+          <button type="button" onclick="setHotelCity('Chicago')">
+            ??? Chicago
+          </button>
+          <button type="button" onclick="setHotelCity('Hawaii')">
+            ?? Hawaii
+          </button>
+        </div>
+
+        <!-- Dates row -->
+        <div class="hotel-dates-row">
+          <div class="hotel-field-subgroup">
+            <label class="hotel-field-label">
+              Check-in
+            </label>
+            <input type="date" 
+              id="hotelCheckin"
+              class="hotel-field-input">
+          </div>
+          <div class="hotel-field-subgroup">
+            <label class="hotel-field-label">
+              Check-out
+            </label>
+            <input type="date" 
+              id="hotelCheckout"
+              class="hotel-field-input">
+          </div>
+        </div>
+
+        <!-- Guests / Stars row -->
+        <div class="hotel-filters-row">
+          <div class="hotel-field-subgroup">
+            <label class="hotel-field-label">
+              Guests
+            </label>
+            <select id="hotelGuests" 
+              class="hotel-field-input">
+              <option>1 Guest</option>
+              <option>2 Guests</option>
+              <option>3 Guests</option>
+              <option>4+ Guests</option>
+            </select>
+          </div>
+          <div class="hotel-field-subgroup">
+            <label class="hotel-field-label">
+              Star Rating
+            </label>
+            <select id="hotelStars" 
+              class="hotel-field-input">
+              <option value="any">? Any Rating</option>
+              <option value="3">??? 3+ Stars</option>
+              <option value="4">???? 4+ Stars</option>
+              <option value="5">????? 5 Stars</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="hotel-search-btn"
+          onclick="searchHotels()">
+          ?? Search Hotels
+        </button>
+
+      </div>
+
+      <div id="hotelResults"></div>
+    </div>
+  </div>
+</div><div class="modal-overlay" id="quizModal">
+  <div class="modal-box medium">
+    <div class="modal-head"><h2>★ Destination Quiz</h2><button class="modal-close" onclick="closeModal('quizModal')">✕</button></div>
+    <div class="modal-body-scroll"><div id="quizContainer"></div><div id="quizResult"></div></div>
+  </div>
+</div>
+
+<!-- MODAL: visaModal -->
+<div class="modal-overlay" id="visaModal">
+  <div class="modal-box medium">
+    <div class="modal-head" style="text-align:center">
+      <h2 style="display:flex;align-items:center;justify-content:center;gap:0.5rem">?? Visa Requirements Check</h2>
+      <button class="modal-close" onclick="closeModal('visaModal')">?</button>
+    </div>
+    <div class="modal-body-scroll" style="padding:1.5rem">
+      <div class="visa-form" style="background:var(--bg-card);padding:1.5rem;border-radius:var(--r-md);margin-bottom:1.5rem">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+          <div class="form-group" style="margin:0">
+            <label style="display:block;margin-bottom:0.5rem;font-weight:600;font-size:0.9rem">Your Passport</label>
+            <select id="visaFrom" style="width:100%">
+              <option value="">Select passport...</option>
+              <option value="US" data-name="United States">???? United States</option>
+              <option value="GB" data-name="United Kingdom">???? United Kingdom</option>
+              <option value="IN" data-name="India">???? India</option>
+              <option value="CN" data-name="China">???? China</option>
+              <option value="AU" data-name="Australia">???? Australia</option>
+              <option value="CA" data-name="Canada">???? Canada</option>
+              <option value="DE" data-name="Germany">???? Germany</option>
+              <option value="FR" data-name="France">???? France</option>
+              <option value="JP" data-name="Japan">???? Japan</option>
+              <option value="KR" data-name="South Korea">???? South Korea</option>
+              <option value="SG" data-name="Singapore">???? Singapore</option>
+              <option value="BR" data-name="Brazil">???? Brazil</option>
+              <option value="MX" data-name="Mexico">???? Mexico</option>
+              <option value="ZA" data-name="South Africa">???? South Africa</option>
+              <option value="NG" data-name="Nigeria">???? Nigeria</option>
+              <option value="PK" data-name="Pakistan">???? Pakistan</option>
+              <option value="BD" data-name="Bangladesh">???? Bangladesh</option>
+              <option value="RU" data-name="Russia">???? Russia</option>
+              <option value="IT" data-name="Italy">???? Italy</option>
+              <option value="ES" data-name="Spain">???? Spain</option>
+              <option value="NL" data-name="Netherlands">???? Netherlands</option>
+              <option value="AE" data-name="UAE">???? UAE</option>
+              <option value="SA" data-name="Saudi Arabia">???? Saudi Arabia</option>
+              <option value="PH" data-name="Philippines">???? Philippines</option>
+              <option value="ID" data-name="Indonesia">???? Indonesia</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin:0">
+            <label style="display:block;margin-bottom:0.5rem;font-weight:600;font-size:0.9rem">Destination Country</label>
+            <select id="visaTo" style="width:100%">
+              <option value="">Select destination...</option>
+              <option value="US" data-name="United States">???? United States</option>
+              <option value="GB" data-name="United Kingdom">???? United Kingdom</option>
+              <option value="FR" data-name="France">???? France</option>
+              <option value="JP" data-name="Japan">???? Japan</option>
+              <option value="TH" data-name="Thailand">???? Thailand</option>
+              <option value="AE" data-name="UAE">???? UAE</option>
+              <option value="SG" data-name="Singapore">???? Singapore</option>
+              <option value="AU" data-name="Australia">???? Australia</option>
+              <option value="CA" data-name="Canada">???? Canada</option>
+              <option value="IN" data-name="India">???? India</option>
+              <option value="DE" data-name="Germany">???? Germany</option>
+              <option value="IT" data-name="Italy">???? Italy</option>
+              <option value="ES" data-name="Spain">???? Spain</option>
+              <option value="MX" data-name="Mexico">???? Mexico</option>
+              <option value="BR" data-name="Brazil">???? Brazil</option>
+              <option value="ID" data-name="Indonesia">???? Indonesia</option>
+              <option value="TR" data-name="Turkey">???? Turkey</option>
+              <option value="GR" data-name="Greece">???? Greece</option>
+              <option value="PT" data-name="Portugal">???? Portugal</option>
+              <option value="NL" data-name="Netherlands">???? Netherlands</option>
+              <option value="CH" data-name="Switzerland">???? Switzerland</option>
+              <option value="ZA" data-name="South Africa">???? South Africa</option>
+              <option value="KE" data-name="Kenya">???? Kenya</option>
+              <option value="EG" data-name="Egypt">???? Egypt</option>
+              <option value="MA" data-name="Morocco">???? Morocco</option>
+              <option value="NZ" data-name="New Zealand">???? New Zealand</option>
+              <option value="VN" data-name="Vietnam">???? Vietnam</option>
+              <option value="KH" data-name="Cambodia">???? Cambodia</option>
+              <option value="LK" data-name="Sri Lanka">???? Sri Lanka</option>
+              <option value="NP" data-name="Nepal">???? Nepal</option>
+              <option value="MV" data-name="Maldives">???? Maldives</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary" style="width:100%;padding:0.75rem;font-size:0.95rem;font-weight:600" onclick="checkVisa()">?? Check with AI</button>
+      </div>
+      <div id="visaOutput"></div>
+    </div>
+  </div>
+</div>
+</div><div class="modal-overlay" id="countdownModal">
+  <div class="modal-box small">
+    <div class="modal-head"><h2>⏳ Countdown</h2><button class="modal-close" onclick="closeModal('countdownModal')">✕</button></div>
+    <div class="modal-body-scroll">
+      <div class="countdown-setup">
+        <div class="form-group"><label>Trip Name</label><input type="text" id="countdownName" placeholder="e.g. Tokyo 2025"></div>
+        <div class="form-group"><label>Date</label><input type="date" id="countdownDate"></div>
+        <button class="btn btn-primary full-w" onclick="addCountdown()">➕ Add</button>
+      </div>
+      <div id="countdownList" class="countdown-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: phraseModal -->
+<div class="modal-overlay" id="phraseModal">
+  <div class="modal-box large">
+    <div class="translator-modal-head">
+      <div class="translator-header-content"><div class="translator-header-icon">🌐</div><div><h2>Translator</h2><p class="translator-header-sub">Groq AI</p></div></div>
+      <button class="modal-close" onclick="closeModal('phraseModal')">✕</button>
+    </div>
+    <div class="modal-body-scroll translator-modal-body">
+      <div class="translator-input-section">
+        <label class="translator-label">Text</label>
+        <textarea id="translateSentence" class="translator-textarea" placeholder="Type here..."></textarea>
+        <div class="translator-footer">
+          <span id="charCount" class="translator-charcount">0 chars</span>
+          <div class="translator-quick-buttons">
+            <button class="translator-quick-btn" onclick="setQuickText('Hello, how are you?')">Hi</button>
+            <button class="translator-quick-btn" onclick="setQuickText('Where is the restaurant?')">Restaurant</button>
+            <button class="translator-quick-btn" onclick="setQuickText('Thank you')">Thanks</button>
+          </div>
+        </div>
+      </div>
+      <div class="translator-lang-section">
+        <div class="translator-lang-header"><label class="translator-label">Languages</label><button class="translator-toggle-btn" onclick="toggleAllLanguages()">Show All</button></div>
+        <div class="translator-popular-wrap">
+          <p class="translator-section-label">⭐ Popular</p>
+          <div class="translator-lang-grid">
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="Spanish"> <span>🇪🇸</span> <span>Spanish</span></label>
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="French"> <span>🇫🇷</span> <span>French</span></label>
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="German"> <span>🇩🇪</span> <span>German</span></label>
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="Japanese"> <span>🇯🇵</span> <span>Japanese</span></label>
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="Mandarin Chinese"> <span>🇨🇳</span> <span>Mandarin</span></label>
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="Korean"> <span>🇰🇷</span> <span>Korean</span></label>
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="Portuguese"> <span>🇧🇷</span> <span>Portuguese</span></label>
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="Italian"> <span>🇮🇹</span> <span>Italian</span></label>
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="Russian"> <span>🇷🇺</span> <span>Russian</span></label>
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="Arabic"> <span>🇦🇪</span> <span>Arabic</span></label>
+          </div>
+        </div>
+        <div id="allLanguagesSection" class="translator-all-wrap" style="display:none">
+          <p class="translator-section-label">📚 All</p>
+          <div class="translator-lang-grid translator-all-grid">
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="Hindi"> <span>🇮🇳</span> <span>Hindi</span></label>
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="Thai"> <span>🇹🇭</span> <span>Thai</span></label>
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="Vietnamese"> <span>🇻🇳</span> <span>Vietnamese</span></label>
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="Turkish"> <span>🇹🇷</span> <span>Turkish</span></label>
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="Dutch"> <span>🇳🇱</span> <span>Dutch</span></label>
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="Swedish"> <span>🇸🇪</span> <span>Swedish</span></label>
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="Polish"> <span>🇵🇱</span> <span>Polish</span></label>
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="Greek"> <span>🇬🇷</span> <span>Greek</span></label>
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="Hebrew"> <span>🇮🇱</span> <span>Hebrew</span></label>
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="Indonesian"> <span>🇮🇩</span> <span>Indonesian</span></label>
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="Tagalog"> <span>🇵🇭</span> <span>Tagalog</span></label>
+            <label class="translator-lang-card"><input type="checkbox" name="transLang" value="Swahili"> <span>🇰🇪</span> <span>Swahili</span></label>
+          </div>
+        </div>
+      </div>
+      <button class="translator-translate-btn" onclick="translateSentence()"><span>✨ Translate</span></button>
+      <div id="translationOutput" class="translator-output"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE HERO -->
+<section class="page-hero" style="background: linear-gradient(135deg, rgba(68, 53, 91, 0.8), rgba(217, 83, 79, 0.2)), url('https://images.unsplash.com/photo-1551632811-561732d1e306?w=1920&h=1080&fit=crop') center/cover;">
+  <div class="page-hero-content">
+    <h1>Unforgettable Experiences</h1>
+    <p>Create memories that last a lifetime</p>
+  </div>
+</section>
+
+<!-- EXPERIENCES -->
+<section id="experiences" class="experiences">
+  <div class="container">
+    <div class="section-header" data-aos="fade-up">
+      <span class="section-eyebrow">Curated for you</span>
+      <h2>Unforgettable Experiences</h2>
+      <p>Handpicked activities and adventures for every type of traveler.</p>
+    </div>
+    <div class="exp-filter" data-aos="fade-up">
+      <button class="filter-btn active" onclick="filterExp('all', this)">All</button>
+      <button class="filter-btn" onclick="filterExp('adventure', this)">▲ Adventure</button>
+      <button class="filter-btn" onclick="filterExp('culture', this)">🏛️ Culture</button>
+      <button class="filter-btn" onclick="filterExp('food', this)">🍽️ Food & Wine</button>
+      <button class="filter-btn" onclick="filterExp('relaxation', this)">◉ Relaxation</button>
+      <button class="filter-btn" onclick="filterExp('wildlife', this)">🌿 Wildlife</button>
+    </div>
+    <div class="experiences-grid">
+
+      <!-- Mountain Hiking -->
+      <div class="exp-card" data-category="adventure" data-aos="fade-up">
+        <div class="exp-img">
+          <img src="https://images.unsplash.com/photo-1551632811-561732d1e306?w=600&h=400&fit=crop" alt="Mountain Hiking" onerror="this.src='https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=400&fit=crop'">
+          <span class="exp-badge">🔥 Popular</span>
+        </div>
+        <div class="exp-body">
+          <h3>Mountain Hiking Adventures</h3>
+          <p>Conquer breathtaking peaks and witness stunning vistas across the Rocky Mountains.</p>
+          <div class="exp-meta"><span>🕐 3–5 days</span><span>⚡ Moderate</span><span class="exp-price">From $299</span></div>
+          <button class="btn btn-outline full-w" onclick="bookExperience('Mountain Hiking','$299')">Book Now</button>
+        </div>
+      </div>
+
+      <!-- Historic City Tours -->
+      <div class="exp-card" data-category="culture" data-aos="fade-up" data-aos-delay="80">
+        <div class="exp-img">
+          <img src="https://images.unsplash.com/photo-1501466044931-62695aada8e9?w=600&h=400&fit=crop" alt="Historic Tours" onerror="this.src='https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=600&h=400&fit=crop'">
+          <span class="exp-badge new">✨ New</span>
+        </div>
+        <div class="exp-body">
+          <h3>Historic City Tours</h3>
+          <p>Explore America's rich history through guided tours of iconic landmarks and museums.</p>
+          <div class="exp-meta"><span>🕐 1–2 days</span><span>⚡ Easy</span><span class="exp-price">From $89</span></div>
+          <button class="btn btn-outline full-w" onclick="bookExperience('Historic Tours','$89')">Book Now</button>
+        </div>
+      </div>
+
+      <!-- Culinary Adventures -->
+      <div class="exp-card" data-category="food" data-aos="fade-up" data-aos-delay="160">
+        <div class="exp-img">
+          <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&h=400&fit=crop" alt="Culinary" onerror="this.src='https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&h=400&fit=crop'">
+        </div>
+        <div class="exp-body">
+          <h3>Culinary Adventures</h3>
+          <p>Savor regional cuisines and wine tastings in America's most celebrated food destinations.</p>
+          <div class="exp-meta"><span>🕐 4–6 hours</span><span>⚡ Easy</span><span class="exp-price">From $149</span></div>
+          <button class="btn btn-outline full-w" onclick="bookExperience('Culinary','$149')">Book Now</button>
+        </div>
+      </div>
+
+      <!-- Whitewater Rafting -->
+      <div class="exp-card" data-category="adventure" data-aos="fade-up" data-aos-delay="240">
+        <div class="exp-img">
+          <img src="https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=600&h=400&fit=crop" alt="Rafting" onerror="this.src='https://images.unsplash.com/photo-1530866495561-507c9faab2ed?w=600&h=400&fit=crop'">
+          <span class="exp-badge trend">📈 Trending</span>
+        </div>
+        <div class="exp-body">
+          <h3>Whitewater Rafting</h3>
+          <p>Experience the thrill of rapids on America's most exciting rivers and waterways.</p>
+          <div class="exp-meta"><span>🕐 Full day</span><span>⚡ Challenging</span><span class="exp-price">From $179</span></div>
+          <button class="btn btn-outline full-w" onclick="bookExperience('Rafting','$179')">Book Now</button>
+        </div>
+      </div>
+
+      <!-- Luxury Spa -->
+      <div class="exp-card" data-category="relaxation" data-aos="fade-up" data-aos-delay="320">
+        <div class="exp-img">
+          <img src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=600&h=400&fit=crop" alt="Spa" onerror="this.src='https://images.unsplash.com/photo-1600334129128-685c5582fd35?w=600&h=400&fit=crop'">
+        </div>
+        <div class="exp-body">
+          <h3>Luxury Spa Retreats</h3>
+          <p>Rejuvenate at world-class spa resorts and wellness centers across the country.</p>
+          <div class="exp-meta"><span>🕐 2–3 days</span><span>⚡ Relaxing</span><span class="exp-price">From $499</span></div>
+          <button class="btn btn-outline full-w" onclick="bookExperience('Spa','$499')">Book Now</button>
+        </div>
+      </div>
+
+      <!-- Wildlife Safari -->
+      <div class="exp-card" data-category="wildlife" data-aos="fade-up" data-aos-delay="400">
+        <div class="exp-img">
+          <img src="https://images.unsplash.com/photo-1474511320723-9a56873867b5?w=600&h=400&fit=crop" alt="Safari" onerror="this.src='https://images.unsplash.com/photo-1564760055775-d63b17a55c44?w=600&h=400&fit=crop'">
+          <span class="exp-badge">🔥 Popular</span>
+        </div>
+        <div class="exp-body">
+          <h3>Wildlife Safari Tours</h3>
+          <p>Observe majestic animals in their natural habitats across national parks and reserves.</p>
+          <div class="exp-meta"><span>🕐 2–4 days</span><span>⚡ Easy</span><span class="exp-price">From $399</span></div>
+          <button class="btn btn-outline full-w" onclick="bookExperience('Safari','$399')">Book Now</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- NEWSLETTER -->
+<section class="newsletter">
+  <div class="container">
+    <div class="newsletter-content" data-aos="fade-up">
+      <span class="section-eyebrow light">Stay inspired</span>
+      <h2>Get Travel Inspiration Delivered</h2>
+      <p>Join 50,000+ travellers receiving exclusive deals, hidden gems, and expert travel guides every week.</p>
+      <form class="newsletter-form" onsubmit="subscribeNewsletter(event)">
+        <input type="email" placeholder="Your email address" required>
+        <button type="submit" class="btn btn-primary">Subscribe ✦</button>
+      </form>
+      <p class="newsletter-note">No spam, ever. Unsubscribe in one click.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-section">
+        <h3>VISIT USA</h3>
+        <p>Your trusted partner for unforgettable journeys since 2009.</p>
+        <div class="social-links">
+          <a href="https://facebook.com" target="_blank">FB</a>
+          <a href="https://instagram.com" target="_blank">IG</a>
+          <a href="https://twitter.com" target="_blank">TW</a>
+          <a href="https://youtube.com" target="_blank">YT</a>
+          <a href="https://pinterest.com" target="_blank">PT</a>
+        </div>
+      </div>
+      <div class="footer-section">
+        <h4>Explore</h4>
+        <ul>
+          <li><a href="./index.html">Home</a></li>
+          <li><a href="./destinations.html">Destinations</a></li>
+          <li><a href="./experiences.html">Experiences</a></li>
+          <li><a href="#" onclick="openModal('quizModal'); startQuiz(); return false">Quiz</a></li>
+          <li><a href="#" onclick="openModal('flightModal'); return false">Flights</a></li>
+          <li><a href="#" onclick="openModal('hotelModal'); return false">Hotels</a></li>
+        </ul>
+      </div>
+      <div class="footer-section">
+        <h4>Tools</h4>
+        <ul>
+          <li><a href="#" onclick="openModal('weatherModal'); return false">Weather</a></li>
+          <li><a href="#" onclick="openModal('currencyModal'); return false">Currency</a></li>
+          <li><a href="#" onclick="openModal('packingModal'); return false">Packing</a></li>
+          <li><a href="#" onclick="openModal('visaModal'); return false">Visa</a></li>
+          <li><a href="#" onclick="openModal('phraseModal'); return false">Translator</a></li>
+        </ul>
+      </div>
+      <div class="footer-section">
+        <h4>Contact</h4>
+        <ul>
+          <li><a href="mailto:hello@visitusa.travel">Email</a></li>
+          <li><a href="tel:+18007282553">1-800-WANDER</a></li>
+          <li>123 Adventure Ave, NY 10001</li>
+          <li><a href="#" onclick="openModal('countdownModal'); return false">Countdown</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2025 VISIT USA. All rights reserved.</p>
+      <div class="footer-links">
+        <a href="#" onclick="showToast('Coming soon','info'); return false">Privacy</a>
+        <a href="#" onclick="showToast('Coming soon','info'); return false">Terms</a>
+        <a href="#" onclick="showToast('Updated','success'); return false">Cookies</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
