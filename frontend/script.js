@@ -77,39 +77,101 @@ function buildTicker() {
 let lastScroll = 0;
 const navbar = document.getElementById('navbar');
 
+/* ── SCROLL BEHAVIOR ──────────────────────────────────── */
 window.addEventListener('scroll', () => {
-  const cur = window.pageYOffset;
-  navbar.classList.toggle('scrolled', cur > 80);
-  if (cur > lastScroll && cur > 200) navbar.classList.add('nav-hidden');
-  else if (cur < lastScroll) navbar.classList.remove('nav-hidden');
-  lastScroll = cur <= 0 ? 0 : cur;
+  const navbar = document.getElementById('navbar');
+  if (navbar) {
+    navbar.classList.toggle('scrolled', window.pageYOffset > 20);
+  }
 });
 
+/* ── MOBILE MENU TOGGLE ───────────────────────────────── */
 function toggleMobileMenu() {
-  document.getElementById('mobileMenu').classList.toggle('open');
+  const mobileMenu = document.getElementById('mobileMenu');
+  const hamburger = document.getElementById('hamburger');
+  if (mobileMenu) {
+    mobileMenu.classList.toggle('open');
+    if (hamburger) hamburger.classList.toggle('open');
+    document.body.style.overflow = mobileMenu.classList.contains('open') ? 'hidden' : '';
+  }
 }
 
-/* Set active nav link based on current page */
+/* Close mobile menu on outside click */
+document.addEventListener('click', (e) => {
+  const mobileMenu = document.getElementById('mobileMenu');
+  const hamburger = document.getElementById('hamburger');
+  const navbar = document.getElementById('navbar');
+  if (mobileMenu && mobileMenu.classList.contains('open')) {
+    if (!navbar.contains(e.target) && !mobileMenu.contains(e.target)) {
+      mobileMenu.classList.remove('open');
+      if (hamburger) hamburger.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+  }
+});
+
+/* ── SET ACTIVE NAV LINK ──────────────────────────────── */
 function setActiveNavLink() {
   const currentPage = window.location.pathname;
   const currentFile = currentPage.split('/').pop() || 'index.html';
   
-  // Remove active class from all nav links
-  document.querySelectorAll('.nav-links a, .mobile-menu a').forEach(link => {
+  document.querySelectorAll('.nav-link[data-page]').forEach(link => {
     link.classList.remove('active');
   });
   
-  // Add active class to current page link
-  document.querySelectorAll('.nav-links a, .mobile-menu a').forEach(link => {
-    const href = link.getAttribute('href');
-    if (href) {
-      const linkFile = href.split('/').pop() || 'index.html';
-      if (linkFile === currentFile || 
-          (currentFile === '' && linkFile === 'index.html')) {
-        link.classList.add('active');
-      }
+  const activeLink = document.querySelector(`.nav-link[data-page="${currentFile.replace('.html', '')}"]`) ||
+                     document.querySelector(`.nav-link[data-page="index"]`);
+  if (activeLink) activeLink.classList.add('active');
+}
+
+/* ── DARK MODE TOGGLE ─────────────────────────────────── */
+function toggleDarkMode() {
+  document.body.classList.toggle('dark-mode');
+  localStorage.setItem('darkMode', document.body.classList.contains('dark-mode') ? '1' : '0');
+}
+
+/* ── INITIALIZE DARK MODE ─────────────────────────────── */
+function initDarkMode() {
+  if (localStorage.getItem('darkMode') === '1') {
+    document.body.classList.add('dark-mode');
+  }
+}
+
+/* ── NAVBAR SEARCH ────────────────────────────────────── */
+function toggleNavSearch() {
+  const navSearchBar = document.getElementById('navSearchBar');
+  const navSearchInput = document.getElementById('navSearchInput');
+  if (navSearchBar) {
+    navSearchBar.classList.toggle('open');
+    if (navSearchBar.classList.contains('open') && navSearchInput) {
+      setTimeout(() => navSearchInput.focus(), 100);
     }
-  });
+  }
+}
+
+function handleNavSearch(e) {
+  if (e.key !== 'Enter') return;
+  
+  const searchQuery = e.target.value.trim().toLowerCase();
+  if (!searchQuery) return;
+  
+  // Check for keyword matches
+  if (searchQuery.includes('weather')) {
+    window.location.href = './tools.html#weather';
+  } else if (searchQuery.includes('flight')) {
+    window.location.href = './tools.html#flights';
+  } else if (searchQuery.includes('hotel')) {
+    window.location.href = './tools.html#hotels';
+  } else if (searchQuery.includes('visa')) {
+    window.location.href = './tools.html#visa';
+  } else if (searchQuery.includes('pack') || searchQuery.includes('packing')) {
+    window.location.href = './tools.html#packing';
+  } else if (searchQuery.includes('currency') || searchQuery.includes('exchange')) {
+    window.location.href = './tools.html#currency';
+  } else {
+    // Default to destinations search
+    window.location.href = './destinations.html';
+  }
 }
 
 function scrollTo(id) {
@@ -2660,18 +2722,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // Build currency ticker
   buildTicker();
 
-  // Dark mode
-  const toggle = document.getElementById('darkModeToggle');
-  if (toggle) {
-    if (localStorage.getItem('wl_dark') === '1') {
-      document.body.classList.add('dark-mode');
-    }
-    toggle.addEventListener('click', () => {
-      document.body.classList.toggle('dark-mode');
-      localStorage.setItem('wl_dark', 
-        document.body.classList.contains('dark-mode') ? '1' : '0');
-    });
-  }
+  // Initialize dark mode from localStorage
+  initDarkMode();
+
+  // Set active nav link based on current page
+  setActiveNavLink();
 
   // Load live currency rates
   loadLiveRates();

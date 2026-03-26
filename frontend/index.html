@@ -283,64 +283,316 @@
      FLIGHT SEARCH MODAL
 ══════════════════════════════════════════ -->
 <div class="modal-overlay" id="flightModal">
-  <div class="modal-box medium">
-    <div class="modal-head">
-      <h2>✈️ Flight Search</h2>
-      <button class="modal-close" onclick="closeModal('flightModal')">✕</button>
-    </div>
-    <div class="modal-body-scroll">
-      <div class="flight-form">
-        <div class="trip-type-toggle">
-          <button class="tt-btn active" id="ttOne" onclick="setTripType('one')">One Way</button>
-          <button class="tt-btn" id="ttRound" onclick="setTripType('round')">Round Trip</button>
+      <div class="modal-box medium">
+
+        <div class="modal-head">
+          <div style="display:flex;
+            align-items:center;gap:1rem">
+            <div style="font-size:2rem;
+              background:rgba(255,255,255,.15);
+              width:48px;height:48px;
+              border-radius:50%;
+              display:flex;align-items:center;
+              justify-content:center;
+              flex-shrink:0">
+              &#9992;
+            </div>
+            <div>
+              <h2 style="color:#fff;
+                font-family:var(--font-display);
+                font-size:1.4rem;font-weight:700;
+                margin-bottom:.15rem">
+                Flight Search
+              </h2>
+              <p style="color:rgba(255,255,255,.6);
+                font-size:.78rem;margin:0">
+                Search real flights worldwide
+              </p>
+            </div>
+          </div>
+          <button 
+            style="background:rgba(255,255,255,.15);
+              border:none;color:#fff;width:36px;
+              height:36px;border-radius:50%;
+              cursor:pointer;font-size:1rem;
+              display:flex;align-items:center;
+              justify-content:center;
+              transition:all .3s ease;flex-shrink:0"
+            onclick="closeModal('flightModal')"
+            onmouseover="this.style.background='rgba(255,255,255,.25)'"
+            onmouseout="this.style.background='rgba(255,255,255,.15)'">
+            &#x2715;
+          </button>
         </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>From</label>
-            <input type="text" id="flightFrom" placeholder="City or airport code" value="New York (JFK)">
+
+        <div class="modal-body-scroll">
+          <div style="padding:.5rem 0 1rem">
+
+            <!-- Trip type toggle -->
+            <div style="display:flex;
+              background:var(--bg-sand);
+              border-radius:12px;padding:4px;
+              gap:4px;margin-bottom:1.25rem">
+              <button id="ttOne"
+                style="flex:1;padding:.65rem 1rem;
+                  border:none;border-radius:9px;
+                  background:var(--bg-card);
+                  font-family:var(--font-body);
+                  font-size:.88rem;font-weight:700;
+                  color:var(--text-primary);
+                  cursor:pointer;
+                  box-shadow:0 2px 8px rgba(70,70,85,.10);
+                  transition:all .2s ease"
+                onclick="setTripType('one')">
+                One Way
+              </button>
+              <button id="ttRound"
+                style="flex:1;padding:.65rem 1rem;
+                  border:none;border-radius:9px;
+                  background:transparent;
+                  font-family:var(--font-body);
+                  font-size:.88rem;font-weight:600;
+                  color:var(--text-muted);
+                  cursor:pointer;
+                  transition:all .2s ease"
+                onclick="setTripType('round')">
+                Round Trip
+              </button>
+            </div>
+
+            <!-- From / Swap / To -->
+            <div style="display:grid;
+              grid-template-columns:1fr 44px 1fr;
+              gap:.75rem;align-items:flex-end;
+              margin-bottom:1rem">
+
+              <div style="display:flex;
+                flex-direction:column;gap:.4rem">
+                <label style="font-size:.70rem;
+                  font-weight:700;
+                  text-transform:uppercase;
+                  letter-spacing:.12em;
+                  color:var(--text-muted)">
+                  From
+                </label>
+                <input type="text"
+                  id="flightFrom"
+                  value="New York (JFK)"
+                  style="width:100%;
+                    padding:.9rem 1rem;
+                    background:var(--bg-card);
+                    border:1.5px solid var(--border);
+                    border-radius:12px;
+                    font-family:var(--font-body);
+                    font-size:.92rem;
+                    font-weight:500;
+                    color:var(--text-primary);
+                    outline:none;
+                    transition:all .2s ease;
+                    box-sizing:border-box"
+                  onfocus="this.style.borderColor='#94958b';this.style.boxShadow='0 0 0 3px rgba(148,149,139,.10)'"
+                  onblur="this.style.borderColor='var(--border)';this.style.boxShadow='none'"
+                  placeholder="City or airport code">
+              </div>
+
+              <div style="display:flex;
+                align-items:flex-end;
+                padding-bottom:.05rem">
+                <button
+                  onclick="swapFlightRoute()"
+                  style="width:40px;height:40px;
+                    background:var(--bg-sand);
+                    border:1.5px solid var(--border);
+                    border-radius:50%;
+                    display:flex;align-items:center;
+                    justify-content:center;
+                    font-size:1.1rem;cursor:pointer;
+                    color:var(--text-secondary);
+                    transition:all .3s ease;
+                    flex-shrink:0"
+                  onmouseover="this.style.background='#464655';this.style.color='#fff';this.style.borderColor='#464655';this.style.transform='rotate(180deg)'"
+                  onmouseout="this.style.background='var(--bg-sand)';this.style.color='var(--text-secondary)';this.style.borderColor='var(--border)';this.style.transform='none'">
+                  &#8644;
+                </button>
+              </div>
+
+              <div style="display:flex;
+                flex-direction:column;gap:.4rem">
+                <label style="font-size:.70rem;
+                  font-weight:700;
+                  text-transform:uppercase;
+                  letter-spacing:.12em;
+                  color:var(--text-muted)">
+                  To
+                </label>
+                <input type="text"
+                  id="flightTo"
+                  value="Los Angeles (LAX)"
+                  style="width:100%;
+                    padding:.9rem 1rem;
+                    background:var(--bg-card);
+                    border:1.5px solid var(--border);
+                    border-radius:12px;
+                    font-family:var(--font-body);
+                    font-size:.92rem;
+                    font-weight:500;
+                    color:var(--text-primary);
+                    outline:none;
+                    transition:all .2s ease;
+                    box-sizing:border-box"
+                  onfocus="this.style.borderColor='#94958b';this.style.boxShadow='0 0 0 3px rgba(148,149,139,.10)'"
+                  onblur="this.style.borderColor='var(--border)';this.style.boxShadow='none'"
+                  placeholder="City or airport code">
+              </div>
+            </div>
+
+            <!-- Depart / Return dates -->
+            <div style="display:grid;
+              grid-template-columns:1fr 1fr;
+              gap:.75rem;margin-bottom:1rem">
+
+              <div style="display:flex;
+                flex-direction:column;gap:.4rem">
+                <label style="font-size:.70rem;
+                  font-weight:700;
+                  text-transform:uppercase;
+                  letter-spacing:.12em;
+                  color:var(--text-muted)">
+                  Depart
+                </label>
+                <input type="date"
+                  id="flightDepart"
+                  style="width:100%;
+                    padding:.9rem 1rem;
+                    background:var(--bg-card);
+                    border:1.5px solid var(--border);
+                    border-radius:12px;
+                    font-family:var(--font-body);
+                    font-size:.88rem;
+                    color:var(--text-primary);
+                    outline:none;
+                    box-sizing:border-box;
+                    transition:all .2s ease"
+                  onfocus="this.style.borderColor='#94958b'"
+                  onblur="this.style.borderColor='var(--border)'">
+              </div>
+
+              <div id="returnGroup"
+                style="display:flex;
+                  flex-direction:column;gap:.4rem">
+                <label style="font-size:.70rem;
+                  font-weight:700;
+                  text-transform:uppercase;
+                  letter-spacing:.12em;
+                  color:var(--text-muted)">
+                  Return
+                </label>
+                <input type="date"
+                  id="flightReturn"
+                  style="width:100%;
+                    padding:.9rem 1rem;
+                    background:var(--bg-card);
+                    border:1.5px solid var(--border);
+                    border-radius:12px;
+                    font-family:var(--font-body);
+                    font-size:.88rem;
+                    color:var(--text-primary);
+                    outline:none;
+                    box-sizing:border-box;
+                    transition:all .2s ease"
+                  onfocus="this.style.borderColor='#94958b'"
+                  onblur="this.style.borderColor='var(--border)'">
+              </div>
+            </div>
+
+            <!-- Passengers / Class -->
+            <div style="display:grid;
+              grid-template-columns:1fr 1fr;
+              gap:.75rem;margin-bottom:1.25rem">
+
+              <div style="display:flex;
+                flex-direction:column;gap:.4rem">
+                <label style="font-size:.70rem;
+                  font-weight:700;
+                  text-transform:uppercase;
+                  letter-spacing:.12em;
+                  color:var(--text-muted)">
+                  Passengers
+                </label>
+                <select id="flightPass"
+                  style="width:100%;
+                    padding:.9rem 1rem;
+                    background:var(--bg-card);
+                    border:1.5px solid var(--border);
+                    border-radius:12px;
+                    font-family:var(--font-body);
+                    font-size:.88rem;
+                    color:var(--text-primary);
+                    outline:none;
+                    cursor:pointer;
+                    box-sizing:border-box;
+                    transition:all .2s ease">
+                  <option>1 Adult</option>
+                  <option>2 Adults</option>
+                  <option>2 Adults + 1 Child</option>
+                  <option>2 Adults + 2 Children</option>
+                  <option>Group (5+)</option>
+                </select>
+              </div>
+
+              <div style="display:flex;
+                flex-direction:column;gap:.4rem">
+                <label style="font-size:.70rem;
+                  font-weight:700;
+                  text-transform:uppercase;
+                  letter-spacing:.12em;
+                  color:var(--text-muted)">
+                  Class
+                </label>
+                <select id="flightClass"
+                  style="width:100%;
+                    padding:.9rem 1rem;
+                    background:var(--bg-card);
+                    border:1.5px solid var(--border);
+                    border-radius:12px;
+                    font-family:var(--font-body);
+                    font-size:.88rem;
+                    color:var(--text-primary);
+                    outline:none;
+                    cursor:pointer;
+                    box-sizing:border-box;
+                    transition:all .2s ease">
+                  <option>Economy</option>
+                  <option>Premium Economy</option>
+                  <option>Business</option>
+                  <option>First Class</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Search button -->
+            <button onclick="searchFlights()"
+              style="width:100%;padding:1rem;
+                background:linear-gradient(135deg,#464655,#33323f);
+                color:#ffffff;border:none;
+                border-radius:14px;
+                font-family:var(--font-display);
+                font-size:1rem;font-weight:700;
+                cursor:pointer;
+                letter-spacing:.02em;
+                transition:all .25s ease;
+                box-shadow:0 8px 24px rgba(70,70,85,.22)"
+              onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 32px rgba(70,70,85,.32)'"
+              onmouseout="this.style.transform='none';this.style.boxShadow='0 8px 24px rgba(70,70,85,.22)'">
+              Search Flights
+            </button>
+
           </div>
-          <div class="form-group">
-            <label>To</label>
-            <input type="text" id="flightTo" placeholder="City or airport code" value="Los Angeles (LAX)">
-          </div>
+
+          <div id="flightResults"></div>
         </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Depart</label>
-            <input type="date" id="flightDepart">
-          </div>
-          <div class="form-group" id="returnGroup">
-            <label>Return</label>
-            <input type="date" id="flightReturn">
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Passengers</label>
-            <select id="flightPass">
-              <option>1 Adult</option>
-              <option>2 Adults</option>
-              <option>2 Adults + 1 Child</option>
-              <option>2 Adults + 2 Children</option>
-              <option>Group (5+)</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Class</label>
-            <select id="flightClass">
-              <option>Economy</option>
-              <option>Premium Economy</option>
-              <option>Business</option>
-              <option>First Class</option>
-            </select>
-          </div>
-        </div>
-        <button class="btn btn-primary full-w" onclick="searchFlights()">🔍 Search Flights</button>
       </div>
-      <div id="flightResults"></div>
     </div>
-  </div>
-</div>
 
 <!-- ══════════════════════════════════════════
      LIVE FLIGHT TRACKER MODAL
@@ -433,7 +685,7 @@
                     border-radius:50%;
                     display:flex;align-items:center;
                     justify-content:center">
-                    🏨
+                    &#127968;
                 </div>
                 <div>
                     <h2 style="color:#fff;margin-bottom:.2rem">
@@ -473,7 +725,7 @@
                             font-weight:600;
                             color:var(--text-primary);
                             transition:all .2s ease">
-                        🗽 New York
+                        New York
                     </button>
                     <button onclick="setHotelCity('Las Vegas')"
                         style="background:var(--bg-sand);
@@ -485,7 +737,7 @@
                             font-weight:600;
                             color:var(--text-primary);
                             transition:all .2s ease">
-                        🎰 Las Vegas
+                        Las Vegas
                     </button>
                     <button onclick="setHotelCity('Miami')"
                         style="background:var(--bg-sand);
@@ -497,7 +749,7 @@
                             font-weight:600;
                             color:var(--text-primary);
                             transition:all .2s ease">
-                        🌴 Miami
+                        Miami
                     </button>
                     <button onclick="setHotelCity('San Francisco')"
                         style="background:var(--bg-sand);
@@ -509,7 +761,7 @@
                             font-weight:600;
                             color:var(--text-primary);
                             transition:all .2s ease">
-                        🌁 San Francisco
+                        San Francisco
                     </button>
                     <button onclick="setHotelCity('Hawaii')"
                         style="background:var(--bg-sand);
@@ -521,7 +773,7 @@
                             font-weight:600;
                             color:var(--text-primary);
                             transition:all .2s ease">
-                        🌺 Hawaii
+                        Hawaii
                     </button>
                     <button onclick="setHotelCity('Chicago')"
                         style="background:var(--bg-sand);
@@ -533,7 +785,7 @@
                             font-weight:600;
                             color:var(--text-primary);
                             transition:all .2s ease">
-                        🏙️ Chicago
+                        Chicago
                     </button>
                 </div>
             </div>
@@ -582,7 +834,7 @@
                 </div>
                 <button class="btn btn-primary full-w"
                     onclick="searchHotels()">
-                    🔍 Search Hotels
+                    Search Hotels
                 </button>
             </div>
 
@@ -846,95 +1098,106 @@
      NAVBAR
 ══════════════════════════════════════════ -->
 <nav id="navbar">
-  <div class="logo">VISIT USA</div>
-  <ul class="nav-links">
-    <li>
-      <a class="dropdown-toggle">Destinations ▾</a>
-      <div class="mega-dropdown">
-        <div class="dropdown-container">
-          <div class="dropdown-grid">
-            <div class="dropdown-section">
-              <h3>United States</h3>
-              <div class="dropdown-items">
-                <!-- California: Golden Gate / Pacific Coast -->
-                <a class="dropdown-item" onclick="showMap('California')">
-                  <img src="https://images.unsplash.com/photo-1449034446853-66c86144b0ad?w=400&h=260&fit=crop" alt="California" class="dropdown-item-image" onerror="this.src='https://placehold.co/400x260/44355b/ffffff?text=California'">
-                  <div class="dropdown-item-overlay">California</div>
-                </a>
-                <!-- Texas: Houston skyline or Texas landscape -->
-                <a class="dropdown-item" onclick="showMap('Texas')">
-                  <img src="https://images.unsplash.com/photo-1531218150217-54595bc2b934?w=400&h=260&fit=crop" alt="Texas" class="dropdown-item-image" onerror="this.src='https://placehold.co/400x260/44355b/ffffff?text=Texas'">
-                  <div class="dropdown-item-overlay">Texas</div>
-                </a>
-                <!-- Florida: Miami beach / palm trees -->
-                <a class="dropdown-item" onclick="showMap('Florida')">
-                  <img src="https://images.unsplash.com/photo-1589083130544-0d6a2926e519?w=400&h=260&fit=crop" alt="Florida" class="dropdown-item-image" onerror="this.src='https://placehold.co/400x260/44355b/ffffff?text=Florida'">
-                  <div class="dropdown-item-overlay">Florida</div>
-                </a>
-                <!-- New York: Manhattan skyline / Times Square -->
-                <a class="dropdown-item" onclick="showMap('New York')">
-                  <img src="https://images.unsplash.com/photo-1538970272646-f61fabb3a8a2?w=400&h=260&fit=crop" alt="New York" class="dropdown-item-image" onerror="this.src='https://placehold.co/400x260/44355b/ffffff?text=New+York'">
-                  <div class="dropdown-item-overlay">New York</div>
-                </a>
-                <!-- Hawaii: tropical beach / volcanic landscape -->
-                <a class="dropdown-item" onclick="showMap('Hawaii')">
-                  <img src="https://images.unsplash.com/photo-1507876466758-0b7a79b0b76d?w=400&h=260&fit=crop" alt="Hawaii" class="dropdown-item-image" onerror="this.src='https://placehold.co/400x260/44355b/ffffff?text=Hawaii'">
-                  <div class="dropdown-item-overlay">Hawaii</div>
-                </a>
-                <!-- Nevada: Las Vegas strip at night -->
-                <a class="dropdown-item" onclick="showMap('Nevada')">
-                  <img src="https://images.unsplash.com/photo-1605833556294-ea5c7a74f97a?w=400&h=260&fit=crop" alt="Nevada" class="dropdown-item-image" onerror="this.src='https://placehold.co/400x260/44355b/ffffff?text=Nevada'">
-                  <div class="dropdown-item-overlay">Nevada</div>
-                </a>
-              </div>
+  <a href="./index.html" class="nav-logo">
+    <span class="nav-logo-icon">✈</span>
+    <span class="nav-logo-text">VISIT USA</span>
+  </a>
+  <ul class="nav-center-links">
+    <li class="nav-item">
+      <a href="./index.html" class="nav-link" data-page="index">Home</a>
+    </li>
+    <li class="nav-item nav-has-dropdown">
+      <a href="./destinations.html" class="nav-link" data-page="destinations">Destinations <span class="nav-chevron">›</span></a>
+      <div class="nav-mega-dropdown">
+        <div class="nav-dropdown-inner">
+          <div class="nav-dropdown-section">
+            <p class="nav-dropdown-label">Popular Cities</p>
+            <div class="nav-dropdown-grid">
+              <a href="./destinations.html" class="nav-dropdown-card"><span class="nav-dc-emoji">🗽</span><span class="nav-dc-name">New York</span><span class="nav-dc-state">New York</span></a>
+              <a href="./destinations.html" class="nav-dropdown-card"><span class="nav-dc-emoji">🌴</span><span class="nav-dc-name">Miami</span><span class="nav-dc-state">Florida</span></a>
+              <a href="./destinations.html" class="nav-dropdown-card"><span class="nav-dc-emoji">🎰</span><span class="nav-dc-name">Las Vegas</span><span class="nav-dc-state">Nevada</span></a>
+              <a href="./destinations.html" class="nav-dropdown-card"><span class="nav-dc-emoji">🌉</span><span class="nav-dc-name">San Francisco</span><span class="nav-dc-state">California</span></a>
+              <a href="./destinations.html" class="nav-dropdown-card"><span class="nav-dc-emoji">🌺</span><span class="nav-dc-name">Hawaii</span><span class="nav-dc-state">Hawaii</span></a>
+              <a href="./destinations.html" class="nav-dropdown-card"><span class="nav-dc-emoji">🏙️</span><span class="nav-dc-name">Chicago</span><span class="nav-dc-state">Illinois</span></a>
             </div>
-            <div class="dropdown-section">
-              <h3>Territories & DC</h3>
-              <div class="dropdown-items territories">
-                <!-- Puerto Rico: Old San Juan colorful buildings or Caribbean beach -->
-                <a class="dropdown-item" onclick="showMap('Puerto Rico')">
-                  <img src="https://images.unsplash.com/photo-1580655653885-65763b2597d0?w=400&h=260&fit=crop" alt="Puerto Rico" class="dropdown-item-image" onerror="this.src='https://placehold.co/400x260/44355b/ffffff?text=Puerto+Rico'">
-                  <div class="dropdown-item-overlay">Puerto Rico</div>
-                </a>
-                <!-- Washington DC: Capitol / Lincoln Memorial -->
-                <a class="dropdown-item" onclick="showMap('Washington D.C.')">
-                  <img src="https://images.unsplash.com/photo-1501466044931-62695aada8e9?w=400&h=260&fit=crop" alt="Washington D.C." class="dropdown-item-image" onerror="this.src='https://placehold.co/400x260/44355b/ffffff?text=Washington+DC'">
-                  <div class="dropdown-item-overlay">Washington D.C.</div>
-                </a>
-              </div>
-              <h3 style="margin-top:1.5rem">Quick Tools</h3>
-              <div class="dropdown-tools">
-                <button onclick="openModal('weatherModal'); loadWeatherModal()">Weather Check</button>
-                <button onclick="openModal('currencyModal'); loadLiveRates()">Currency</button>
-                <button onclick="openModal('visaModal')">Visa Info</button>
-                <button onclick="openModal('phraseModal')">Translator</button>
-              </div>
+          </div>
+          <div class="nav-dropdown-section">
+            <p class="nav-dropdown-label">Nature & Adventure</p>
+            <div class="nav-dropdown-list">
+              <a href="./destinations.html" class="nav-dropdown-list-item"><span>🏜️</span>Grand Canyon</a>
+              <a href="./destinations.html" class="nav-dropdown-list-item"><span>🦌</span>Yellowstone</a>
+              <a href="./destinations.html" class="nav-dropdown-list-item"><span>🌲</span>Yosemite</a>
+              <a href="./destinations.html" class="nav-dropdown-list-item"><span>🏔️</span>Rocky Mountains</a>
             </div>
+          </div>
+          <div class="nav-dropdown-cta">
+            <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:.75rem">Not sure where to go?</p>
+            <a href="./plan.html" class="nav-dropdown-cta-btn">✨ Take the AI Quiz</a>
           </div>
         </div>
       </div>
     </li>
-    <li><a href="#experiences" onclick="scrollTo('experiences')">Experiences</a></li>
-    <li><a href="#plan" onclick="scrollTo('plan')">Plan Trip</a></li>
-    <li><a href="#tools" onclick="scrollTo('tools')">Tools</a></li>
-    <li><a href="#about" onclick="scrollTo('about')">About</a></li>
-    <li>
-      <button class="dark-mode-toggle" id="darkModeToggle" aria-label="Toggle dark mode">
-        <span class="sun-icon">☀️</span>
-        <span class="moon-icon">🌙</span>
-      </button>
+    <li class="nav-item">
+      <a href="./experiences.html" class="nav-link" data-page="experiences">Experiences</a>
+    </li>
+    <li class="nav-item">
+      <a href="./tools.html" class="nav-link" data-page="tools">Tools</a>
+    </li>
+    <li class="nav-item">
+      <a href="./plan.html" class="nav-link" data-page="plan">Plan Trip</a>
+    </li>
+    <li class="nav-item">
+      <a href="./about.html" class="nav-link" data-page="about">About</a>
     </li>
   </ul>
-  <button class="hamburger" id="hamburger" onclick="toggleMobileMenu()">☰</button>
+  <div class="nav-actions">
+    <button class="nav-icon-btn" id="navSearchBtn" onclick="toggleNavSearch()" title="Search destinations">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+    </button>
+    <button class="nav-icon-btn nav-dark-btn" id="darkToggle" onclick="toggleDarkMode()" title="Toggle dark mode">
+      <span class="nav-sun">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        </svg>
+      </span>
+      <span class="nav-moon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+      </span>
+    </button>
+    <a href="./plan.html" class="nav-cta-btn">Plan a Trip</a>
+    <button class="nav-hamburger" id="hamburger" onclick="toggleMobileMenu()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+  <div class="nav-search-bar" id="navSearchBar">
+    <input type="text" id="navSearchInput" placeholder="Search destinations, experiences, tools..." onkeydown="handleNavSearch(event)">
+    <button onclick="toggleNavSearch()">✕</button>
+  </div>
 </nav>
 
-<!-- Mobile menu -->
-<div class="mobile-menu" id="mobileMenu">
-  <a href="#destinations" onclick="toggleMobileMenu()">Destinations</a>
-  <a href="#experiences" onclick="toggleMobileMenu()">Experiences</a>
-  <a href="#plan" onclick="toggleMobileMenu()">Plan Trip</a>
-  <a href="#tools" onclick="toggleMobileMenu()">Tools</a>
-  <a href="#about" onclick="toggleMobileMenu()">About</a>
+<div class="nav-mobile-overlay" id="mobileMenu">
+  <div class="nav-mobile-inner">
+    <div class="nav-mobile-header">
+      <span class="nav-logo-text">VISIT USA</span>
+      <button onclick="toggleMobileMenu()" class="nav-mobile-close">✕</button>
+    </div>
+    <nav class="nav-mobile-links">
+      <a href="./index.html" class="nav-mobile-link"><span>Home</span><span class="nav-mobile-arrow">›</span></a>
+      <a href="./destinations.html" class="nav-mobile-link"><span>Destinations</span><span class="nav-mobile-arrow">›</span></a>
+      <a href="./experiences.html" class="nav-mobile-link"><span>Experiences</span><span class="nav-mobile-arrow">›</span></a>
+      <a href="./tools.html" class="nav-mobile-link"><span>Tools</span><span class="nav-mobile-arrow">›</span></a>
+      <a href="./plan.html" class="nav-mobile-link"><span>Plan Trip</span><span class="nav-mobile-arrow">›</span></a>
+      <a href="./about.html" class="nav-mobile-link"><span>About</span><span class="nav-mobile-arrow">›</span></a>
+    </nav>
+    <div class="nav-mobile-footer">
+      <a href="./plan.html" class="nav-mobile-cta">✨ Start Planning</a>
+      <p style="font-size:.75rem;color:var(--text-muted);text-align:center;margin-top:1rem">Free trip planning tools</p>
+    </div>
+  </div>
 </div>
 
 <!-- ══════════════════════════════════════════
