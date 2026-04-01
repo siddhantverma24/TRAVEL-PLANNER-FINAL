@@ -395,56 +395,340 @@ const destinationPOIs = {
   }
 };
 
-function openDestinationMap(cityName) {
-  openModal('destinationMapModal');
-  document.getElementById('destinationMapTitle').textContent = `Explore ${cityName}`;
-  setTimeout(() => { initDestMap(cityName); if (destMapInstance) destMapInstance.invalidateSize(); }, 200);
-}
-function closeDestinationMap() {
-  closeModal('destinationMapModal');
-  if (destMapInstance) { destMapInstance.remove(); destMapInstance = null; }
-}
-function initDestMap(city) {
-  const d = destinationPOIs[city];
-  if (!d) return;
-  if (destMapInstance) destMapInstance.remove();
-  
-  const mapContainer = document.getElementById('destinationMap');
-  if (!mapContainer) return;
-  
-  destMapInstance = L.map(mapContainer).setView([d.center[0], d.center[1]], 12);
+async function openDestinationMap(name) {
+  const modal = document.getElementById('destinationMapModal');
+  const title = document.getElementById('destinationMapTitle');
+  const sidebar = document.getElementById('destinationPOIs');
+  const mapEl = document.getElementById('destinationMap');
+
+  if (!modal || !title || !sidebar || !mapEl || typeof L === 'undefined') return;
+
+  // Open modal (support both legacy .open and .active).
+  modal.classList.add('open');
+  modal.classList.add('active');
+  title.textContent = '📍 ' + name;
+  sidebar.innerHTML = '<p style="color:var(--text-muted);padding:1rem">Loading AI info...</p>';
+
+  // 1) Geocode destination via Nominatim.
+  let lat = 39.5;
+  let lng = -98.35;
+  let zoom = 5;
+  try {
+    const geo = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(name + ' USA')}&format=json&limit=1`
+    );
+    const geoData = await geo.json();
+    if (Array.isArray(geoData) && geoData.length > 0) {
+      lat = parseFloat(geoData[0].lat);
+      lng = parseFloat(geoData[0].lon);
+      zoom = 11;
+    }
+  } catch (e) {
+    // Keep fallback USA center.
+  }
+
+  // 2) Init/reset Leaflet map.
+  mapEl.style.height = '380px';
+  if (window._destMap) {
+    window._destMap.remove();
+    window._destMap = null;
+  }
+
+  const map = L.map('destinationMap').setView([lat, lng], zoom);
+  window._destMap = map;
+
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors',
     maxZoom: 19
-  }).addTo(destMapInstance);
+  }).addTo(map);
 
-  const sidebar = document.getElementById('destinationPOIs');
-  if (!sidebar) return;
-  sidebar.innerHTML = '';
-  d.pois.forEach(p => {
-    const markerEl = document.createElement('div');
-    markerEl.style.background = p.type==='attraction' ? '#44355b' : '#eca72c';
-    markerEl.style.color = 'white';
-    markerEl.style.width = '34px';
-    markerEl.style.height = '34px';
-    markerEl.style.borderRadius = '50%';
-    markerEl.style.display = 'flex';
-    markerEl.style.alignItems = 'center';
-    markerEl.style.justifyContent = 'center';
-    markerEl.style.fontSize = '18px';
-    markerEl.style.boxShadow = '0 3px 10px rgba(0,0,0,.3)';
-    markerEl.style.cursor = 'pointer';
-    markerEl.textContent = p.type==='attraction' ? '📍' : 'R';
-    
-    const icon = L.divIcon({ html: markerEl.outerHTML, iconSize: [34, 34], className: 'custom-marker' });
-    const m = L.marker([p.lat, p.lng], { icon: icon }).bindPopup(`<strong>${p.name}</strong><br>${p.desc}`).addTo(destMapInstance);
-    
-    const el = document.createElement('div');
-    el.className = 'poi-item';
-    el.innerHTML = `<h4>${p.type==='attraction'?'📍':'🍽️'} ${p.name}</h4><p>${p.desc}</p>`;
-    el.onclick = () => { destMapInstance.setView([p.lat, p.lng], 15); m.openPopup(); };
-    sidebar.appendChild(el);
+  L.marker([lat, lng]).addTo(map).bindPopup(`<b>${name}</b>`).openPopup();
+
+  // 3) Call Groq endpoint for overview + POIs.
+  try {
+    const res = await fetch('/api/hero-ai/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt: `Tell me about ${name} as a US travel destination. Give me:\n1. A 2-sentence overview\n2. Exactly 4 must-visit points of interest with their real GPS coordinates\n\nRespond ONLY in this JSON format, no markdown:\n{\n  "overview": "...",\n  "pois": [\n    {"name": "...", "description": "...", "lat": 0.0, "lng": 0.0, "emoji": "..."},\n    {"name": "...", "description": "...", "lat": 0.0, "lng": 0.0, "emoji": "..."},\n    {"name": "...", "description": "...", "lat": 0.0, "lng": 0.0, "emoji": "..."},\n    {"name": "...", "description": "...", "lat": 0.0, "lng": 0.0, "emoji": "..."}\n  ]\n}`
+      })
+    });
+
+    const raw = await res.json();
+    let data = raw;
+
+    // Fallback if endpoint returns hero card array.
+    if (Array.isArray(raw)) {
+      data = {
+        overview: raw.map(r => r.tagline).filter(Boolean).join('. '),
+        pois: raw.slice(0, 4).map(r => ({
+          name: r.name,
+          description: r.description,
+          lat: lat + (Math.random() - 0.5) * 0.05,
+          lng: lng + (Math.random() - 0.5) * 0.05,
+          emoji: r.emoji || '📍'
+        }))
+      };
+    }
+
+    // 4) Add POI markers.
+    const pois = Array.isArray(data?.pois) ? data.pois : [];
+    pois.forEach((poi) => {
+      const pLat = Number(poi.lat);
+      const pLng = Number(poi.lng);
+      if (!Number.isFinite(pLat) || !Number.isFinite(pLng)) return;
+
+      const icon = L.divIcon({
+        html: `<div style="font-size:1.6rem;line-height:1">${poi.emoji || '📍'}</div>`,
+        className: '',
+        iconSize: [32, 32],
+        iconAnchor: [16, 16]
+      });
+
+      L.marker([pLat, pLng], { icon })
+        .addTo(map)
+        .bindPopup(`<b>${poi.emoji || '📍'} ${poi.name || 'POI'}</b><br><small>${poi.description || ''}</small>`);
+    });
+
+    const allPoints = [[lat, lng], ...pois
+      .filter((p) => Number.isFinite(Number(p.lat)) && Number.isFinite(Number(p.lng)))
+      .map((p) => [Number(p.lat), Number(p.lng)])
+    ];
+    if (allPoints.length > 1) {
+      map.fitBounds(allPoints, { padding: [40, 40] });
+    }
+
+    // 5) Unsplash photos.
+    const photoQueries = [name, `${name} landmark`, `${name} travel`];
+    const seed = Date.now();
+    const photoUrls = photoQueries.map((q, i) =>
+      `https://source.unsplash.com/400x260/?${encodeURIComponent(q)}&sig=${seed + i}`
+    );
+
+    const photosHTML = `
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;margin-bottom:1rem">
+        ${photoUrls.map((url) => `
+          <img src="${url}" alt="${name}"
+            style="width:100%;height:90px;object-fit:cover;border-radius:8px;cursor:pointer"
+            onerror="this.style.display='none'"
+            onclick="window.open('${url}','_blank')"
+          >
+        `).join('')}
+      </div>
+    `;
+
+    // 6) Render sidebar.
+    const poisHTML = pois.map((poi) => {
+      const pLat = Number(poi.lat);
+      const pLng = Number(poi.lng);
+      const safeLat = Number.isFinite(pLat) ? pLat : lat;
+      const safeLng = Number.isFinite(pLng) ? pLng : lng;
+      return `
+      <div style="padding:0.65rem 0;border-bottom:1px solid var(--border);cursor:pointer"
+        onclick="window._destMap && window._destMap.setView([${safeLat},${safeLng}], 14)">
+        <div style="font-weight:700;font-size:0.9rem;color:var(--text-primary)">
+          ${poi.emoji || '📍'} ${poi.name || 'Point of Interest'}
+        </div>
+        <div style="font-size:0.78rem;color:var(--text-muted);margin-top:0.2rem;line-height:1.4">
+          ${poi.description || ''}
+        </div>
+      </div>
+    `;
+    }).join('');
+
+    sidebar.innerHTML = `
+      ${photosHTML}
+      <p style="font-size:0.85rem;color:var(--text-primary);line-height:1.6;margin-bottom:0.75rem;padding:0 0.25rem">
+        ${data?.overview || ''}
+      </p>
+      <h4 style="font-size:0.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:0.5rem">
+        Must-Visit Spots
+      </h4>
+      ${poisHTML}
+      <a href="https://www.google.com/maps/search/${encodeURIComponent(name)}+USA"
+        target="_blank"
+        style="display:block;margin-top:1rem;text-align:center;padding:0.6rem;background:var(--honey-bronze);color:#fff;border-radius:8px;font-size:0.82rem;font-weight:700;text-decoration:none">
+        Open in Google Maps ↗
+      </a>
+    `;
+  } catch (err) {
+    sidebar.innerHTML = `
+      <p style="color:var(--text-muted);padding:1rem;font-size:0.85rem">
+        Could not load destination info. Please try again.
+      </p>`;
+  }
+}
+
+function closeDestinationMap() {
+  const modal = document.getElementById('destinationMapModal');
+  if (modal) {
+    modal.classList.remove('open');
+    modal.classList.remove('active');
+  }
+  if (window._destMap) {
+    window._destMap.remove();
+    window._destMap = null;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────
+   AI TOOLS HELPERS + HANDLERS
+───────────────────────────────────────────────────────── */
+function aiShowLoading(resultId, btnEl, message = 'Getting AI response...') {
+  document.getElementById(resultId).innerHTML = `
+    <div class="ai-result-loading">
+      <div class="ai-result-spinner"></div>
+      <span>${message}</span>
+    </div>`;
+  if (btnEl) btnEl.disabled = true;
+}
+
+function aiShowError(resultId, btnEl) {
+  document.getElementById(resultId).innerHTML = `
+    <div class="ai-error-msg">
+      ⚠️ Could not reach AI. Check your connection and try again.
+    </div>`;
+  if (btnEl) btnEl.disabled = false;
+}
+
+async function callAI(endpoint, body) {
+  const res = await fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
   });
+  if (!res.ok) throw new Error('API error');
+  return await res.json();
+}
+
+async function runAdventureFinder() {
+  const dest = document.getElementById('advDest').value.trim();
+  const duration = document.getElementById('advDuration').value;
+  const budget = document.getElementById('advBudget').value;
+  const family = document.getElementById('advFamily').value;
+  const btn = document.querySelector('#cardAdventure .ai-tool-btn');
+
+  if (!dest) {
+    document.getElementById('resultAdventure').innerHTML =
+      '<div class="ai-error-msg">⚠️ Please describe what you are interested in.</div>';
+    return;
+  }
+
+  aiShowLoading('resultAdventure', btn, 'Finding family adventures...');
+
+  try {
+    const data = await callAI('/ai/adventure', {
+      destination: dest,
+      duration,
+      budget,
+      family_type: family
+    });
+
+    if (!Array.isArray(data) || data.length === 0) throw new Error();
+
+    const cards = data.map((d) => `
+      <div class="adv-card">
+        <div class="adv-card-title">${d.emoji || '📍'} ${d.name}</div>
+        <div class="adv-card-reason">${d.reason}</div>
+        <div class="adv-card-meta">
+          <span class="adv-tag">🎯 ${d.top_activity}</span>
+          <span class="adv-tag">💵 ${d.daily_cost}</span>
+          <span class="adv-tag">🗓️ ${d.best_season}</span>
+        </div>
+      </div>
+    `).join('');
+
+    document.getElementById('resultAdventure').innerHTML =
+      `<div class="adv-cards">${cards}</div>`;
+  } catch (e) {
+    aiShowError('resultAdventure', btn);
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function runRoadTripBuilder() {
+  const start = document.getElementById('rtStart').value.trim();
+  const end = document.getElementById('rtEnd').value.trim();
+  const days = document.getElementById('rtDays').value;
+  const style = document.getElementById('rtStyle').value;
+  const btn = document.querySelector('#cardRoadtrip .ai-tool-btn');
+
+  if (!start || !end) {
+    document.getElementById('resultRoadtrip').innerHTML =
+      '<div class="ai-error-msg">⚠️ Please enter both a start and end city.</div>';
+    return;
+  }
+
+  aiShowLoading('resultRoadtrip', btn, 'Planning your road trip...');
+
+  try {
+    const data = await callAI('/ai/roadtrip', { start, end, days, style });
+
+    if (!data.days || !Array.isArray(data.days)) throw new Error();
+
+    const dayRows = data.days.map((d) => `
+      <div class="rt-day">
+        <div class="rt-day-num">${d.day}</div>
+        <div class="rt-day-info">
+          <div class="rt-day-stop">📍 ${d.stop}</div>
+          <div class="rt-day-detail">
+            🚗 ${d.drive_time} &nbsp;|&nbsp; 🍽️ ${d.eat}<br>
+            🎯 ${d.do}<br>
+            <em style="font-size:0.75rem;opacity:0.75">${d.highlight}</em>
+          </div>
+        </div>
+      </div>
+    `).join('');
+
+    document.getElementById('resultRoadtrip').innerHTML = `
+      <div class="rt-header">
+        🗺️ ${data.route_name || start + ' → ' + end}
+        <span style="font-weight:400;font-size:0.8rem;margin-left:0.5rem;opacity:0.7">
+          ~${data.total_miles || '?'} total
+        </span>
+      </div>
+      ${dayRows}
+    `;
+  } catch (e) {
+    aiShowError('resultRoadtrip', btn);
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function runViewsExplorer() {
+  const region = document.getElementById('viewRegion').value;
+  const type = document.getElementById('viewType').value;
+  const season = document.getElementById('viewSeason').value;
+  const btn = document.querySelector('#cardViews .ai-tool-btn');
+
+  aiShowLoading('resultViews', btn, 'Discovering scenic spots...');
+
+  try {
+    const data = await callAI('/ai/views', { region, type, season });
+
+    if (!Array.isArray(data) || data.length === 0) throw new Error();
+
+    const cards = data.map((d) => `
+      <div class="view-card">
+        <div class="view-card-title">${d.emoji || '🌄'} ${d.name}</div>
+        <div class="view-card-desc">${d.description}</div>
+        <div class="view-card-meta">
+          <span class="adv-tag">📸 ${d.photo_spot}</span>
+          <span class="adv-tag">🏘️ ${d.nearby_town}</span>
+          <span class="adv-tag">🥾 ${d.accessibility}</span>
+        </div>
+      </div>
+    `).join('');
+
+    document.getElementById('resultViews').innerHTML =
+      `<div class="views-cards">${cards}</div>`;
+  } catch (e) {
+    aiShowError('resultViews', btn);
+  } finally {
+    if (btn) btn.disabled = false;
+  }
 }
 
 /* ─────────────────────────────────────────────────────────

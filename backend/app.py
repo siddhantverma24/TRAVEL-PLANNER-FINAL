@@ -33,10 +33,23 @@ from routes.phrases import phrases_bp
 from routes.flighttracker import flighttracker_bp
 from routes.quiz import quiz_bp
 from routes.hero_ai import hero_ai_bp
+from routes.ai_tools import ai_tools_bp
 
 app = Flask(__name__, static_folder='../frontend', static_url_path='')
 CORS(app, resources={
     r"/api/*": {
+        "origins": [
+            "http://localhost:3001",
+            "http://127.0.0.1:3001",
+            "http://localhost:5500",
+            "http://127.0.0.1:5500",
+            "http://localhost:5173",
+            "http://127.0.0.1:5173"
+        ],
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"]
+    },
+    r"/ai/*": {
         "origins": [
             "http://localhost:3001",
             "http://127.0.0.1:3001",
@@ -64,6 +77,7 @@ app.register_blueprint(phrases_bp, url_prefix='/api/phrases')
 app.register_blueprint(flighttracker_bp, url_prefix='/api/flighttracker')
 app.register_blueprint(quiz_bp, url_prefix='/api/quiz')
 app.register_blueprint(hero_ai_bp, url_prefix='/api/hero-ai')
+app.register_blueprint(ai_tools_bp, url_prefix='/ai')
 
 # ============= FRONTEND SERVING ROUTES =============
 @app.route('/index.html')

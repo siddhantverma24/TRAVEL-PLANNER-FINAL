@@ -28,146 +28,52 @@ def hero_ai():
       "prompt": "Find my family adventure"
     }
     
-    Returns array of destination suggestions:
-    [
-      {
-        "name": "Destination Name",
-        "emoji": "📍",
-        "tagline": "One-line description",
-        "description": "Two-sentence description"
-      },
-      ...
-    ]
+    Returns JSON parsed from model output.
+    The response may be an object or an array depending on the user's prompt.
     """
     try:
         data = request.get_json() or {}
         user_prompt = data.get('prompt', 'Find the best US destinations')
-        
+
         client = get_groq_client()
         if not client:
             return jsonify({'error': 'Groq API key not configured'}), 500
-        
-        # Call Groq API
+
+        # Let caller define exact output schema; force valid JSON only.
+        system_prompt = (
+            "You are a USA travel expert. Return ONLY valid JSON with no markdown, no code fences, "
+            "and no extra text. Follow the exact JSON structure requested by the user prompt. "
+            "If the prompt asks for an array, return an array. If it asks for an object, return an object."
+        )
+
         completion = client.chat.completions.create(
             model="llama-3.1-8b-instant",
             messages=[
-                {
-                    "role": "system",
-                    "content": (
-                        "You are a USA travel expert. Given a traveler's interest, "
-                        "recommend 3-4 specific US destinations. For each, give: name, "
-                        "one-line tagline, and 2-sentence description. Respond ONLY in "
-                        "JSON array format: "
-                        '[{"name":"...","tagline":"...","description":"...","emoji":"..."}] '
-                        "No markdown, no code blocks, raw JSON array only."
-                    )
-                },
+                {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
             ],
             temperature=0.7,
             max_tokens=1000,
         )
-        
-        raw = completion.choices[0].message.content.strip()
-        
-        # Parse JSON response
+
+        raw = (completion.choices[0].message.content or '').strip()
+
+        # Handle accidental markdown code fences.
+        if raw.startswith('```'):
+            raw = raw.strip('`')
+            if raw.lower().startswith('json'):
+                raw = raw[4:]
+            raw = raw.strip()
+
         try:
             result = json.loads(raw)
+            return jsonify(result)
         except json.JSONDecodeError:
-            # Fallback if JSON parsing fails
-            return jsonify([
-                {
-                    "name": "New York City",
-                    "emoji": "🗽",
-                    "tagline": "The city that never sleeps",
-                    "description": "Experience iconic landmarks, world-class museums, and diverse neighborhoods. From Times Square to Central Park, NYC offers unforgettable urban adventures."
-                },
-                {
-                    "name": "Grand Canyon",
-                    "emoji": "🏜️",
-                    "tagline": "Nature's greatest masterpiece",
-                    "description": "Witness one of the world's most spectacular natural wonders. Hike stunning trails, raft the Colorado River, or simply marvel at the breathtaking vistas."
-                },
-                {
-                    "name": "Yellowstone",
-                    "emoji": "🦌",
-                    "tagline": "Geysers, wildlife, and adventure",
-                    "description": "Explore America's first national park with dramatic canyons, colorful hot springs, and abundant wildlife. Perfect for nature lovers and photographers."
-                }
-            ])
-        
-        # Call Groq API with system prompt
-        system_prompt = """You are a USA travel expert. Given a traveler's interest, recommend 3-4 specific US destinations or experiences. 
+            return jsonify({'error': 'Model returned invalid JSON'}), 502
 
-For each recommendation, provide in JSON format ONLY (no markdown, no explanation):
-[
-  {
-    "name": "Destination Name",
-    "emoji": "appropriate emoji",
-    "tagline": "one-line tagline",
-    "description": "two-sentence description highlighting key attractions"
-  }
-]
-
-Return ONLY valid JSON array, nothing else."""
-
-        message = user_prompt
-
-        completion = client.messages.create(
-            model="llama-3.1-8b-instant",
-            max_tokens=1024,
-            system=system_prompt,
-            messages=[
-                {"role": "user", "content": message}
-            ]
-        )
-        
-        # Extract response text
-        response_text = completion.content[0].text.strip()
-        
-        # Try to parse JSON from response
-        try:
-            # Try direct JSON parse first
-            results = json.loads(response_text)
-            if isinstance(results, list):
-                return jsonify(results)
-        except json.JSONDecodeError:
-            # Try to extract JSON from response if it has markdown wrapping
-            import re
-            json_match = re.search(r'\[[\s\S]*\]', response_text)
-            if json_match:
-                try:
-                    results = json.loads(json_match.group())
-                    if isinstance(results, list):
-                        return jsonify(results)
-                except json.JSONDecodeError:
-                    pass
-        
-        # If parsing fails, return structured fallback
-        return jsonify([
-            {
-                "name": "New York City",
-                "emoji": "🗽",
-                "tagline": "The city that never sleeps",
-                "description": "Experience iconic landmarks, world-class museums, and diverse neighborhoods. From Times Square to Central Park, NYC offers unforgettable urban adventures."
-            },
-            {
-                "name": "Grand Canyon",
-                "emoji": "🏜️",
-                "tagline": "Nature's greatest masterpiece",
-                "description": "Witness one of the world's most spectacular natural wonders. Hike stunning trails, raft the Colorado River, or simply marvel at the breathtaking vistas."
-            },
-            {
-                "name": "Yellowstone",
-                "emoji": "🦌",
-                "tagline": "Geysers, wildlife, and adventure",
-                "description": "Explore America's first national park with dramatic canyons, colorful hot springs, and abundant wildlife. Perfect for nature lovers and photographers."
-            }
-        ])
-        
     except Exception as e:
         print(f"Hero AI Route Error: {str(e)}")
-        # Return fallback recommendations on error
+        # Keep backward-compatible fallback shape for existing UI when upstream fails.
         return jsonify([
             {
                 "name": "New York City",
