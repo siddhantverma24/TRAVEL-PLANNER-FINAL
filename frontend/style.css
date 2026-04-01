@@ -10471,3 +10471,90 @@ body.dark-mode small {
 body.dark-mode [class*="border"] {
   border-color: rgba(183, 182, 193, 0.12);
 }
+
+/* Final button visibility safeguard across all pages. */
+button,
+.btn,
+a.btn,
+.btn-primary,
+.btn-outline,
+.btn-gold,
+.btn-glass,
+.tracker-tab,
+.region-btn,
+.filter-btn,
+.dest-btn,
+.action-btn,
+.translator-quick-btn,
+.translator-toggle-btn,
+.translator-translate-btn,
+.book-flight-btn,
+.book-hotel-btn,
+.duration-btn,
+.modal-close {
+  opacity: 1 !important;
+}
+
+button:not(.btn-primary):not(.btn-gold):not(.translator-translate-btn),
+.btn-outline,
+.btn-glass,
+.tracker-tab,
+.region-btn,
+.filter-btn,
+.dest-btn,
+.action-btn,
+.translator-quick-btn,
+.translator-toggle-btn,
+.duration-btn {
+  color: var(--text-primary) !important;
+  border-color: rgba(69, 69, 84, 0.2);
+}
+
+.btn-primary,
+.btn-gold,
+.translator-translate-btn,
+.book-flight-btn,
+.book-hotel-btn {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff;
+}
+
+.modal-head .modal-close,
+.translator-modal-head .modal-close,
+body.dark-mode .modal-close {
+  color: #ffffff !important;
+}
+
+body.dark-mode button:not(.btn-primary):not(.btn-gold):not(.translator-translate-btn),
+body.dark-mode .btn-outline,
+body.dark-mode .btn-glass,
+body.dark-mode .tracker-tab,
+body.dark-mode .region-btn,
+body.dark-mode .filter-btn,
+body.dark-mode .dest-btn,
+body.dark-mode .action-btn,
+body.dark-mode .translator-quick-btn,
+body.dark-mode .translator-toggle-btn,
+body.dark-mode .duration-btn {
+  color: #eddfef !important;
+  border-color: rgba(183, 182, 193, 0.32);
+}
+
+button:disabled,
+.btn:disabled,
+.btn-primary:disabled,
+.btn-outline:disabled,
+.translator-translate-btn:disabled,
+.duration-btn:disabled {
+  opacity: 0.62 !important;
+  color: rgba(38, 38, 48, 0.68) !important;
+}
+
+body.dark-mode button:disabled,
+body.dark-mode .btn:disabled,
+body.dark-mode .btn-primary:disabled,
+body.dark-mode .btn-outline:disabled,
+body.dark-mode .translator-translate-btn:disabled,
+body.dark-mode .duration-btn:disabled {
+  color: rgba(237, 223, 239, 0.64) !important;
+}
