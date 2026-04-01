@@ -5,6 +5,13 @@ img  { display:block; max-width:100%; }
 
 /* ── VARIABLES ────────────────────────────────────────── */
 :root {
+  --primary: #56cbf9;
+  --secondary: #7fbeeb;
+  --bg-light: #ffffff;
+  --bg-soft: #dbd8f0;
+  --text-dark: #1a1a1a;
+  --text-light: #ffffff;
+
   /* ── NEW PALETTE (Soft Pastels + Aqua) ────── */
   --sky-aqua:      #56cbf9;
   --maya-blue:     #7fbeeb;
@@ -27,7 +34,7 @@ img  { display:block; max-width:100%; }
   
   --text-primary:   #2d3748;
   --text-secondary: #4a5568;
-  --text-muted:     #718096;
+  --text-muted:     #4f5f75;
   --text-light:     #a0aec0;
   
   --border:         rgba(86, 203, 249, 0.15);
@@ -104,7 +111,7 @@ body.dark-mode {
   
   --text-primary:   #ffffff;
   --text-secondary: #cbd5e0;
-  --text-muted:     #a0aec0;
+  --text-muted:     #b3c0d4;
   --text-light:     #718096;
   
   --border:         rgba(86, 203, 249, 0.2);
@@ -170,6 +177,16 @@ h2 { font-size: clamp(1.9rem,4vw,2.8rem); font-weight:700; letter-spacing:-.02em
 h3 { font-size: 1.5rem; font-weight:600; }
 p  { font-family: var(--font-body); color: var(--text-secondary); }
 
+a {
+  color: var(--primary);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 2px;
+}
+
+a:hover {
+  color: var(--secondary);
+}
+
 label {
   color: var(--text-primary) !important;
   font-weight: 600;
@@ -181,8 +198,8 @@ em { font-style: italic; color: var(--honey-bronze); }
 input::placeholder,
 textarea::placeholder,
 select option {
-  color: var(--text-muted);
-  opacity: 0.9;
+  color: var(--text-secondary);
+  opacity: 1;
 }
 
 /* ── FORM ELEMENTS CONTRAST ─────────────────────────────– */
@@ -279,6 +296,7 @@ body.dark-mode select {
 #navbar .nav-cta-btn,
 #navbar .nav-icon-btn {
   color: #fff !important;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.45);
 }
 
 #navbar.scrolled {
@@ -295,6 +313,7 @@ body.dark-mode select {
 #navbar.scrolled .nav-logo-text,
 #navbar.scrolled .nav-logo-icon {
   color: var(--text-primary) !important;
+  text-shadow: none;
 }
 
 #navbar.scrolled .nav-cta-btn {
@@ -1301,6 +1320,10 @@ body.dark-mode .ai-tool-drawer {
 }
 .hero-video { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); min-width:100%; min-height:100%; object-fit:cover; }
 .hero-overlay { position:absolute; inset:0; background: transparent !important; display: none !important; }
+.hero-overlay {
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.42), rgba(0, 0, 0, 0.12)) !important;
+  display: block !important;
+}
 .hero-content { position:relative; z-index:2; max-width:860px; padding:0 2rem; margin-top:-4rem; }
 .hero-badge {
   display:inline-block; border:1px solid rgba(183,182,193,.6); color: var(--honey-bronze-light);
@@ -1310,6 +1333,175 @@ body.dark-mode .ai-tool-drawer {
 }
 .hero h1 { color:#fff; margin-bottom:1.5rem; text-shadow:0 4px 30px rgba(70,70,85,.5); }
 .hero p  { font-size:1.15rem; color:rgba(255,255,255,.9); margin-bottom:2.5rem; font-weight:300; max-width:600px; margin-left:auto; margin-right:auto; }
+.hero p  { font-weight: 400; }
+
+/* Readability hardening for key page sections */
+.page-teaser h2,
+.page-teaser h3,
+.page-teaser h4,
+.page-teaser p,
+.testimonials h2,
+.testimonials p,
+.footer h3,
+.footer h4,
+.footer p,
+.footer a {
+  color: var(--text-primary);
+}
+
+.page-teaser p,
+.testimonials p,
+.footer p,
+.footer li,
+.footer a {
+  color: var(--text-secondary);
+}
+
+.btn,
+button,
+.nav-link,
+.footer a {
+  opacity: 1;
+}
+
+/* Cross-page modal readability normalization */
+.modal-head h2 {
+  color: #ffffff !important;
+}
+
+.modal-head p {
+  color: rgba(255, 255, 255, 0.92) !important;
+  opacity: 1 !important;
+}
+
+.modal-head .modal-close {
+  color: #ffffff;
+}
+
+.modal-body-scroll p,
+.modal-body-scroll small,
+.modal-body-scroll label,
+.modal-box p,
+.modal-box label {
+  color: var(--text-secondary);
+  opacity: 1;
+}
+
+/* Keep section content readable regardless of inline color leftovers */
+.page-hero h1,
+.page-hero h2,
+.page-hero p {
+  color: var(--text-light);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+}
+
+body.dark-mode .page-teaser,
+body.dark-mode .testimonials,
+body.dark-mode .newsletter,
+body.dark-mode .about,
+body.dark-mode .footer {
+  color: var(--text-primary);
+}
+
+body.dark-mode .page-teaser p,
+body.dark-mode .testimonials p,
+body.dark-mode .about p,
+body.dark-mode .footer p,
+body.dark-mode .footer a {
+  color: var(--text-secondary);
+}
+
+/* Global button audit hardening */
+button,
+.btn,
+.hero-pill,
+.nav-cta-btn,
+.ai-tool-drawer-btn,
+.tracker-tab,
+.region-btn,
+.filter-btn,
+.dest-filter-btn,
+.dest-btn,
+.action-btn,
+.translator-quick-btn,
+.translator-toggle-btn,
+.translator-translate-btn,
+.book-flight-btn,
+.book-hotel-btn,
+.swap-button,
+.duration-btn {
+  color: inherit;
+  font-weight: 600;
+  opacity: 1;
+}
+
+button:focus-visible,
+.btn:focus-visible,
+.hero-pill:focus-visible,
+.nav-cta-btn:focus-visible,
+.ai-tool-drawer-btn:focus-visible,
+.tracker-tab:focus-visible,
+.region-btn:focus-visible,
+.filter-btn:focus-visible,
+.dest-filter-btn:focus-visible,
+.dest-btn:focus-visible,
+.action-btn:focus-visible,
+.translator-quick-btn:focus-visible,
+.translator-toggle-btn:focus-visible,
+.translator-translate-btn:focus-visible,
+.book-flight-btn:focus-visible,
+.book-hotel-btn:focus-visible,
+.swap-button:focus-visible,
+.duration-btn:focus-visible,
+.modal-close:focus-visible,
+.nav-icon-btn:focus-visible,
+.nav-mobile-close:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+button:disabled,
+.btn:disabled,
+.btn-primary:disabled,
+.btn-outline:disabled,
+.ai-tool-drawer-btn:disabled,
+.translator-translate-btn:disabled,
+.itinerary-generate-btn:disabled {
+  opacity: 0.85 !important;
+  color: var(--text-secondary) !important;
+  cursor: not-allowed;
+}
+
+/* Normalize inline quick-action buttons used across pages. */
+button[onclick*="quickTrack("],
+button[onclick*="quickTrackFlight("],
+button[onclick*="quickWeather("],
+button[onclick*="setHotelCity("] {
+  background: var(--bg-sand) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text-primary) !important;
+}
+
+button[onclick*="quickTrack("]:hover,
+button[onclick*="quickTrackFlight("]:hover,
+button[onclick*="quickWeather("]:hover,
+button[onclick*="setHotelCity("]:hover {
+  border-color: var(--primary) !important;
+  background: var(--bg-hover) !important;
+}
+
+/* Ensure outline buttons stay readable in dark mode. */
+body.dark-mode .btn-outline {
+  color: var(--text-primary);
+  border-color: var(--border);
+  background: transparent;
+}
+
+body.dark-mode .btn-outline:hover {
+  color: var(--text-light);
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  border-color: transparent;
+}
 .cta-buttons { display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; margin-bottom:0; }
 
 /* Hero search */
