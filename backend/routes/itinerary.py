@@ -1,135 +1,167 @@
-"""Itinerary Route - Groq AI Integration
+"""Itinerary Route - Groq AI Integration (Real Itinerary Generation)
 """
 from flask import Blueprint, request, jsonify
 import os
 import json
 import requests
+from datetime import datetime, timedelta
 
 itinerary_bp = Blueprint('itinerary', __name__)
 
-GROQ_KEY = os.environ.get('GROQ_KEY')
+GROQ_API_KEY = os.environ.get('GROQ_API_KEY') or os.environ.get('GROQ_KEY')
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 
 @itinerary_bp.route('/', methods=['POST'])
 def generate_itinerary():
-    # LIVE API: Groq AI
+    """Generate a real day-by-day itinerary using Groq AI"""
     try:
         data = request.json
-        destination = data.get('destination', '')
-        days = int(data.get('days', data.get('duration', 5)))  # Support both 'days' and 'duration'
+        destination = data.get('destination', '').strip()
+        days = int(data.get('days', data.get('duration', 5)))
+        travel_date = data.get('travel_date', data.get('date', ''))
+        budget_level = data.get('budget', 'midrange')
         interests = data.get('interests', [])
-        budget = data.get('budget', 'moderate')
+        traveler_type = data.get('traveler_type', data.get('travelerType', 'solo'))
         
+        # Validate required fields
         if not destination:
             return jsonify({"error": "Destination required"}), 400
         
-        groq_key = os.environ.get('GROQ_KEY')
-        if not groq_key:
-            return jsonify({"error": "Groq API not configured"}), 503
+        if days < 1 or days > 30:
+            return jsonify({"error": "Days must be between 1 and 30"}), 400
         
-        print(f"[API] Calling Groq for itinerary: {destination}")
+        if not GROQ_API_KEY:
+            print("[ERROR] GROQ_KEY not configured in environment")
+            return jsonify({"error": "AI service not configured"}), 503
         
-        # Build prompt
-        interests_str = ", ".join(interests) if interests else "general sightseeing"
-        prompt = f"""Create a {days}-day travel itinerary for {destination}.
+        print(f"[ITINERARY] Generating {days}-day itinerary for {destination}")
+        print(f"[ITINERARY] Budget: {budget_level}, Traveler: {traveler_type}, Interests: {interests}")
         
-User interests: {interests_str}
-Budget level: {budget}
+        # Build a detailed prompt for Groq
+        interests_str = ", ".join(interests) if interests else "general sightseeing, culture, local cuisine"
+        
+        prompt = f"""You are a professional travel planner. Create a detailed {days}-day travel itinerary for {destination}.
 
-Requirements:
-- Daily breakdown with specific times
-- Mix of popular sites and lesser-known spots
-- Include meal recommendations (breakfast, lunch, dinner)
-- Practical tips (transportation, best times to visit, etc.)
-- Budget-friendly alternatives
-- Weather considerations for this season
+TRAVELER PROFILE:
+- Destination: {destination}
+- Duration: {days} days
+- Budget Level: {budget_level} (budget=$20-50/day, midrange=$50-150/day, luxury=$150+/day)
+- Traveler Type: {traveler_type}
+- Interests: {interests_str}
 
-Return ONLY valid JSON (no markdown, no code blocks):
+REQUIREMENTS:
+1. Create a day-by-day itinerary with specific activities, times, and costs
+2. Include 3-4 main activities per day with times (e.g., 09:00-11:00)
+3. Recommend breakfast, lunch, and dinner venues (actual suggested restaurants or types)
+4. Each day should have a title and summary
+5. Include practical tips for each day (transportation, best times, tickets, etc.)
+6. Format times as HH:MM
+7. Include estimated daily cost
+8. Keep activities realistic and accessible for the {traveler_type} traveler
+9. Mix popular attractions with local hidden gems
+10. Consider weather and local events seasonally
+
+RESPONSE FORMAT - Return ONLY valid JSON, no markdown code blocks:
 {{
-  "days": [
+  "destination": "{destination}",
+  "days": {days},
+  "budget_level": "{budget_level}",
+  "days_schedule": [
     {{
       "day": 1,
-      "title": "Arrival & Exploration",
+      "date": "Day 1 of {days}",
+      "title": "Arrival & First Impressions",
+      "summary": "Arrive and get oriented with the city",
       "activities": [
-        {{"time": "09:00", "activity": "Activity with time", "duration": "2 hours"}},
-        {{"time": "14:00", "activity": "Activity with time", "duration": "3 hours"}}
+        {{
+          "time": "09:00",
+          "activity": "Arrival at airport/station",
+          "duration": "1-2 hours",
+          "cost": 0,
+          "tips": "Take metro/taxi to hotel, settle in"
+        }},
+        {{
+          "time": "12:00",
+          "activity": "Lunch at local restaurant",
+          "duration": "1 hour",
+          "cost": 15,
+          "tips": "Ask hotel staff for recommendations"
+        }}
       ],
-      "meals": {{"breakfast": "venue", "lunch": "venue", "dinner": "venue"}},
-      "cost": 150,
-      "tips": "Practical tips for this day"
+      "meals": {{
+        "breakfast": "Hotel or local cafe",
+        "lunch": "Local restaurant downtown",
+        "dinner": "Popular restaurant in city center"
+      }},
+      "daily_cost": 60,
+      "tips": "Start with relaxation after travel, explore neighborhood walking"
     }}
   ],
-  "totalCost": 750,
-  "breakdown": {{
+  "total_estimated_cost": 600,
+  "cost_breakdown": {{
     "accommodation": 300,
-    "food": 200,
-    "activities": 150,
-    "transport": 100
+    "food_and_dining": 180,
+    "activities_and_attractions": 100,
+    "transportation": 20
   }},
-  "weather": "Expected weather conditions",
-  "packingList": ["Item 1", "Item 2"]
+  "packing_suggestions": [
+    "Comfortable walking shoes",
+    "Light jacket"
+  ],
+  "general_tips": "Use public transportation when possible to save money. Always carry a copy of your passport."
 }}"""
         
-        # Call Groq API
-        response_text = _call_groq_api(prompt)
+        # Call Groq API with real model
+        response_text = _call_groq_api(prompt, GROQ_API_KEY)
         
-        # Parse JSON - remove markdown code blocks if present
+        # Clean up response if it has markdown code blocks
         if response_text.startswith('```'):
             response_text = response_text.split('```')[1]
             if response_text.startswith('json'):
                 response_text = response_text[4:]
         
+        response_text = response_text.strip().rstrip('`')
+        
+        # Parse JSON response
         result = json.loads(response_text)
         
-        return jsonify(result)
+        print(f"[ITINERARY] Successfully generated itinerary for {destination}")
+        return jsonify(result), 200
+        
+    except json.JSONDecodeError as e:
+        print(f"[ERROR] JSON parsing failed: {str(e)}")
+        print(f"[ERROR] Response text: {response_text[:500]}")
+        return jsonify({"error": "Invalid response format from AI service", "details": str(e)}), 500
+        
+    except requests.exceptions.RequestException as e:
+        print(f"[ERROR] Groq API request failed: {str(e)}")
+        return jsonify({"error": "AI service request failed", "details": str(e)}), 503
         
     except Exception as e:
-        print(f"[ERROR] itinerary route: {str(e)}")
-        # Return fallback itinerary
-        destination = request.json.get('destination', 'Destination')
-        days = int(request.json.get('days', request.json.get('duration', 5)))
-        return jsonify({
-            "days": [
-                {
-                    "day": i+1,
-                    "title": f"Day {i+1} in {destination}",
-                    "activities": [
-                        {"time": "09:00", "activity": "Explore local attractions", "duration": "3 hours"},
-                        {"time": "14:00", "activity": "Enjoy local cuisine", "duration": "2 hours"}
-                    ],
-                    "meals": {"breakfast": "Local cafe", "lunch": "Restaurant", "dinner": "Fine dining"},
-                    "cost": 200,
-                    "tips": "Ask locals for recommendations"
-                }
-                for i in range(days)
-            ],
-            "totalCost": 200 * days,
-            "breakdown": {
-                "accommodation": 100 * days,
-                "food": 50 * days,
-                "activities": 40 * days,
-                "transport": 10 * days
-            }
-        }), 200
+        print(f"[ERROR] Itinerary generation failed: {str(e)}")
+        return jsonify({"error": "Failed to generate itinerary", "details": str(e)}), 500
 
 
-def _call_groq_api(prompt):
-    """Call Groq API and return response text"""
+def _call_groq_api(prompt, api_key):
+    """Call Groq API with llama3-8b model and return response text"""
     headers = {
-        "Authorization": f"Bearer {GROQ_KEY}",
+        "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json"
     }
     
     payload = {
-        "model": "mixtral-8x7b-32768",
+        "model": "llama-3.1-8b-instant",
         "temperature": 0.7,
-        "max_tokens": 2000,
+        "max_tokens": 3000,
         "messages": [
+            {"role": "system", "content": "You are a helpful travel planning assistant. Always respond with valid JSON format."},
             {"role": "user", "content": prompt}
         ]
     }
     
-    response = requests.post(GROQ_URL, json=payload, headers=headers)
+    print(f"[GROQ] Calling API with model llama3-8b-8192")
+    
+    response = requests.post(GROQ_URL, json=payload, headers=headers, timeout=30)
     response.raise_for_status()
     
     result = response.json()

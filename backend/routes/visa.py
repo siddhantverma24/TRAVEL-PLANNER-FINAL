@@ -4,16 +4,15 @@ Gets real detailed visa information for any passport + destination combination
 """
 import os
 import json
+import requests
 from flask import Blueprint, request, jsonify
-from groq import Groq
-from functools import lru_cache
 from datetime import datetime, timedelta
 
 visa_bp = Blueprint('visa', __name__)
 
-# Initialize Groq client
-groq_api_key = os.getenv('GROQ_KEY')
-groq = Groq(api_key=groq_api_key) if groq_api_key else None
+# Groq API configuration
+GROQ_KEY = os.getenv('GROQ_API_KEY') or os.getenv('GROQ_KEY')
+GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 
 # Health check route
 @visa_bp.route('/ping', methods=['GET'])
@@ -22,7 +21,7 @@ def ping():
     return jsonify({
         "status": "ok",
         "message": "Visa API is working",
-        "groq_configured": groq is not None
+        "groq_configured": GROQ_KEY is not None
     })
 
 # Simple cache implementation with 24-hour TTL
@@ -110,14 +109,21 @@ Return JSON with this exact structure (no markdown, just JSON):
 
 Be accurate and specific. Include realistic insider tips."""
         
-        message = groq.messages.create(
-            model="llama-3.3-70b-versatile",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.3,
-            max_tokens=1000
-        )
+        headers = {
+            "Authorization": f"Bearer {GROQ_KEY}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "model": "llama-3.1-8b-instant",
+            "temperature": 0.3,
+            "max_tokens": 1000,
+            "messages": [{"role": "user", "content": prompt}]
+        }
         
-        response_text = message.content[0].text.strip()
+        response = requests.post(GROQ_URL, json=payload, headers=headers, timeout=30)
+        response.raise_for_status()
+        
+        response_text = response.json()['choices'][0]['message']['content'].strip()
         # Clean markdown if present
         if response_text.startswith("```"):
             response_text = response_text.split("```")[1]
@@ -151,7 +157,7 @@ def check_visa():
         
         # Try Groq API
         visa_data = None
-        if groq:
+        if GROQ_KEY:
             visa_data = get_visa_info_from_groq(from_code, to_code, from_name, to_name)
         
         # Fallback to hardcoded data if API fails or not available

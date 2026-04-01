@@ -902,46 +902,220 @@
       <p>Get a personalised day-by-day travel plan in seconds.</p>
     </div>
     <div class="itinerary-form-wrapper">
-      <form id="itineraryForm" class="itinerary-form" onsubmit="handleItinerarySubmit(event)" data-aos="fade-up">
-        <div class="form-section-title">Trip Details</div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Destination City</label>
-            <input type="text" id="itinerary-city" placeholder="e.g. San Francisco" required>
-          </div>
-          <div class="form-group">
-            <label>Number of Days</label>
-            <select id="itinerary-days" required>
-              <option value="">Select days</option>
-              <option value="3">3 Days</option>
-              <option value="5">5 Days</option>
-              <option value="7">7 Days</option>
-              <option value="10">10 Days</option>
-            </select>
+      <!-- MULTI-STEP WIZARD -->
+      <div id="tripWizard" class="trip-wizard" data-aos="fade-up">
+        
+        <!-- PROGRESS INDICATOR -->
+        <div class="wizard-progress">
+          <div class="progress-label">Step <span id="currentStep">1</span> of 4</div>
+          <div class="progress-bar">
+            <div id="progressFill" class="progress-fill" style="width: 25%"></div>
           </div>
         </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Travel Style</label>
-            <select id="travel-style" required>
-              <option value="">Select style</option>
-              <option value="luxury">💎 Luxury</option>
-              <option value="budget">💸 Budget-Friendly</option>
-              <option value="adventure">▲ Adventure</option>
-              <option value="relaxation">◉ Relaxation</option>
-              <option value="cultural">🏛️ Cultural</option>
-            </select>
+
+        <!-- STEP 1: DESTINATION -->
+        <div id="step1" class="wizard-step active">
+          <div class="step-header">
+            <h3>🗺️ Where Are You Headed?</h3>
+            <p>Start by choosing your destination and trip length</p>
           </div>
-          <div class="form-group">
-            <label>Budget Per Day ($)</label>
-            <input type="number" id="daily-budget" placeholder="e.g. 200" min="50" required>
+          
+          <div class="step-content">
+            <div class="form-group">
+              <label>Destination City</label>
+              <input 
+                type="text" 
+                id="wizardCity" 
+                placeholder="e.g. New York, Miami, San Francisco"
+                class="form-input">
+              <small class="form-hint">Enter any US city or destination</small>
+            </div>
+
+            <div class="form-group">
+              <label>Trip Duration</label>
+              <div class="duration-buttons">
+                <button type="button" class="duration-btn" data-days="3">3 Days</button>
+                <button type="button" class="duration-btn" data-days="5">5 Days</button>
+                <button type="button" class="duration-btn" data-days="7">1 Week</button>
+                <button type="button" class="duration-btn" data-days="14">2 Weeks</button>
+              </div>
+              <input type="hidden" id="wizardDays" value="">
+            </div>
+          </div>
+
+          <div class="step-actions">
+            <button type="button" class="btn btn-outline" disabled>← Back</button>
+            <button type="button" class="btn btn-primary" onclick="wizardNext()">Next →</button>
           </div>
         </div>
-        <button type="submit" class="btn btn-primary btn-full">
-          <span class="btn-text">✨ Generate My Itinerary</span>
-          <span class="btn-loader" style="display:none">⏳ Generating…</span>
-        </button>
-      </form>
+
+        <!-- STEP 2: DATES & BUDGET -->
+        <div id="step2" class="wizard-step">
+          <div class="step-header">
+            <h3>📅 When & How Much?</h3>
+            <p>Select your travel dates and budget preference</p>
+          </div>
+          
+          <div class="step-content">
+            <div class="form-group">
+              <label>Departure Date</label>
+              <input 
+                type="date" 
+                id="wizardDate" 
+                class="form-input">
+              <small class="form-hint">When are you leaving?</small>
+            </div>
+
+            <div class="form-group">
+              <label>Budget Level</label>
+              <div class="budget-options">
+                <div class="budget-card" data-budget="budget">
+                  <div class="budget-emoji">💸</div>
+                  <div class="budget-name">Budget</div>
+                  <div class="budget-desc">$50-100/day</div>
+                </div>
+                <div class="budget-card" data-budget="midrange">
+                  <div class="budget-emoji">💳</div>
+                  <div class="budget-name">Mid-Range</div>
+                  <div class="budget-desc">$100-250/day</div>
+                </div>
+                <div class="budget-card" data-budget="luxury">
+                  <div class="budget-emoji">💎</div>
+                  <div class="budget-name">Luxury</div>
+                  <div class="budget-desc">$250+/day</div>
+                </div>
+              </div>
+              <input type="hidden" id="wizardBudget" value="">
+            </div>
+          </div>
+
+          <div class="step-actions">
+            <button type="button" class="btn btn-outline" onclick="wizardBack()">← Back</button>
+            <button type="button" class="btn btn-primary" onclick="wizardNext()">Next →</button>
+          </div>
+        </div>
+
+        <!-- STEP 3: PREFERENCES -->
+        <div id="step3" class="wizard-step">
+          <div class="step-header">
+            <h3>⚡ Your Interests</h3>
+            <p>Tell us what you love to do on vacation</p>
+          </div>
+          
+          <div class="step-content">
+            <div class="form-group">
+              <label>What interests you? (Select any)</label>
+              <div class="checkbox-grid">
+                <label class="checkbox-item">
+                  <input type="checkbox" name="interests" value="Food">
+                  <span class="checkbox-label">🍽️ Food & Dining</span>
+                </label>
+                <label class="checkbox-item">
+                  <input type="checkbox" name="interests" value="History">
+                  <span class="checkbox-label">🏛️ History & Culture</span>
+                </label>
+                <label class="checkbox-item">
+                  <input type="checkbox" name="interests" value="Nature">
+                  <span class="checkbox-label">🌲 Nature & Outdoors</span>
+                </label>
+                <label class="checkbox-item">
+                  <input type="checkbox" name="interests" value="Nightlife">
+                  <span class="checkbox-label">🎉 Nightlife & Music</span>
+                </label>
+                <label class="checkbox-item">
+                  <input type="checkbox" name="interests" value="Shopping">
+                  <span class="checkbox-label">🛍️ Shopping</span>
+                </label>
+                <label class="checkbox-item">
+                  <input type="checkbox" name="interests" value="Adventure">
+                  <span class="checkbox-label">▲ Adventure & Sports</span>
+                </label>
+                <label class="checkbox-item">
+                  <input type="checkbox" name="interests" value="Art">
+                  <span class="checkbox-label">🎨 Art & Museums</span>
+                </label>
+                <label class="checkbox-item">
+                  <input type="checkbox" name="interests" value="Family">
+                  <span class="checkbox-label">👨‍👩‍👧‍👦 Family-Friendly</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Who are you traveling with?</label>
+              <div class="radio-grid">
+                <label class="radio-item">
+                  <input type="radio" name="travelerType" value="Solo">
+                  <span class="radio-label">🧑 Solo</span>
+                </label>
+                <label class="radio-item">
+                  <input type="radio" name="travelerType" value="Couple">
+                  <span class="radio-label">👫 Couple</span>
+                </label>
+                <label class="radio-item">
+                  <input type="radio" name="travelerType" value="Family">
+                  <span class="radio-label">👨‍👩‍👧 Family</span>
+                </label>
+                <label class="radio-item">
+                  <input type="radio" name="travelerType" value="Group">
+                  <span class="radio-label">👥 Group (3+)</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="step-actions">
+            <button type="button" class="btn btn-outline" onclick="wizardBack()">← Back</button>
+            <button type="button" class="btn btn-primary" onclick="wizardNext()">Next →</button>
+          </div>
+        </div>
+
+        <!-- STEP 4: REVIEW & GENERATE -->
+        <div id="step4" class="wizard-step">
+          <div class="step-header">
+            <h3>✨ Ready to Generate?</h3>
+            <p>Review your trip details before generating your itinerary</p>
+          </div>
+          
+          <div class="step-content">
+            <div class="review-card">
+              <div class="review-row">
+                <div class="review-label">📍 Destination</div>
+                <div class="review-value" id="reviewCity">-</div>
+              </div>
+              <div class="review-row">
+                <div class="review-label">📅 Duration</div>
+                <div class="review-value" id="reviewDays">-</div>
+              </div>
+              <div class="review-row">
+                <div class="review-label">🗓️ Date</div>
+                <div class="review-value" id="reviewDate">-</div>
+              </div>
+              <div class="review-row">
+                <div class="review-label">💰 Budget</div>
+                <div class="review-value" id="reviewBudget">-</div>
+              </div>
+              <div class="review-row">
+                <div class="review-label">❤️ Interests</div>
+                <div class="review-value" id="reviewInterests">-</div>
+              </div>
+              <div class="review-row">
+                <div class="review-label">👥 Traveler Type</div>
+                <div class="review-value" id="reviewTraveler">-</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="step-actions">
+            <button type="button" class="btn btn-outline" onclick="wizardBack()">← Back</button>
+            <button type="button" id="generateBtn" class="btn btn-primary btn-large" onclick="wizardGenerate()">
+              <span class="btn-text">✨ Generate My Itinerary</span>
+              <span class="btn-loader" style="display:none">⏳ Generating…</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
 
       <div id="itinerary-result" class="itinerary-result" style="display:none" data-aos="fade-up">
         <div class="itinerary-header">

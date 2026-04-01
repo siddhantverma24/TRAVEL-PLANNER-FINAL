@@ -126,13 +126,24 @@ function setActiveNavLink() {
 
 /* ── DARK MODE TOGGLE ─────────────────────────────────── */
 function toggleDarkMode() {
-  document.body.classList.toggle('dark-mode');
-  localStorage.setItem('darkMode', document.body.classList.contains('dark-mode') ? '1' : '0');
+  const isDark = document.body.classList.toggle('dark-mode');
+  localStorage.setItem('darkMode', isDark ? '1' : '0');
 }
 
 /* ── INITIALIZE DARK MODE ─────────────────────────────── */
 function initDarkMode() {
-  if (localStorage.getItem('darkMode') === '1') {
+  const savedTheme = localStorage.getItem('darkMode');
+  if (savedTheme === '1') {
+    document.body.classList.add('dark-mode');
+    return;
+  }
+  if (savedTheme === '0') {
+    document.body.classList.remove('dark-mode');
+    return;
+  }
+
+  // First-time visitors follow OS preference.
+  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
     document.body.classList.add('dark-mode');
   }
 }
@@ -2994,4 +3005,383 @@ function lookupAirport(code) {
   switchTrackerTab('search');
   document.getElementById('trackFlightInput').value = '';
   showToast(`Looking up flights from ${code}...`, 'info');
+}
+
+/* ─────────────────────────────────────────────────────────
+   34. MULTI-STEP FORM WIZARD
+───────────────────────────────────────────────────────── */
+
+// Wizard state object
+const wizardState = {
+  city: '',
+  days: '',
+  date: '',
+  budget: '',
+  interests: [],
+  travelerType: ''
+};
+
+// Initialize wizard event listeners
+document.addEventListener('DOMContentLoaded', () => {
+  // Duration buttons
+  document.querySelectorAll('.duration-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      document.querySelectorAll('.duration-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      wizardState.days = btn.dataset.days;
+      validateStep(1);
+    });
+  });
+
+  // Budget cards
+  document.querySelectorAll('.budget-card').forEach(card => {
+    card.addEventListener('click', (e) => {
+      e.preventDefault();
+      document.querySelectorAll('.budget-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      wizardState.budget = card.dataset.budget;
+      validateStep(2);
+    });
+  });
+
+  // Destination input
+  const cityInput = document.getElementById('wizardCity');
+  if (cityInput) {
+    cityInput.addEventListener('change', () => {
+      wizardState.city = cityInput.value.trim();
+    });
+  }
+
+  // Date picker
+  const dateInput = document.getElementById('wizardDate');
+  if (dateInput) {
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.min = today;
+    dateInput.addEventListener('change', () => {
+      wizardState.date = dateInput.value;
+      validateStep(2);
+    });
+  }
+
+  // Checkboxes (interests)
+  document.querySelectorAll('.checkbox-item input[type="checkbox"]').forEach(cb => {
+    cb.addEventListener('change', () => {
+      wizardState.interests = Array.from(
+        document.querySelectorAll('.checkbox-item input[type="checkbox"]:checked')
+      ).map(el => el.value);
+    });
+  });
+
+  // Radio buttons (traveler type)
+  document.querySelectorAll('.radio-item input[type="radio"]').forEach(rb => {
+    rb.addEventListener('change', () => {
+      wizardState.travelerType = rb.value;
+    });
+  });
+});
+
+// Step navigation
+function wizardNext() {
+  const currentStep = getCurrentStep();
+  
+  // Validate current step
+  if (!validateStep(currentStep)) {
+    showToast('Please complete all required fields', 'warning');
+    return;
+  }
+
+  // Go to next step
+  goToStep(currentStep + 1);
+  updateProgressBar();
+  
+  // If moving to step 4, populate review
+  if (currentStep + 1 === 4) {
+    populateReview();
+  }
+}
+
+function wizardBack() {
+  const currentStep = getCurrentStep();
+  if (currentStep > 1) {
+    goToStep(currentStep - 1);
+    updateProgressBar();
+  }
+}
+
+function validateStep(step) {
+  switch(step) {
+    case 1:
+      const city = document.getElementById('wizardCity')?.value?.trim();
+      const days = wizardState.days;
+      if (!city) {
+        showToast('Please enter a destination city', 'warning');
+        document.getElementById('wizardCity')?.focus();
+        return false;
+      }
+      if (!days) {
+        showToast('Please select trip duration', 'warning');
+        return false;
+      }
+      wizardState.city = city;
+      return true;
+
+    case 2:
+      const date = document.getElementById('wizardDate')?.value;
+      const budget = wizardState.budget;
+      if (!date) {
+        showToast('Please select departure date', 'warning');
+        document.getElementById('wizardDate')?.focus();
+        return false;
+      }
+      if (!budget) {
+        showToast('Please select budget level', 'warning');
+        return false;
+      }
+      wizardState.date = date;
+      return true;
+
+    case 3:
+      // Step 3 is optional - user doesn't have to select interests
+      return true;
+
+    default:
+      return true;
+  }
+}
+
+function getCurrentStep() {
+  const activeStep = document.querySelector('.wizard-step.active');
+  return parseInt(activeStep.id.replace('step', ''));
+}
+
+function goToStep(step) {
+  // Hide all steps
+  document.querySelectorAll('.wizard-step').forEach(s => s.classList.remove('active'));
+  
+  // Show target step
+  const targetStep = document.getElementById(`step${step}`);
+  if (targetStep) {
+    targetStep.classList.add('active');
+  }
+  
+  // Update current step indicator
+  document.getElementById('currentStep').textContent = step;
+}
+
+function updateProgressBar() {
+  const currentStep = getCurrentStep();
+  const percentage = (currentStep / 4) * 100;
+  document.getElementById('progressFill').style.width = percentage + '%';
+}
+
+function populateReview() {
+  // Display all collected info in step 4
+  document.getElementById('reviewCity').textContent = wizardState.city || '-';
+  document.getElementById('reviewDays').textContent = (wizardState.days || '-') + ' days';
+  
+  // Format date
+  if (wizardState.date) {
+    const dateObj = new Date(wizardState.date);
+    document.getElementById('reviewDate').textContent = dateObj.toLocaleDateString('en-US', { 
+      year: 'numeric', month: 'long', day: 'numeric' 
+    });
+  } else {
+    document.getElementById('reviewDate').textContent = '-';
+  }
+
+  // Budget label
+  const budgetLabels = {
+    'budget': '💸 Budget ($50-100/day)',
+    'midrange': '💳 Mid-Range ($100-250/day)',
+    'luxury': '💎 Luxury ($250+/day)'
+  };
+  document.getElementById('reviewBudget').textContent = budgetLabels[wizardState.budget] || '-';
+
+  // Interests
+  const interests = wizardState.interests.length > 0 
+    ? wizardState.interests.join(', ') 
+    : 'Not specified';
+  document.getElementById('reviewInterests').textContent = interests;
+
+  // Traveler type
+  document.getElementById('reviewTraveler').textContent = wizardState.travelerType || 'Not specified';
+}
+
+function wizardGenerate() {
+  // Final validation
+  if (!validateStep(1) || !validateStep(2)) {
+    showToast('Please complete all required fields', 'warning');
+    return;
+  }
+
+  // Show loading state
+  const genBtn = document.getElementById('generateBtn');
+  const btnTxt = genBtn.querySelector('.btn-text');
+  const btnLdr = genBtn.querySelector('.btn-loader');
+  btnTxt.style.display = 'none';
+  btnLdr.style.display = 'inline';
+  genBtn.disabled = true;
+
+  // Build proper payload with all wizard data
+  const payload = {
+    destination: wizardState.city,
+    days: parseInt(wizardState.days),
+    travel_date: wizardState.date,
+    budget: wizardState.budget,
+    interests: wizardState.interests.length > 0 ? wizardState.interests : ['general sightseeing'],
+    traveler_type: wizardState.travelerType || 'solo'
+  };
+
+  console.log('[WIZARD] Generating itinerary with payload:', payload);
+
+  // Call API directly
+  fetch(`${API_BASE}/api/itinerary`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  .then(res => {
+    if (!res.ok) throw new Error(`API returned ${res.status}`);
+    return res.json();
+  })
+  .then(data => {
+    console.log('[WIZARD] Itinerary received:', data);
+    renderWizardItinerary(data);
+    
+    // Scroll to results
+    const resultEl = document.getElementById('itinerary-result');
+    if (resultEl) {
+      resultEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  })
+  .catch(err => {
+    console.error('[ERROR] Itinerary generation failed:', err);
+    showToast('Error generating itinerary: ' + err.message, 'error');
+  })
+  .finally(() => {
+    btnTxt.style.display = 'inline';
+    btnLdr.style.display = 'none';
+    genBtn.disabled = false;
+  });
+}
+
+// Render wizard itinerary with Groq response
+function renderWizardItinerary(data) {
+  let html = '';
+  
+  // Header with trip info
+  html += `<div class="itinerary-header">
+    <h2>🗺️ Your ${data.days}-Day Itinerary for ${data.destination}</h2>
+    <p class="itinerary-meta">💰 Budget: ${data.budget_level} · Estimated Total: $${data.total_estimated_cost || 0}</p>
+  </div>`;
+
+  // Render each day
+  if (data.days_schedule && Array.isArray(data.days_schedule)) {
+    data.days_schedule.forEach(day => {
+      html += `<div class="itinerary-day">
+        <div class="day-header">
+          <h3>📅 Day ${day.day} — ${day.title}</h3>
+          <span class="day-cost">💰 $${day.daily_cost || 0}</span>
+        </div>
+        <p class="day-summary">${day.summary || ''}</p>`;
+
+      // Activities
+      if (day.activities && Array.isArray(day.activities)) {
+        html += '<div class="day-activities">';
+        day.activities.forEach(act => {
+          html += `<div class="itinerary-activity">
+            <div class="activity-time">⏰ ${act.time}</div>
+            <div class="activity-details">
+              <h5>${act.activity}</h5>
+              <p><strong>Duration:</strong> ${act.duration}</p>
+              <p><strong>Cost:</strong> $${act.cost}</p>
+              <p class="activity-tips">💡 ${act.tips}</p>
+            </div>
+          </div>`;
+        });
+        html += '</div>';
+      }
+
+      // Meals
+      if (day.meals) {
+        html += `<div class="day-meals">
+          <strong>🍽️ Meals:</strong>
+          <ul>
+            <li><strong>Breakfast:</strong> ${day.meals.breakfast}</li>
+            <li><strong>Lunch:</strong> ${day.meals.lunch}</li>
+            <li><strong>Dinner:</strong> ${day.meals.dinner}</li>
+          </ul>
+        </div>`;
+      }
+
+      // Day tips
+      if (day.tips) {
+        html += `<div class="day-tips">
+          <strong>ℹ️ Tips for today:</strong> ${day.tips}
+        </div>`;
+      }
+
+      html += '</div>';
+    });
+  }
+
+  // Cost breakdown
+  if (data.cost_breakdown) {
+    html += `<div class="cost-breakdown">
+      <h3>💵 Cost Breakdown</h3>
+      <div class="breakdown-items">
+        <div class="breakdown-item">
+          <span>Accommodation</span>
+          <span>$${data.cost_breakdown.accommodation || 0}</span>
+        </div>
+        <div class="breakdown-item">
+          <span>Food & Dining</span>
+          <span>$${data.cost_breakdown.food_and_dining || 0}</span>
+        </div>
+        <div class="breakdown-item">
+          <span>Activities & Attractions</span>
+          <span>$${data.cost_breakdown.activities_and_attractions || 0}</span>
+        </div>
+        <div class="breakdown-item">
+          <span>Transportation</span>
+          <span>$${data.cost_breakdown.transportation || 0}</span>
+        </div>
+        <div class="breakdown-item total">
+          <span><strong>Total Estimated</strong></span>
+          <span><strong>$${data.total_estimated_cost || 0}</strong></span>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // Packing suggestions
+  if (data.packing_suggestions && Array.isArray(data.packing_suggestions)) {
+    html += `<div class="packing-suggestions">
+      <h3>🎒 Packing Suggestions</h3>
+      <ul>
+        ${data.packing_suggestions.map(item => `<li>✓ ${item}</li>`).join('')}
+      </ul>
+    </div>`;
+  }
+
+  // General tips
+  if (data.general_tips) {
+    html += `<div class="general-tips">
+      <h3>ℹ️ General Tips</h3>
+      <p>${data.general_tips}</p>
+    </div>`;
+  }
+
+  // Add footer note
+  html += `<div class="itinerary-footer">
+    <small>✨ Itinerary generated by Groq AI · Always check updated travel restrictions and weather before departing</small>
+  </div>`;
+
+  // Update result section
+  const resultEl = document.getElementById('itinerary-result');
+  if (resultEl) {
+    resultEl.innerHTML = html;
+    resultEl.style.display = 'block';
+  }
 }

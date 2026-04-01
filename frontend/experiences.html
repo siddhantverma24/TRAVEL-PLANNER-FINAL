@@ -908,99 +908,7 @@
       </div>
     </div>
 
-        <!-- Destination -->
-        <div class="hotel-field-group">
-          <label class="hotel-field-label">
-            Destination City
-          </label>
-          <input type="text" 
-            id="hotelCity"
-            class="hotel-field-input"
-            placeholder="e.g. New York, Miami, Las Vegas"
-            value="New York">
-        </div>
-
-        <!-- Quick city chips -->
-        <div class="hotel-quick-cities">
-          <button type="button" onclick="setHotelCity('New York')">
-            ?? New York
-          </button>
-          <button type="button" onclick="setHotelCity('Miami')">
-            ?? Miami
-          </button>
-          <button type="button" onclick="setHotelCity('Las Vegas')">
-            ?? Las Vegas
-          </button>
-          <button type="button" onclick="setHotelCity('Los Angeles')">
-            ?? LA
-          </button>
-          <button type="button" onclick="setHotelCity('Chicago')">
-            ??? Chicago
-          </button>
-          <button type="button" onclick="setHotelCity('Hawaii')">
-            ?? Hawaii
-          </button>
-        </div>
-
-        <!-- Dates row -->
-        <div class="hotel-dates-row">
-          <div class="hotel-field-subgroup">
-            <label class="hotel-field-label">
-              Check-in
-            </label>
-            <input type="date" 
-              id="hotelCheckin"
-              class="hotel-field-input">
-          </div>
-          <div class="hotel-field-subgroup">
-            <label class="hotel-field-label">
-              Check-out
-            </label>
-            <input type="date" 
-              id="hotelCheckout"
-              class="hotel-field-input">
-          </div>
-        </div>
-
-        <!-- Guests / Stars row -->
-        <div class="hotel-filters-row">
-          <div class="hotel-field-subgroup">
-            <label class="hotel-field-label">
-              Guests
-            </label>
-            <select id="hotelGuests" 
-              class="hotel-field-input">
-              <option>1 Guest</option>
-              <option>2 Guests</option>
-              <option>3 Guests</option>
-              <option>4+ Guests</option>
-            </select>
-          </div>
-          <div class="hotel-field-subgroup">
-            <label class="hotel-field-label">
-              Star Rating
-            </label>
-            <select id="hotelStars" 
-              class="hotel-field-input">
-              <option value="any">? Any Rating</option>
-              <option value="3">??? 3+ Stars</option>
-              <option value="4">???? 4+ Stars</option>
-              <option value="5">????? 5 Stars</option>
-            </select>
-          </div>
-        </div>
-
-        <button class="hotel-search-btn"
-          onclick="searchHotels()">
-          ?? Search Hotels
-        </button>
-
-      </div>
-
-      <div id="hotelResults"></div>
-    </div>
-  </div>
-</div><div class="modal-overlay" id="quizModal">
+    <div class="modal-overlay" id="quizModal">
   <div class="modal-box medium">
     <div class="modal-head"><h2>★ Destination Quiz</h2><button class="modal-close" onclick="closeModal('quizModal')">✕</button></div>
     <div class="modal-body-scroll"><div id="quizContainer"></div><div id="quizResult"></div></div>
@@ -1011,8 +919,8 @@
 <div class="modal-overlay" id="visaModal">
   <div class="modal-box medium">
     <div class="modal-head" style="text-align:center">
-      <h2 style="display:flex;align-items:center;justify-content:center;gap:0.5rem">?? Visa Requirements Check</h2>
-      <button class="modal-close" onclick="closeModal('visaModal')">?</button>
+      <h2 style="display:flex;align-items:center;justify-content:center;gap:0.5rem">🛂 Visa Requirements Check</h2>
+      <button class="modal-close" onclick="closeModal('visaModal')">✕</button>
     </div>
     <div class="modal-body-scroll" style="padding:1.5rem">
       <div class="visa-form" style="background:var(--bg-card);padding:1.5rem;border-radius:var(--r-md);margin-bottom:1.5rem">
@@ -1021,72 +929,72 @@
             <label style="display:block;margin-bottom:0.5rem;font-weight:600;font-size:0.9rem">Your Passport</label>
             <select id="visaFrom" style="width:100%">
               <option value="">Select passport...</option>
-              <option value="US" data-name="United States">???? United States</option>
-              <option value="GB" data-name="United Kingdom">???? United Kingdom</option>
-              <option value="IN" data-name="India">???? India</option>
-              <option value="CN" data-name="China">???? China</option>
-              <option value="AU" data-name="Australia">???? Australia</option>
-              <option value="CA" data-name="Canada">???? Canada</option>
-              <option value="DE" data-name="Germany">???? Germany</option>
-              <option value="FR" data-name="France">???? France</option>
-              <option value="JP" data-name="Japan">???? Japan</option>
-              <option value="KR" data-name="South Korea">???? South Korea</option>
-              <option value="SG" data-name="Singapore">???? Singapore</option>
-              <option value="BR" data-name="Brazil">???? Brazil</option>
-              <option value="MX" data-name="Mexico">???? Mexico</option>
-              <option value="ZA" data-name="South Africa">???? South Africa</option>
-              <option value="NG" data-name="Nigeria">???? Nigeria</option>
-              <option value="PK" data-name="Pakistan">???? Pakistan</option>
-              <option value="BD" data-name="Bangladesh">???? Bangladesh</option>
-              <option value="RU" data-name="Russia">???? Russia</option>
-              <option value="IT" data-name="Italy">???? Italy</option>
-              <option value="ES" data-name="Spain">???? Spain</option>
-              <option value="NL" data-name="Netherlands">???? Netherlands</option>
-              <option value="AE" data-name="UAE">???? UAE</option>
-              <option value="SA" data-name="Saudi Arabia">???? Saudi Arabia</option>
-              <option value="PH" data-name="Philippines">???? Philippines</option>
-              <option value="ID" data-name="Indonesia">???? Indonesia</option>
+              <option value="US" data-name="United States">🇺🇸 United States</option>
+              <option value="GB" data-name="United Kingdom">🇬🇧 United Kingdom</option>
+              <option value="IN" data-name="India">🇮🇳 India</option>
+              <option value="CN" data-name="China">🇨🇳 China</option>
+              <option value="AU" data-name="Australia">🇦🇺 Australia</option>
+              <option value="CA" data-name="Canada">🇨🇦 Canada</option>
+              <option value="DE" data-name="Germany">🇩🇪 Germany</option>
+              <option value="FR" data-name="France">🇫🇷 France</option>
+              <option value="JP" data-name="Japan">🇯🇵 Japan</option>
+              <option value="KR" data-name="South Korea">🇰🇷 South Korea</option>
+              <option value="SG" data-name="Singapore">🇸🇬 Singapore</option>
+              <option value="BR" data-name="Brazil">🇧🇷 Brazil</option>
+              <option value="MX" data-name="Mexico">🇲🇽 Mexico</option>
+              <option value="ZA" data-name="South Africa">🇿🇦 South Africa</option>
+              <option value="NG" data-name="Nigeria">🇳🇬 Nigeria</option>
+              <option value="PK" data-name="Pakistan">🇵🇰 Pakistan</option>
+              <option value="BD" data-name="Bangladesh">🇧🇩 Bangladesh</option>
+              <option value="RU" data-name="Russia">🇷🇺 Russia</option>
+              <option value="IT" data-name="Italy">🇮🇹 Italy</option>
+              <option value="ES" data-name="Spain">🇪🇸 Spain</option>
+              <option value="NL" data-name="Netherlands">🇳🇱 Netherlands</option>
+              <option value="AE" data-name="UAE">🇦🇪 UAE</option>
+              <option value="SA" data-name="Saudi Arabia">🇸🇦 Saudi Arabia</option>
+              <option value="PH" data-name="Philippines">🇵🇭 Philippines</option>
+              <option value="ID" data-name="Indonesia">🇮🇩 Indonesia</option>
             </select>
           </div>
           <div class="form-group" style="margin:0">
             <label style="display:block;margin-bottom:0.5rem;font-weight:600;font-size:0.9rem">Destination Country</label>
             <select id="visaTo" style="width:100%">
               <option value="">Select destination...</option>
-              <option value="US" data-name="United States">???? United States</option>
-              <option value="GB" data-name="United Kingdom">???? United Kingdom</option>
-              <option value="FR" data-name="France">???? France</option>
-              <option value="JP" data-name="Japan">???? Japan</option>
-              <option value="TH" data-name="Thailand">???? Thailand</option>
-              <option value="AE" data-name="UAE">???? UAE</option>
-              <option value="SG" data-name="Singapore">???? Singapore</option>
-              <option value="AU" data-name="Australia">???? Australia</option>
-              <option value="CA" data-name="Canada">???? Canada</option>
-              <option value="IN" data-name="India">???? India</option>
-              <option value="DE" data-name="Germany">???? Germany</option>
-              <option value="IT" data-name="Italy">???? Italy</option>
-              <option value="ES" data-name="Spain">???? Spain</option>
-              <option value="MX" data-name="Mexico">???? Mexico</option>
-              <option value="BR" data-name="Brazil">???? Brazil</option>
-              <option value="ID" data-name="Indonesia">???? Indonesia</option>
-              <option value="TR" data-name="Turkey">???? Turkey</option>
-              <option value="GR" data-name="Greece">???? Greece</option>
-              <option value="PT" data-name="Portugal">???? Portugal</option>
-              <option value="NL" data-name="Netherlands">???? Netherlands</option>
-              <option value="CH" data-name="Switzerland">???? Switzerland</option>
-              <option value="ZA" data-name="South Africa">???? South Africa</option>
-              <option value="KE" data-name="Kenya">???? Kenya</option>
-              <option value="EG" data-name="Egypt">???? Egypt</option>
-              <option value="MA" data-name="Morocco">???? Morocco</option>
-              <option value="NZ" data-name="New Zealand">???? New Zealand</option>
-              <option value="VN" data-name="Vietnam">???? Vietnam</option>
-              <option value="KH" data-name="Cambodia">???? Cambodia</option>
-              <option value="LK" data-name="Sri Lanka">???? Sri Lanka</option>
-              <option value="NP" data-name="Nepal">???? Nepal</option>
-              <option value="MV" data-name="Maldives">???? Maldives</option>
+              <option value="US" data-name="United States">🇺🇸 United States</option>
+              <option value="GB" data-name="United Kingdom">🇬🇧 United Kingdom</option>
+              <option value="FR" data-name="France">🇫🇷 France</option>
+              <option value="JP" data-name="Japan">🇯🇵 Japan</option>
+              <option value="TH" data-name="Thailand">🇹🇭 Thailand</option>
+              <option value="AE" data-name="UAE">🇦🇪 UAE</option>
+              <option value="SG" data-name="Singapore">🇸🇬 Singapore</option>
+              <option value="AU" data-name="Australia">🇦🇺 Australia</option>
+              <option value="CA" data-name="Canada">🇨🇦 Canada</option>
+              <option value="IN" data-name="India">🇮🇳 India</option>
+              <option value="DE" data-name="Germany">🇩🇪 Germany</option>
+              <option value="IT" data-name="Italy">🇮🇹 Italy</option>
+              <option value="ES" data-name="Spain">🇪🇸 Spain</option>
+              <option value="MX" data-name="Mexico">🇲🇽 Mexico</option>
+              <option value="BR" data-name="Brazil">🇧🇷 Brazil</option>
+              <option value="ID" data-name="Indonesia">🇮🇩 Indonesia</option>
+              <option value="TR" data-name="Turkey">🇹🇷 Turkey</option>
+              <option value="GR" data-name="Greece">🇬🇷 Greece</option>
+              <option value="PT" data-name="Portugal">🇵🇹 Portugal</option>
+              <option value="NL" data-name="Netherlands">🇳🇱 Netherlands</option>
+              <option value="CH" data-name="Switzerland">🇨🇭 Switzerland</option>
+              <option value="ZA" data-name="South Africa">🇿🇦 South Africa</option>
+              <option value="KE" data-name="Kenya">🇰🇪 Kenya</option>
+              <option value="EG" data-name="Egypt">🇪🇬 Egypt</option>
+              <option value="MA" data-name="Morocco">🇲🇦 Morocco</option>
+              <option value="NZ" data-name="New Zealand">🇳🇿 New Zealand</option>
+              <option value="VN" data-name="Vietnam">🇻🇳 Vietnam</option>
+              <option value="KH" data-name="Cambodia">🇰🇭 Cambodia</option>
+              <option value="LK" data-name="Sri Lanka">🇱🇰 Sri Lanka</option>
+              <option value="NP" data-name="Nepal">🇳🇵 Nepal</option>
+              <option value="MV" data-name="Maldives">🇲🇻 Maldives</option>
             </select>
           </div>
         </div>
-        <button class="btn btn-primary" style="width:100%;padding:0.75rem;font-size:0.95rem;font-weight:600" onclick="checkVisa()">?? Check with AI</button>
+        <button class="btn btn-primary" style="width:100%;padding:0.75rem;font-size:0.95rem;font-weight:600" onclick="checkVisa()">✅ Check Visa Requirements</button>
       </div>
       <div id="visaOutput"></div>
     </div>

@@ -155,7 +155,7 @@ def health_check():
             "flights": bool(os.environ.get('AMADEUS_KEY')),
             "hotels": bool(os.environ.get('RAPIDAPI_KEY')),
             "maps": True,
-            "itinerary": bool(os.environ.get('ANTHROPIC_API_KEY')),
+            "itinerary": bool(os.environ.get('GROQ_KEY')),
             "translate": True,
             "visa": True
         }
