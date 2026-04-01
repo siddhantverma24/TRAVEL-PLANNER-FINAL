@@ -1,6 +1,8 @@
 """Itinerary Route - Groq AI Integration (Real Itinerary Generation)
 """
 from flask import Blueprint, request, jsonify
+from bson import ObjectId
+from db import get_collection
 import os
 import json
 import requests
@@ -126,6 +128,22 @@ RESPONSE FORMAT - Return ONLY valid JSON, no markdown code blocks:
         result = json.loads(response_text)
         
         print(f"[ITINERARY] Successfully generated itinerary for {destination}")
+        
+        # ══════════════════════════════════════════════════════════════════════
+        # SAVE TO MONGODB
+        # ══════════════════════════════════════════════════════════════════════
+        try:
+            itineraries = get_collection('itineraries')
+            doc = {
+                **result,  # Include all Groq response fields
+                'saved_at': datetime.utcnow(),
+            }
+            insert_result = itineraries.insert_one(doc)
+            print(f"✅ Itinerary saved to MongoDB with ID: {insert_result.inserted_id}")
+        except Exception as e:
+            print(f"⚠️ [MONGODB] Failed to save itinerary: {str(e)}")
+            # Continue anyway - don't crash the API response
+        
         return jsonify(result), 200
         
     except json.JSONDecodeError as e:
@@ -166,3 +184,48 @@ def _call_groq_api(prompt, api_key):
     
     result = response.json()
     return result['choices'][0]['message']['content']
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# SAVED ITINERARIES ROUTES
+# ═══════════════════════════════════════════════════════════════════════════
+
+@itinerary_bp.route('/saved', methods=['GET'])
+def get_saved_itineraries():
+    """Retrieve all saved itineraries sorted by saved_at descending"""
+    try:
+        itineraries = get_collection('itineraries')
+        docs = list(itineraries.find().sort('saved_at', -1))
+        
+        # Convert ObjectId to string for JSON serialization
+        for doc in docs:
+            doc['_id'] = str(doc['_id'])
+        
+        print(f"✅ Retrieved {len(docs)} saved itineraries")
+        return jsonify({"count": len(docs), "itineraries": docs}), 200
+        
+    except Exception as e:
+        print(f"❌ Error retrieving saved itineraries: {str(e)}")
+        return jsonify({"error": "Failed to retrieve itineraries"}), 500
+
+
+@itinerary_bp.route('/saved/<itinerary_id>', methods=['DELETE'])
+def delete_saved_itinerary(itinerary_id):
+    """Delete a saved itinerary by MongoDB ID"""
+    try:
+        # Validate ObjectId format
+        if not ObjectId.is_valid(itinerary_id):
+            return jsonify({"error": "Invalid itinerary ID format"}), 400
+        
+        itineraries = get_collection('itineraries')
+        result = itineraries.delete_one({'_id': ObjectId(itinerary_id)})
+        
+        if result.deleted_count == 0:
+            return jsonify({"error": "Itinerary not found"}), 404
+        
+        print(f"✅ Deleted itinerary: {itinerary_id}")
+        return jsonify({"message": "Itinerary deleted successfully"}), 200
+        
+    except Exception as e:
+        print(f"❌ Error deleting itinerary: {str(e)}")
+        return jsonify({"error": "Failed to delete itinerary"}), 500

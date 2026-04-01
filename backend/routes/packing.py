@@ -2,6 +2,8 @@
 Packing Route - AI-powered smart packing list generator using Groq
 """
 from flask import Blueprint, request, jsonify
+from db import get_collection
+from datetime import datetime
 import requests
 import os
 import json
@@ -81,9 +83,12 @@ def generate_packing_list():
         # Check if Groq key is available
         if not GROQ_KEY or GROQ_KEY == 'your_key_here':
             print("[WARNING] GROQ_KEY not configured, using fallback packing list")
-            return jsonify(generate_fallback_packing_list(
+            fallback = generate_fallback_packing_list(
                 destination, 'general', days, 'mixed', 'solo'
-            ))
+            )
+            # Save fallback to MongoDB
+            _save_packing_list(fallback, destination, days, 'fallback')
+            return jsonify(fallback)
         
         # Build Groq prompt - infer trip nature from destination alone
         prompt = f"""You are an expert travel packing consultant with deep knowledge of destinations worldwide.
@@ -174,6 +179,9 @@ Total items should be realistic and tailored to {destination} and the {days}-day
         data = json.loads(ai_response)
         data['source'] = 'groq'
         
+        # Save to MongoDB
+        _save_packing_list(data, destination, days, 'groq')
+        
         return jsonify(data)
         
     except Exception as e:
@@ -184,6 +192,61 @@ Total items should be realistic and tailored to {destination} and the {days}-day
         weather = body.get('weather', 'mixed') if 'body' in locals() else 'mixed'
         travelers = body.get('travelers', 'solo') if 'body' in locals() else 'solo'
         
-        return jsonify(generate_fallback_packing_list(
+        fallback = generate_fallback_packing_list(
             destination, trip_type, days, weather, travelers
-        ))
+        )
+        # Save fallback to MongoDB
+        _save_packing_list(fallback, destination, days, 'fallback')
+        
+        return jsonify(fallback)
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# HELPER & SAVED PACKING LISTS ROUTES
+# ═══════════════════════════════════════════════════════════════════════════
+
+def _save_packing_list(packing_data, destination, days, source):
+    """Save packing list to MongoDB"""
+    try:
+        packing_lists = get_collection('packing_lists')
+        doc = {
+            'destination': destination,
+            'days': days,
+            'packing_data': packing_data,
+            'saved_at': datetime.utcnow(),
+            'source': source
+        }
+        insert_result = packing_lists.insert_one(doc)
+        print(f"✅ Packing list saved to MongoDB with ID: {insert_result.inserted_id}")
+    except Exception as e:
+        print(f"⚠️ [MONGODB] Failed to save packing list: {str(e)}")
+        # Continue anyway - don't crash the API response
+
+
+@packing_bp.route('/saved', methods=['GET'])
+def get_saved_packing_lists():
+    """Retrieve saved packing lists for a given destination"""
+    try:
+        destination = request.args.get('destination', '')
+        
+        packing_lists = get_collection('packing_lists')
+        
+        if destination:
+            # Search for specific destination (case-insensitive)
+            docs = list(packing_lists.find(
+                {'destination': {'$regex': destination, '$options': 'i'}}
+            ).sort('saved_at', -1).limit(5))
+        else:
+            # Return most recent 5 if no destination specified
+            docs = list(packing_lists.find().sort('saved_at', -1).limit(5))
+        
+        # Convert ObjectId to string for JSON serialization
+        for doc in docs:
+            doc['_id'] = str(doc['_id'])
+        
+        print(f"✅ Retrieved {len(docs)} saved packing lists for '{destination}'")
+        return jsonify({"count": len(docs), "packing_lists": docs}), 200
+        
+    except Exception as e:
+        print(f"❌ Error retrieving saved packing lists: {str(e)}")
+        return jsonify({"error": "Failed to retrieve packing lists"}), 500

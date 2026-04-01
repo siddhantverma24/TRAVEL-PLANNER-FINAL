@@ -7,7 +7,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
-# from db import get_db_connection  # Not needed yet
+from db import get_db, get_collection
 from datetime import datetime
 import json
 from dotenv import load_dotenv
@@ -32,6 +32,7 @@ from routes.packing import packing_bp
 from routes.phrases import phrases_bp
 from routes.flighttracker import flighttracker_bp
 from routes.quiz import quiz_bp
+from routes.hero_ai import hero_ai_bp
 
 app = Flask(__name__, static_folder='../frontend', static_url_path='')
 CORS(app, resources={
@@ -62,6 +63,7 @@ app.register_blueprint(packing_bp, url_prefix='/api/packing')
 app.register_blueprint(phrases_bp, url_prefix='/api/phrases')
 app.register_blueprint(flighttracker_bp, url_prefix='/api/flighttracker')
 app.register_blueprint(quiz_bp, url_prefix='/api/quiz')
+app.register_blueprint(hero_ai_bp, url_prefix='/api/hero-ai')
 
 # ============= FRONTEND SERVING ROUTES =============
 @app.route('/index.html')

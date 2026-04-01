@@ -9,12 +9,179 @@
   <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800;900&family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
   <style>
     /* Fallback: ensure images don't break layout */
     img { background: #e0e0e0; }
+    
+    /* ── VTUSA HERO ───────────────────────── */
+    .hero-content-vtusa {
+      position: absolute;
+      bottom: 12%;
+      left: 5%;
+      right: 5%;
+      z-index: 3;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    
+    .hero-headline-vtusa {
+      font-size: clamp(2rem, 5.5vw, 7rem);
+      font-weight: 950;
+      color: #ffffff;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      text-transform: uppercase;
+      margin: 0 0 1.5rem 0;
+      text-shadow: 0 2px 8px rgba(255,255,255,0.35);
+      white-space: nowrap;
+    }
+    
+    .hero-ai-label {
+      color: #2f3b4d;
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 1.25rem;
+      letter-spacing: .05em;
+    }
+    
+    .hero-ai-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      justify-content: center;
+    }
+    
+    .hero-pill {
+      padding: 0.75rem 1.5rem;
+      background: linear-gradient(135deg, #56cbf9 0%, #7fbeeb 100%);
+      border: 1.5px solid #56cbf9;
+      border-radius: 3rem;
+      color: #ffffff;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      white-space: nowrap;
+      font-family: var(--font-body);
+      box-shadow: 0 8px 20px rgba(86, 203, 249, 0.35);
+    }
+    
+    .hero-pill:hover {
+      background: linear-gradient(135deg, #40bce9 0%, #6aafe0 100%);
+      border-color: #40bce9;
+      transform: translateY(-4px);
+      box-shadow: 0 12px 28px rgba(86, 203, 249, 0.45);
+    }
+    
+    /* ── AI PANEL ─────────────────────────── */
+    .hero-ai-panel {
+      background: #fff;
+      border-bottom: 1px solid #e5e5e5;
+      position: relative;
+      z-index: 10;
+    }
+    
+    body.dark-mode .hero-ai-panel { 
+      background: #1a1a2e;
+      border-color: #333;
+    }
+    
+    .hero-ai-panel-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem 5%;
+    }
+    
+    .hero-ai-panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 700;
+      font-size: 1.1rem;
+      margin-bottom: 1.25rem;
+      color: var(--text-primary);
+    }
+    
+    .hero-ai-panel-header button {
+      background: none;
+      border: none;
+      font-size: 1.2rem;
+      cursor: pointer;
+      color: var(--text-muted);
+    }
+    
+    .hero-ai-loading {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      color: var(--text-muted);
+      padding: 1rem 0;
+    }
+    
+    .ai-spinner {
+      width: 20px; height: 20px;
+      border: 2px solid #ddd;
+      border-top-color: #333;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    .hero-ai-result-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 1rem;
+    }
+    
+    .hero-ai-result-card {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      padding: 1.25rem;
+      border: 1px solid var(--border);
+    }
+    
+    .hero-ai-result-card h4 {
+      margin: 0 0 0.5rem;
+      font-size: 1rem;
+      color: var(--text-primary);
+    }
+    
+    .hero-ai-result-card p {
+      margin: 0;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    
+    .hero-ai-result-card .ai-card-btn {
+      margin-top: 0.75rem;
+      padding: 0.4rem 1rem;
+      background: #111;
+      color: #fff;
+      border: none;
+      border-radius: 2rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: background 0.2s;
+      font-family: var(--font-body);
+    }
+    
+    body.dark-mode .hero-ai-result-card .ai-card-btn { 
+      background: #fff; 
+      color: #111; 
+    }
+    
+    @media (max-width: 600px) {
+      .hero-headline-vtusa { font-size: 3.2rem; }
+      .hero-ai-pills { gap: 0.5rem; }
+      .hero-pill { font-size: 0.8rem; padding: 0.6rem 1.1rem; }
+    }
   </style>
 </head>
 <body>
@@ -24,13 +191,6 @@
 ══════════════════════════════════════════ -->
 <div class="toast" id="toast">
   <span id="toastMsg">Message here</span>
-</div>
-
-<!-- ══════════════════════════════════════════
-     CURRENCY TICKER
-══════════════════════════════════════════ -->
-<div class="currency-ticker" id="currencyTicker">
-  <div class="ticker-track" id="tickerTrack"></div>
 </div>
 
 <!-- ══════════════════════════════════════════
@@ -1203,7 +1363,8 @@
 <!-- ══════════════════════════════════════════
      HERO
 ══════════════════════════════════════════ -->
-<section class="hero">
+<section class="hero" id="heroSection">
+  <!-- Background video (keep existing) -->
   <div class="hero-video-container">
     <video class="hero-video" autoplay muted loop playsinline
       poster="https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1920&h=1080&fit=crop">
@@ -1211,27 +1372,52 @@
     </video>
   </div>
   <div class="hero-overlay"></div>
-  <div class="hero-content">
-    <div class="hero-badge" data-aos="fade-down">✦ Discover the World</div>
-    <h1 data-aos="fade-up" data-aos-delay="100">Every Journey<br><em>Tells a Story</em></h1>
-    <p data-aos="fade-up" data-aos-delay="200">Handcrafted itineraries, real-time tools, and expert guidance for travelers who demand more than ordinary.</p>
-    <div class="cta-buttons" data-aos="fade-up" data-aos-delay="300">
-      <a href="#plan" class="btn btn-primary" onclick="event.preventDefault(); scrollTo('plan')">✦ Start Planning</a>
-      <button class="btn btn-glass" onclick="openModal('quizModal'); startQuiz()">★ Find My Destination</button>
+
+  <!-- Main headline — huge, bold, uppercase, bottom-left like visittheusa -->
+  <div class="hero-content-vtusa">
+    <h1 class="hero-headline-vtusa" data-aos="fade-up">
+      AMERICA THE BEAUTIFUL
+    </h1>
+
+    <!-- AI prompt line -->
+    <p class="hero-ai-label" data-aos="fade-up" data-aos-delay="150">
+      ✦ Get travel ideas with AI
+    </p>
+
+    <!-- 4 AI suggestion pill buttons -->
+    <div class="hero-ai-pills" data-aos="fade-up" data-aos-delay="250">
+      <button class="hero-pill" onclick="heroAIPrompt('Find my family adventure')">
+        ✦ Find my family adventure
+      </button>
+      <button class="hero-pill" onclick="heroAIPrompt('Show me incredible views')">
+        ✦ Show me incredible views
+      </button>
+      <button class="hero-pill" onclick="heroAIPrompt('Build my family road trip')">
+        ✦ Build my family road trip
+      </button>
+      <button class="hero-pill" onclick="heroAIPrompt('See top arts destinations')">
+        ✦ See top arts destinations
+      </button>
     </div>
   </div>
-  <div class="hero-search" data-aos="fade-up" data-aos-delay="400">
-    <div class="search-tabs">
-      <button class="stab active" onclick="setSearchTab(this,'flights')">✈️ Flights</button>
-      <button class="stab" onclick="setSearchTab(this,'hotels')">🏨 Hotels</button>
-    </div>
-    <div class="search-bar-wrap" style="display:flex;gap:1rem;margin-top:1.5rem;align-items:stretch">
-      <input type="text" class="hero-input" id="heroSearch" placeholder="Where to? Enter a destination, city, or airport…" style="flex:1;padding:0.95rem 1.25rem;font-size:1rem;border:2px solid rgba(255,255,255,0.25);border-radius:12px;background:rgba(255,255,255,0.95);color:#1a1a1a;transition:all 0.3s ease">
-      <button class="search-btn" onclick="handleHeroSearch()" style="padding:0.95rem 2rem;background:linear-gradient(135deg,#ff6b6b,#ee5a6f);color:#fff;border:none;border-radius:12px;font-weight:700;font-size:0.95rem;cursor:pointer;transition:all 0.3s ease;white-space:nowrap">🔍 Search</button>
-    </div>
-  </div>
-  <div class="scroll-cue">Scroll to explore ↓</div>
 </section>
+
+<!-- AI RESPONSE PANEL — appears below hero when a pill is clicked -->
+<div class="hero-ai-panel" id="heroAIPanel" style="display:none">
+  <div class="hero-ai-panel-inner">
+    <div class="hero-ai-panel-header">
+      <span id="heroAIPanelTitle">✦ AI Travel Ideas</span>
+      <button onclick="closeHeroAIPanel()">✕</button>
+    </div>
+    <div class="hero-ai-panel-body" id="heroAIPanelBody">
+      <div class="hero-ai-loading" id="heroAILoading">
+        <div class="ai-spinner"></div>
+        <span>Getting ideas from AI...</span>
+      </div>
+      <div id="heroAIResult" style="display:none"></div>
+    </div>
+  </div>
+</div>
 
 <!-- ══════════════════════════════════════════
      DESTINATIONS
@@ -1243,7 +1429,7 @@
         <span class="section-eyebrow">Where to Next?</span>
         <h2>Explore Popular Destinations</h2>
         <p>From iconic cities to natural wonders, discover America's most sought-after locations. Browse our curated collection of 6 amazing destinations with insider tips, best times to visit, and real-time weather updates.</p>
-        <a href="./destinations.html" class="btn btn-primary" style="display:inline-block">Explore Destinations →</a>
+        <a href="./destinations.html" class="btn btn-primary" style="display:inline-block;background:linear-gradient(135deg,#56cbf9,#7fbeeb);color:#ffffff !important;border:none;box-shadow:0 10px 22px rgba(86,203,249,.35)">Explore Destinations →</a>
       </div>
       <div class="teaser-cards" style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
         <div style="text-align:center;padding:1.5rem;background:var(--bg-sand);border-radius:12px">
@@ -1274,36 +1460,36 @@
 <!-- ══════════════════════════════════════════
      EXPERIENCES
 ══════════════════════════════════════════ -->
-<section class="page-teaser experiences-teaser" style="background:var(--grad-green);color:#fff">
+<section class="page-teaser experiences-teaser" style="background:#afbed1;color:#1a1a1a;border-top:1px solid rgba(86,203,249,.35);border-bottom:1px solid rgba(86,203,249,.35)">
   <div class="container">
     <div class="teaser-grid" style="grid-template-columns: 1fr 1fr; align-items: center; gap:4rem">
       <div class="teaser-cards" style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;order:2">
-        <div style="text-align:center;padding:1.5rem;background:rgba(255,255,255,.1);border-radius:12px;color:#fff">
+        <div style="text-align:center;padding:1.5rem;background:#ffffff;border-radius:12px;color:#1a1a1a;box-shadow:0 6px 16px rgba(86,203,249,.18)">
           <div style="font-size:3rem;margin-bottom:.5rem">▲</div>
           <h3 style="font-size:1.1rem;margin:.5rem 0">Adventure</h3>
           <p style="font-size:.85rem">Hiking, Rafting</p>
         </div>
-        <div style="text-align:center;padding:1.5rem;background:rgba(255,255,255,.1);border-radius:12px;color:#fff">
+        <div style="text-align:center;padding:1.5rem;background:#ffffff;border-radius:12px;color:#1a1a1a;box-shadow:0 6px 16px rgba(86,203,249,.18)">
           <div style="font-size:3rem;margin-bottom:.5rem">🏛️</div>
           <h3 style="font-size:1.1rem;margin:.5rem 0">Culture</h3>
           <p style="font-size:.85rem">Historic Tours</p>
         </div>
-        <div style="text-align:center;padding:1.5rem;background:rgba(255,255,255,.1);border-radius:12px;color:#fff">
+        <div style="text-align:center;padding:1.5rem;background:#ffffff;border-radius:12px;color:#1a1a1a;box-shadow:0 6px 16px rgba(86,203,249,.18)">
           <div style="font-size:3rem;margin-bottom:.5rem">🍽️</div>
           <h3 style="font-size:1.1rem;margin:.5rem 0">Food</h3>
           <p style="font-size:.85rem">Culinary Tours</p>
         </div>
-        <div style="text-align:center;padding:1.5rem;background:rgba(255,255,255,.1);border-radius:12px;color:#fff">
+        <div style="text-align:center;padding:1.5rem;background:#ffffff;border-radius:12px;color:#1a1a1a;box-shadow:0 6px 16px rgba(86,203,249,.18)">
           <div style="font-size:3rem;margin-bottom:.5rem">◉</div>
           <h3 style="font-size:1.1rem;margin:.5rem 0">Relaxation</h3>
           <p style="font-size:.85rem">Spa Retreats</p>
         </div>
       </div>
       <div class="teaser-content" style="order:1">
-        <span class="section-eyebrow" style="color:rgba(255,255,255,.8)">Create Memories</span>
-        <h2 style="color:#fff">Unforgettable Experiences</h2>
-        <p style="color:rgba(255,255,255,.9)">Handpicked activities for every traveler. From mountain hiking to luxury spa retreats, adventure to cultural tours, we've curated the perfect experiences for your journey.</p>
-        <a href="./experiences.html" class="btn btn-outline" style="display:inline-block;color:#fff;border-color:#fff">Explore Experiences →</a>
+        <span class="section-eyebrow" style="color:#2f3b4d">Create Memories</span>
+        <h2 style="color:#1a1a1a">Unforgettable Experiences</h2>
+        <p style="color:#2f3b4d">Handpicked activities for every traveler. From mountain hiking to luxury spa retreats, adventure to cultural tours, we've curated the perfect experiences for your journey.</p>
+        <a href="./experiences.html" class="btn btn-outline" style="display:inline-block;color:#ffffff !important;border:0;background:linear-gradient(135deg,#56cbf9,#7fbeeb)">Explore Experiences →</a>
       </div>
     </div>
   </div>
@@ -1594,5 +1780,62 @@
 </footer>
 
 <script src="script.js"></script>
+<script>
+// Scroll detection for transparent navbar
+window.addEventListener('scroll', () => {
+  const nb = document.getElementById('navbar');
+  if (!nb) return;
+  nb.classList.toggle('scrolled', window.scrollY > 10);
+});
+
+// Hero AI Prompt Handler
+async function heroAIPrompt(prompt) {
+  const panel = document.getElementById('heroAIPanel');
+  const loading = document.getElementById('heroAILoading');
+  const result = document.getElementById('heroAIResult');
+  const title = document.getElementById('heroAIPanelTitle');
+
+  // Show panel, reset state
+  panel.style.display = 'block';
+  loading.style.display = 'flex';
+  result.style.display = 'none';
+  title.textContent = '✦ ' + prompt;
+
+  // Scroll panel into view
+  panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  try {
+    const res = await fetch('/api/hero-ai', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt })
+    });
+    const data = await res.json();
+
+    // data is an array of { name, tagline, description, emoji }
+    const cards = data.map(d => `
+      <div class="hero-ai-result-card">
+        <h4>${d.emoji || '📍'} ${d.name}</h4>
+        <p><strong>${d.tagline}</strong></p>
+        <p>${d.description}</p>
+        <button class="ai-card-btn" 
+          onclick="openDestinationMap('${d.name}')">Explore →</button>
+      </div>
+    `).join('');
+
+    result.innerHTML = `<div class="hero-ai-result-cards">${cards}</div>`;
+  } catch(e) {
+    result.innerHTML = `<p style="color:var(--text-muted)">
+      Could not load suggestions. Please try again.</p>`;
+  } finally {
+    loading.style.display = 'none';
+    result.style.display = 'block';
+  }
+}
+
+function closeHeroAIPanel() {
+  document.getElementById('heroAIPanel').style.display = 'none';
+}
+</script>
 </body>
 </html>

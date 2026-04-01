@@ -6,6 +6,8 @@ import os
 import json
 import requests
 from flask import Blueprint, request, jsonify
+from bson import ObjectId
+from db import get_collection
 from datetime import datetime, timedelta
 
 visa_bp = Blueprint('visa', __name__)
@@ -23,17 +25,6 @@ def ping():
         "message": "Visa API is working",
         "groq_configured": GROQ_KEY is not None
     })
-
-# Simple cache implementation with 24-hour TTL
-class CachedResponse:
-    def __init__(self, data, timestamp):
-        self.data = data
-        self.timestamp = timestamp
-    
-    def is_expired(self):
-        return datetime.now() - self.timestamp > timedelta(hours=24)
-
-visa_cache = {}
 
 # Fallback visa data for 3 key routes (when API unavailable)
 FALLBACK_DATA = {
@@ -148,12 +139,20 @@ def check_visa():
         if not (from_code and to_code):
             return jsonify({"error": "from and to parameters required"}), 400
         
-        # Check cache first
+        # Check MongoDB cache first
         cache_key = f"{from_code}->{to_code}"
-        if cache_key in visa_cache:
-            cached = visa_cache[cache_key]
-            if not cached.is_expired():
-                return jsonify(cached.data), 200
+        visa_cache = get_collection('visa_cache')
+        
+        try:
+            cached_doc = visa_cache.find_one({'cache_key': cache_key})
+            if cached_doc:
+                cached_at = cached_doc.get('cached_at')
+                if cached_at and datetime.utcnow() - cached_at < timedelta(hours=24):
+                    print(f"✅ Using cached visa data for {cache_key}")
+                    return jsonify(cached_doc['data']), 200
+        except Exception as e:
+            print(f"⚠️ [MONGODB] Cache lookup failed: {str(e)}")
+            # Continue anyway - fetch fresh data
         
         # Try Groq API
         visa_data = None
@@ -165,8 +164,22 @@ def check_visa():
             visa_data = FALLBACK_DATA[cache_key]
         
         if visa_data:
-            # Cache the result
-            visa_cache[cache_key] = CachedResponse(visa_data, datetime.now())
+            # Save to MongoDB cache with upsert
+            try:
+                visa_cache.update_one(
+                    {'cache_key': cache_key},
+                    {'$set': {
+                        'cache_key': cache_key,
+                        'data': visa_data,
+                        'cached_at': datetime.utcnow()
+                    }},
+                    upsert=True
+                )
+                print(f"✅ Cached visa data for {cache_key}")
+            except Exception as e:
+                print(f"⚠️ [MONGODB] Failed to cache visa data: {str(e)}")
+                # Continue anyway - don't crash the response
+            
             return jsonify(visa_data), 200
         
         # No data available

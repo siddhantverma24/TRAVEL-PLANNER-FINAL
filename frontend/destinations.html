@@ -9,11 +9,136 @@
   <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800;900&family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
   <style>
     img { background: #e0e0e0; }
+    
+    /* Filter Tabs */
+    .dest-filter-tabs { 
+      display: flex; 
+      gap: 0.5rem; 
+      flex-wrap: wrap; 
+      margin-bottom: 2rem; 
+      justify-content: center;
+    }
+    
+    .dest-filter-btn { 
+      padding: 0.5rem 1.2rem; 
+      border-radius: 2rem; 
+      border: 1px solid var(--border); 
+      background: var(--bg-card); 
+      cursor: pointer; 
+      font-size: 0.85rem; 
+      font-weight: 600;
+      font-family: var(--font-body);
+      transition: all 0.2s ease;
+      color: var(--text-primary);
+    }
+    
+    .dest-filter-btn:hover {
+      border-color: var(--honey-bronze);
+      color: var(--honey-bronze);
+    }
+    
+    .dest-filter-btn.active { 
+      background: var(--honey-bronze); 
+      color: #fff; 
+      border-color: var(--honey-bronze); 
+    }
+    
+    /* Browse All States Section */
+    .all-states-section { 
+      padding: 4rem 0; 
+      background: var(--bg-secondary, #f5f5f5);
+    }
+    
+    body.dark-mode .all-states-section {
+      background: #0d0d0d;
+    }
+    
+    .region-group { 
+      margin-bottom: 3rem; 
+    }
+    
+    .region-title { 
+      font-size: 1.3rem; 
+      font-weight: 700; 
+      margin-bottom: 1rem; 
+      padding-bottom: 0.5rem; 
+      border-bottom: 2px solid var(--honey-bronze);
+      color: var(--text-primary);
+    }
+    
+    .states-grid { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); 
+      gap: 1rem; 
+    }
+    
+    .state-card { 
+      border-radius: 12px; 
+      overflow: hidden; 
+      cursor: pointer; 
+      background: var(--bg-card); 
+      border: 1px solid var(--border); 
+      transition: all 0.2s ease;
+    }
+    
+    .state-card:hover { 
+      transform: translateY(-4px); 
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      border-color: var(--honey-bronze);
+    }
+    
+    .state-card-img { 
+      width: 100%;
+      height: 100px;
+      overflow: hidden;
+    }
+    
+    .state-card-img img { 
+      width: 100%; 
+      height: 100%; 
+      object-fit: cover; 
+      display: block;
+      transition: transform 0.3s ease;
+    }
+    
+    .state-card:hover .state-card-img img {
+      transform: scale(1.05);
+    }
+    
+    .state-card-info { 
+      padding: 0.6rem 0.75rem; 
+      display: flex; 
+      flex-direction: column; 
+      gap: 0.15rem; 
+    }
+    
+    .state-flag { 
+      font-size: 1.2rem;
+      line-height: 1;
+    }
+    
+    .state-name { 
+      font-size: 0.85rem; 
+      font-weight: 700; 
+      color: var(--text-primary);
+      margin-top: 0.25rem;
+    }
+    
+    .state-nick { 
+      font-size: 0.72rem; 
+      color: var(--text-muted);
+    }
+    
+    @media (max-width: 768px) {
+      .states-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      }
+    }
   </style>
 </head>
 <body class="destinations-page">
@@ -27,36 +152,8 @@
     <li class="nav-item">
       <a href="./index.html" class="nav-link" data-page="index">Home</a>
     </li>
-    <li class="nav-item nav-has-dropdown">
+    <li class="nav-item">
       <a href="./destinations.html" class="nav-link" data-page="destinations">Destinations <span class="nav-chevron">›</span></a>
-      <div class="nav-mega-dropdown">
-        <div class="nav-dropdown-inner">
-          <div class="nav-dropdown-section">
-            <p class="nav-dropdown-label">Popular Cities</p>
-            <div class="nav-dropdown-grid">
-              <a href="./destinations.html" class="nav-dropdown-card"><span class="nav-dc-emoji">🗽</span><span class="nav-dc-name">New York</span><span class="nav-dc-state">New York</span></a>
-              <a href="./destinations.html" class="nav-dropdown-card"><span class="nav-dc-emoji">🌴</span><span class="nav-dc-name">Miami</span><span class="nav-dc-state">Florida</span></a>
-              <a href="./destinations.html" class="nav-dropdown-card"><span class="nav-dc-emoji">🎰</span><span class="nav-dc-name">Las Vegas</span><span class="nav-dc-state">Nevada</span></a>
-              <a href="./destinations.html" class="nav-dropdown-card"><span class="nav-dc-emoji">🌉</span><span class="nav-dc-name">San Francisco</span><span class="nav-dc-state">California</span></a>
-              <a href="./destinations.html" class="nav-dropdown-card"><span class="nav-dc-emoji">🌺</span><span class="nav-dc-name">Hawaii</span><span class="nav-dc-state">Hawaii</span></a>
-              <a href="./destinations.html" class="nav-dropdown-card"><span class="nav-dc-emoji">🏙️</span><span class="nav-dc-name">Chicago</span><span class="nav-dc-state">Illinois</span></a>
-            </div>
-          </div>
-          <div class="nav-dropdown-section">
-            <p class="nav-dropdown-label">Nature & Adventure</p>
-            <div class="nav-dropdown-list">
-              <a href="./destinations.html" class="nav-dropdown-list-item"><span>🏜️</span>Grand Canyon</a>
-              <a href="./destinations.html" class="nav-dropdown-list-item"><span>🦌</span>Yellowstone</a>
-              <a href="./destinations.html" class="nav-dropdown-list-item"><span>🌲</span>Yosemite</a>
-              <a href="./destinations.html" class="nav-dropdown-list-item"><span>🏔️</span>Rocky Mountains</a>
-            </div>
-          </div>
-          <div class="nav-dropdown-cta">
-            <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:.75rem">Not sure where to go?</p>
-            <a href="./plan.html" class="nav-dropdown-cta-btn">✨ Take the AI Quiz</a>
-          </div>
-        </div>
-      </div>
     </li>
     <li class="nav-item">
       <a href="./experiences.html" class="nav-link" data-page="experiences">Experiences</a>
@@ -1296,105 +1393,595 @@
       <h2>Popular Destinations</h2>
       <p>Explore America's most sought-after locations, from coastal cities to national wonders.</p>
     </div>
+    
+    <!-- Filter Tabs -->
+    <div class="dest-filter-tabs">
+      <button class="dest-filter-btn active" onclick="filterDests('all')">🗺️ All</button>
+      <button class="dest-filter-btn" onclick="filterDests('city')">🏙️ Cities</button>
+      <button class="dest-filter-btn" onclick="filterDests('nature')">🌿 Nature</button>
+      <button class="dest-filter-btn" onclick="filterDests('beach')">🏖️ Beach</button>
+      <button class="dest-filter-btn" onclick="filterDests('mountain')">🏔️ Mountains</button>
+    </div>
+    
     <div class="destinations-grid">
 
-      <!-- New York City -->
-      <div class="destination-card" data-aos="fade-up" onclick="openDestinationMap('New York City')">
-        <img src="https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=800&h=600&fit=crop" alt="New York City skyline" onerror="this.src='https://images.unsplash.com/photo-1534430480872-3498386e7856?w=800&h=600&fit=crop'">
+      <!-- 1. New York City -->
+      <div class="destination-card" data-category="city" data-state="New York" data-aos="fade-up" onclick="openDestinationMap('New York City')">
+        <img src="https://images.unsplash.com/photo-1538970272646-f61fabb3a8a2?w=800&h=600&fit=crop" alt="New York City" onerror="this.src='https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=800&h=600&fit=crop'">
         <div class="dest-overlay">
           <span class="dest-tag">Urban Paradise</span>
           <h3>New York City</h3>
           <p>The city that never sleeps</p>
           <div class="dest-meta">
             <span>⭐ 4.9</span>
-            <span>🌡️ 18°C</span>
             <span>🕐 Best: Sep–Nov</span>
           </div>
           <button class="dest-btn" onclick="event.stopPropagation(); openDestinationMap('New York City')">Explore Map →</button>
         </div>
       </div>
 
-      <!-- San Francisco -->
-      <div class="destination-card" data-aos="fade-up" data-aos-delay="80" onclick="openDestinationMap('San Francisco')">
-        <img src="https://images.unsplash.com/photo-1449034446853-66c86144b0ad?w=800&h=600&fit=crop" alt="San Francisco Golden Gate Bridge" onerror="this.src='https://images.unsplash.com/photo-1501594907352-04cda38ebc29?w=800&h=600&fit=crop'">
+      <!-- 2. Los Angeles -->
+      <div class="destination-card" data-category="city" data-state="California" data-aos="fade-up" data-aos-delay="80" onclick="openDestinationMap('Los Angeles')">
+        <img src="https://images.unsplash.com/photo-1444723121867-7a241cacace9?w=800&h=600&fit=crop" alt="Los Angeles" onerror="this.src='https://images.unsplash.com/photo-1534430480872-3498386e7856?w=800&h=600&fit=crop'">
         <div class="dest-overlay">
-          <span class="dest-tag">Coastal Charm</span>
-          <h3>San Francisco</h3>
-          <p>Golden Gate & tech hub</p>
-          <div class="dest-meta">
-            <span>⭐ 4.8</span>
-            <span>🌡️ 14°C</span>
-            <span>🕐 Best: Sep–Nov</span>
-          </div>
-          <button class="dest-btn" onclick="event.stopPropagation(); openDestinationMap('San Francisco')">Explore Map →</button>
-        </div>
-      </div>
-
-      <!-- Grand Canyon -->
-      <div class="destination-card" data-aos="fade-up" data-aos-delay="160" onclick="openDestinationMap('Grand Canyon')">
-        <img src="https://images.unsplash.com/photo-1474044159687-1ee9f3a51722?w=800&h=600&fit=crop" alt="Grand Canyon aerial view" onerror="this.src='https://images.unsplash.com/photo-1615551043360-33de8b5f410c?w=800&h=600&fit=crop'">
-        <div class="dest-overlay">
-          <span class="dest-tag">Adventure</span>
-          <h3>Grand Canyon</h3>
-          <p>Nature's masterpiece</p>
-          <div class="dest-meta">
-            <span>⭐ 4.9</span>
-            <span>🌡️ 22°C</span>
-            <span>🕐 Best: Mar–May</span>
-          </div>
-          <button class="dest-btn" onclick="event.stopPropagation(); openDestinationMap('Grand Canyon')">Explore Map →</button>
-        </div>
-      </div>
-
-      <!-- Miami Beach -->
-      <div class="destination-card" data-aos="fade-up" data-aos-delay="240" onclick="openDestinationMap('Miami')">
-        <img src="https://images.unsplash.com/photo-1533106418989-88406c7cc8ca?w=800&h=600&fit=crop" alt="Miami Beach South Beach" onerror="this.src='https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop'">
-        <div class="dest-overlay">
-          <span class="dest-tag">Beach Life</span>
-          <h3>Miami Beach</h3>
-          <p>Tropical paradise</p>
+          <span class="dest-tag">Hollywood Dreams</span>
+          <h3>Los Angeles</h3>
+          <p>Stars, beaches & sunshine</p>
           <div class="dest-meta">
             <span>⭐ 4.7</span>
-            <span>🌡️ 28°C</span>
-            <span>🕐 Best: Dec–Apr</span>
+            <span>🕐 Best: Mar–May</span>
           </div>
-          <button class="dest-btn" onclick="event.stopPropagation(); openDestinationMap('Miami')">Explore Map →</button>
+          <button class="dest-btn" onclick="event.stopPropagation(); openDestinationMap('Los Angeles')">Explore Map →</button>
         </div>
       </div>
 
-      <!-- Las Vegas -->
-      <div class="destination-card" data-aos="fade-up" data-aos-delay="320" onclick="openDestinationMap('Las Vegas')">
-        <img src="https://images.unsplash.com/photo-1605833556294-ea5c7a74f97a?w=800&h=600&fit=crop" alt="Las Vegas Strip at night" onerror="this.src='https://images.unsplash.com/photo-1581351721010-8cf859cb14a4?w=800&h=600&fit=crop'">
+      <!-- 3. Chicago -->
+      <div class="destination-card" data-category="city" data-state="Illinois" data-aos="fade-up" data-aos-delay="160" onclick="openDestinationMap('Chicago')">
+        <img src="https://images.unsplash.com/photo-1494522855154-9297ac14b55f?w=800&h=600&fit=crop" alt="Chicago" onerror="this.src='https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=800&h=600&fit=crop'">
+        <div class="dest-overlay">
+          <span class="dest-tag">Windy City</span>
+          <h3>Chicago</h3>
+          <p>Architecture & deep dish</p>
+          <div class="dest-meta">
+            <span>⭐ 4.8</span>
+            <span>🕐 Best: Jun–Aug</span>
+          </div>
+          <button class="dest-btn" onclick="event.stopPropagation(); openDestinationMap('Chicago')">Explore Map →</button>
+        </div>
+      </div>
+
+      <!-- 4. Las Vegas -->
+      <div class="destination-card" data-category="city" data-state="Nevada" data-aos="fade-up" data-aos-delay="240" onclick="openDestinationMap('Las Vegas')">
+        <img src="https://images.unsplash.com/photo-1605833556294-ea5c7a74f97a?w=800&h=600&fit=crop" alt="Las Vegas" onerror="this.src='https://images.unsplash.com/photo-1581351721010-8cf859cb14a4?w=800&h=600&fit=crop'">
         <div class="dest-overlay">
           <span class="dest-tag">Nightlife</span>
           <h3>Las Vegas</h3>
           <p>Entertainment capital</p>
           <div class="dest-meta">
             <span>⭐ 4.6</span>
-            <span>🌡️ 32°C</span>
             <span>🕐 Best: Mar–May</span>
           </div>
           <button class="dest-btn" onclick="event.stopPropagation(); openDestinationMap('Las Vegas')">Explore Map →</button>
         </div>
       </div>
 
-      <!-- Yellowstone -->
-      <div class="destination-card" data-aos="fade-up" data-aos-delay="400" onclick="openDestinationMap('Yellowstone')">
-        <img src="https://images.unsplash.com/photo-1590492359745-f7e5dc0ef4b6?w=800&h=600&fit=crop" alt="Yellowstone Grand Prismatic Spring" onerror="this.src='https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?w=800&h=600&fit=crop'">
+      <!-- 5. San Francisco -->
+      <div class="destination-card" data-category="city" data-state="California" data-aos="fade-up" data-aos-delay="320" onclick="openDestinationMap('San Francisco')">
+        <img src="https://images.unsplash.com/photo-1501594907352-04cda38ebc29?w=800&h=600&fit=crop" alt="San Francisco" onerror="this.src='https://images.unsplash.com/photo-1449034446853-66c86144b0ad?w=800&h=600&fit=crop'">
         <div class="dest-overlay">
-          <span class="dest-tag">Nature</span>
-          <h3>Yellowstone</h3>
-          <p>Wildlife & geysers</p>
+          <span class="dest-tag">Coastal Charm</span>
+          <h3>San Francisco</h3>
+          <p>Golden Gate & tech hub</p>
+          <div class="dest-meta">
+            <span>⭐ 4.8</span>
+            <span>🕐 Best: Sep–Nov</span>
+          </div>
+          <button class="dest-btn" onclick="event.stopPropagation(); openDestinationMap('San Francisco')">Explore Map →</button>
+        </div>
+      </div>
+
+      <!-- 6. New Orleans -->
+      <div class="destination-card" data-category="city" data-state="Louisiana" data-aos="fade-up" data-aos-delay="400" onclick="openDestinationMap('New Orleans')">
+        <img src="https://images.unsplash.com/photo-1568695988940-fdee4e70e64d?w=800&h=600&fit=crop" alt="New Orleans" onerror="this.src='https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop'">
+        <div class="dest-overlay">
+          <span class="dest-tag">Jazz & Culture</span>
+          <h3>New Orleans</h3>
+          <p>Mardi Gras spirit year-round</p>
+          <div class="dest-meta">
+            <span>⭐ 4.8</span>
+            <span>🕐 Best: Feb–May</span>
+          </div>
+          <button class="dest-btn" onclick="event.stopPropagation(); openDestinationMap('New Orleans')">Explore Map →</button>
+        </div>
+      </div>
+
+      <!-- 7. Nashville -->
+      <div class="destination-card" data-category="city" data-state="Tennessee" data-aos="fade-up" data-aos-delay="480" onclick="openDestinationMap('Nashville')">
+        <img src="https://images.unsplash.com/photo-1514533450685-4493e01d1fdc?w=800&h=600&fit=crop" alt="Nashville" onerror="this.src='https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop'">
+        <div class="dest-overlay">
+          <span class="dest-tag">Music City</span>
+          <h3>Nashville</h3>
+          <p>Country soul & hot chicken</p>
+          <div class="dest-meta">
+            <span>⭐ 4.7</span>
+            <span>🕐 Best: Apr–Jun</span>
+          </div>
+          <button class="dest-btn" onclick="event.stopPropagation(); openDestinationMap('Nashville')">Explore Map →</button>
+        </div>
+      </div>
+
+      <!-- 8. Austin -->
+      <div class="destination-card" data-category="city" data-state="Texas" data-aos="fade-up" data-aos-delay="560" onclick="openDestinationMap('Austin')">
+        <img src="https://images.unsplash.com/photo-1531218150217-54595bc2b934?w=800&h=600&fit=crop" alt="Austin" onerror="this.src='https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop'">
+        <div class="dest-overlay">
+          <span class="dest-tag">Keep It Weird</span>
+          <h3>Austin</h3>
+          <p>Live music & BBQ capital</p>
+          <div class="dest-meta">
+            <span>⭐ 4.7</span>
+            <span>🕐 Best: Mar–May</span>
+          </div>
+          <button class="dest-btn" onclick="event.stopPropagation(); openDestinationMap('Austin')">Explore Map →</button>
+        </div>
+      </div>
+
+      <!-- 9. Grand Canyon -->
+      <div class="destination-card" data-category="nature" data-state="Arizona" data-aos="fade-up" data-aos-delay="640" onclick="openDestinationMap('Grand Canyon')">
+        <img src="https://images.unsplash.com/photo-1615551043360-33de8b5f410c?w=800&h=600&fit=crop" alt="Grand Canyon" onerror="this.src='https://images.unsplash.com/photo-1474044159687-1ee9f3a51722?w=800&h=600&fit=crop'">
+        <div class="dest-overlay">
+          <span class="dest-tag">Adventure</span>
+          <h3>Grand Canyon</h3>
+          <p>Nature's greatest masterpiece</p>
           <div class="dest-meta">
             <span>⭐ 4.9</span>
-            <span>🌡️ 12°C</span>
+            <span>🕐 Best: Mar–May</span>
+          </div>
+          <button class="dest-btn" onclick="event.stopPropagation(); openDestinationMap('Grand Canyon')">Explore Map →</button>
+        </div>
+      </div>
+
+      <!-- 10. Yellowstone -->
+      <div class="destination-card" data-category="nature" data-state="Wyoming" data-aos="fade-up" data-aos-delay="720" onclick="openDestinationMap('Yellowstone')">
+        <img src="https://images.unsplash.com/photo-1590492359745-f7e5dc0ef4b6?w=800&h=600&fit=crop" alt="Yellowstone" onerror="this.src='https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?w=800&h=600&fit=crop'">
+        <div class="dest-overlay">
+          <span class="dest-tag">Wildlife</span>
+          <h3>Yellowstone</h3>
+          <p>Geysers & bison country</p>
+          <div class="dest-meta">
+            <span>⭐ 4.9</span>
             <span>🕐 Best: Jun–Aug</span>
           </div>
           <button class="dest-btn" onclick="event.stopPropagation(); openDestinationMap('Yellowstone')">Explore Map →</button>
         </div>
       </div>
 
+      <!-- 11. Yosemite -->
+      <div class="destination-card" data-category="nature" data-state="California" data-aos="fade-up" onclick="openDestinationMap('Yosemite')">
+        <img src="https://images.unsplash.com/photo-1426604966848-d7adac402bff?w=800&h=600&fit=crop" alt="Yosemite" onerror="this.src='https://images.unsplash.com/photo-1439066615861-d1af74d74000?w=800&h=600&fit=crop'">
+        <div class="dest-overlay">
+          <span class="dest-tag">National Park</span>
+          <h3>Yosemite</h3>
+          <p>Valley of ancient giants</p>
+          <div class="dest-meta">
+            <span>⭐ 4.9</span>
+            <span>🕐 Best: May–Sep</span>
+          </div>
+          <button class="dest-btn" onclick="event.stopPropagation(); openDestinationMap('Yosemite')">Explore Map →</button>
+        </div>
+      </div>
+
+      <!-- 12. Zion National Park -->
+      <div class="destination-card" data-category="nature" data-state="Utah" data-aos="fade-up" data-aos-delay="80" onclick="openDestinationMap('Zion')">
+        <img src="https://images.unsplash.com/photo-1474044159687-1ee9f3a51722?w=800&h=600&fit=crop" alt="Zion" onerror="this.src='https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop'">
+        <div class="dest-overlay">
+          <span class="dest-tag">Canyon Country</span>
+          <h3>Zion National Park</h3>
+          <p>Red rock slot canyons</p>
+          <div class="dest-meta">
+            <span>⭐ 4.9</span>
+            <span>🕐 Best: Mar–May</span>
+          </div>
+          <button class="dest-btn" onclick="event.stopPropagation(); openDestinationMap('Zion')">Explore Map →</button>
+        </div>
+      </div>
+
+      <!-- 13. Great Smoky Mountains -->
+      <div class="destination-card" data-category="nature" data-state="Tennessee" data-aos="fade-up" data-aos-delay="160" onclick="openDestinationMap('Great Smoky Mountains')">
+        <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop" alt="Great Smoky Mountains" onerror="this.src='https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&h=600&fit=crop'">
+        <div class="dest-overlay">
+          <span class="dest-tag">Most Visited Park</span>
+          <h3>Great Smoky Mountains</h3>
+          <p>Misty peaks & fireflies</p>
+          <div class="dest-meta">
+            <span>⭐ 4.8</span>
+            <span>🕐 Best: Oct</span>
+          </div>
+          <button class="dest-btn" onclick="event.stopPropagation(); openDestinationMap('Great Smoky Mountains')">Explore Map →</button>
+        </div>
+      </div>
+
+      <!-- 14. Acadia National Park -->
+      <div class="destination-card" data-category="nature" data-state="Maine" data-aos="fade-up" data-aos-delay="240" onclick="openDestinationMap('Acadia')">
+        <img src="https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=800&h=600&fit=crop" alt="Acadia" onerror="this.src='https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop'">
+        <div class="dest-overlay">
+          <span class="dest-tag">New England</span>
+          <h3>Acadia National Park</h3>
+          <p>Rugged coastline & lighthouses</p>
+          <div class="dest-meta">
+            <span>⭐ 4.9</span>
+            <span>🕐 Best: Sep–Oct</span>
+          </div>
+          <button class="dest-btn" onclick="event.stopPropagation(); openDestinationMap('Acadia')">Explore Map →</button>
+        </div>
+      </div>
+
+      <!-- 15. Miami Beach -->
+      <div class="destination-card" data-category="beach" data-state="Florida" data-aos="fade-up" data-aos-delay="320" onclick="openDestinationMap('Miami Beach')">
+        <img src="https://images.unsplash.com/photo-1533106418989-88406c7cc8ca?w=800&h=600&fit=crop" alt="Miami Beach" onerror="this.src='https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop'">
+        <div class="dest-overlay">
+          <span class="dest-tag">Beach Life</span>
+          <h3>Miami Beach</h3>
+          <p>Art deco & turquoise water</p>
+          <div class="dest-meta">
+            <span>⭐ 4.7</span>
+            <span>🕐 Best: Dec–Apr</span>
+          </div>
+          <button class="dest-btn" onclick="event.stopPropagation(); openDestinationMap('Miami Beach')">Explore Map →</button>
+        </div>
+      </div>
+
+      <!-- 16. Maui -->
+      <div class="destination-card" data-category="beach" data-state="Hawaii" data-aos="fade-up" data-aos-delay="400" onclick="openDestinationMap('Maui')">
+        <img src="https://images.unsplash.com/photo-1542259009477-d625272157b7?w=800&h=600&fit=crop" alt="Maui" onerror="this.src='https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop'">
+        <div class="dest-overlay">
+          <span class="dest-tag">Island Paradise</span>
+          <h3>Maui</h3>
+          <p>Road to Hana & whale watching</p>
+          <div class="dest-meta">
+            <span>⭐ 4.9</span>
+            <span>🕐 Best: Apr–May</span>
+          </div>
+          <button class="dest-btn" onclick="event.stopPropagation(); openDestinationMap('Maui')">Explore Map →</button>
+        </div>
+      </div>
+
+      <!-- 17. Outer Banks -->
+      <div class="destination-card" data-category="beach" data-state="North Carolina" data-aos="fade-up" data-aos-delay="480" onclick="openDestinationMap('Outer Banks')">
+        <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&h=600&fit=crop" alt="Outer Banks" onerror="this.src='https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop'">
+        <div class="dest-overlay">
+          <span class="dest-tag">Wild Coast</span>
+          <h3>Outer Banks</h3>
+          <p>Lighthouse trails & wild horses</p>
+          <div class="dest-meta">
+            <span>⭐ 4.7</span>
+            <span>🕐 Best: May–Sep</span>
+          </div>
+          <button class="dest-btn" onclick="event.stopPropagation(); openDestinationMap('Outer Banks')">Explore Map →</button>
+        </div>
+      </div>
+
+      <!-- 18. Rocky Mountain NP -->
+      <div class="destination-card" data-category="mountain" data-state="Colorado" data-aos="fade-up" data-aos-delay="560" onclick="openDestinationMap('Rocky Mountain')">
+        <img src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&h=600&fit=crop" alt="Rocky Mountain" onerror="this.src='https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop'">
+        <div class="dest-overlay">
+          <span class="dest-tag">Alpine</span>
+          <h3>Rocky Mountain NP</h3>
+          <p>Tundra & elk above the clouds</p>
+          <div class="dest-meta">
+            <span>⭐ 4.9</span>
+            <span>🕐 Best: Jul–Sep</span>
+          </div>
+          <button class="dest-btn" onclick="event.stopPropagation(); openDestinationMap('Rocky Mountain')">Explore Map →</button>
+        </div>
+      </div>
+
+      <!-- 19. Glacier National Park -->
+      <div class="destination-card" data-category="mountain" data-state="Montana" data-aos="fade-up" data-aos-delay="640" onclick="openDestinationMap('Glacier')">
+        <img src="https://images.unsplash.com/photo-1508739773434-c26b3d09e071?w=800&h=600&fit=crop" alt="Glacier" onerror="this.src='https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop'">
+        <div class="dest-overlay">
+          <span class="dest-tag">Crown of Continent</span>
+          <h3>Glacier National Park</h3>
+          <p>Going-to-the-Sun Road</p>
+          <div class="dest-meta">
+            <span>⭐ 4.9</span>
+            <span>🕐 Best: Jul–Sep</span>
+          </div>
+          <button class="dest-btn" onclick="event.stopPropagation(); openDestinationMap('Glacier')">Explore Map →</button>
+        </div>
+      </div>
+
+      <!-- 20. Sedona -->
+      <div class="destination-card" data-category="mountain" data-state="Arizona" data-aos="fade-up" data-aos-delay="720" onclick="openDestinationMap('Sedona')">
+        <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop" alt="Sedona" onerror="this.src='https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop'">
+        <div class="dest-overlay">
+          <span class="dest-tag">Red Rocks</span>
+          <h3>Sedona</h3>
+          <p>Vortexes & spiritual retreats</p>
+          <div class="dest-meta">
+            <span>⭐ 4.8</span>
+            <span>🕐 Best: Mar–May</span>
+          </div>
+          <button class="dest-btn" onclick="event.stopPropagation(); openDestinationMap('Sedona')">Explore Map →</button>
+        </div>
+      </div>
+
     </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     BROWSE ALL STATES & TERRITORIES
+══════════════════════════════════════════ -->
+<section class="all-states-section">
+  <div class="container">
+    <div class="section-header" data-aos="fade-up">
+      <span class="section-eyebrow">Explore Everything</span>
+      <h2>Browse All States & Territories</h2>
+      <p>Discover every corner of America and its territories</p>
+    </div>
+
+    <!-- NORTHEAST -->
+    <div id="region-northeast" class="region-group">
+      <h3 class="region-title">🌊 Northeast</h3>
+      <div class="states-grid">
+        <div class="state-card" onclick="openDestinationMap('Connecticut')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1570168007204-dfb528c6958f?w=400&h=300&fit=crop" alt="Connecticut" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🏛️</span><span class="state-name">Connecticut</span><span class="state-nick">Constitution State</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('Maine')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=400&h=300&fit=crop" alt="Maine" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🦞</span><span class="state-name">Maine</span><span class="state-nick">Pine Tree State</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('Massachusetts')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1501979376754-f3928d0d6289?w=400&h=300&fit=crop" alt="Massachusetts" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🎓</span><span class="state-name">Massachusetts</span><span class="state-nick">Bay State</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('New Hampshire')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1508739773434-c26b3d09e071?w=400&h=300&fit=crop" alt="New Hampshire" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🍂</span><span class="state-name">New Hampshire</span><span class="state-nick">Granite State</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('New Jersey')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1534430480872-3498386e7856?w=400&h=300&fit=crop" alt="New Jersey" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🌊</span><span class="state-name">New Jersey</span><span class="state-nick">Garden State</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('New York')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1538970272646-f61fabb3a8a2?w=400&h=300&fit=crop" alt="New York" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🗽</span><span class="state-name">New York</span><span class="state-nick">Empire State</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('Pennsylvania')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1501700493788-fa1a4fc9fe62?w=400&h=300&fit=crop" alt="Pennsylvania" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🔔</span><span class="state-name">Pennsylvania</span><span class="state-nick">Keystone State</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('Rhode Island')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop" alt="Rhode Island" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">⛵</span><span class="state-name">Rhode Island</span><span class="state-nick">Ocean State</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('Vermont')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=400&h=300&fit=crop" alt="Vermont" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🍁</span><span class="state-name">Vermont</span><span class="state-nick">Green Mountain State</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SOUTHEAST -->
+    <div id="region-southeast" class="region-group">
+      <h3 class="region-title">🌞 Southeast</h3>
+      <div class="states-grid">
+        <div class="state-card" onclick="openDestinationMap('Alabama')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop" alt="Alabama" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🌹</span><span class="state-name">Alabama</span><span class="state-nick">Heart of Dixie</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('Arkansas')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop" alt="Arkansas" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">💎</span><span class="state-name">Arkansas</span><span class="state-nick">Natural State</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('Delaware')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop" alt="Delaware" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🦅</span><span class="state-name">Delaware</span><span class="state-nick">First State</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('Florida')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1533106418989-88406c7cc8ca?w=400&h=300&fit=crop" alt="Florida" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🌴</span><span class="state-name">Florida</span><span class="state-nick">Sunshine State</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('Georgia')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1575999502951-4ab25b5ca889?w=400&h=300&fit=crop" alt="Georgia" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🍑</span><span class="state-name">Georgia</span><span class="state-nick">Peach State</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('Kentucky')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop" alt="Kentucky" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🏇</span><span class="state-name">Kentucky</span><span class="state-nick">Bluegrass State</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('Louisiana')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1568695988940-fdee4e70e64d?w=400&h=300&fit=crop" alt="Louisiana" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🎷</span><span class="state-name">Louisiana</span><span class="state-nick">Pelican State</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('Maryland')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1501700493788-fa1a4fc9fe62?w=400&h=300&fit=crop" alt="Maryland" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🦀</span><span class="state-name">Maryland</span><span class="state-nick">Old Line State</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('Mississippi')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop" alt="Mississippi" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🎸</span><span class="state-name">Mississippi</span><span class="state-nick">Magnolia State</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('North Carolina')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&h=300&fit=crop" alt="North Carolina" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🌊</span><span class="state-name">North Carolina</span><span class="state-nick">Tar Heel State</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('South Carolina')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop" alt="South Carolina" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🌴</span><span class="state-name">South Carolina</span><span class="state-nick">Palmetto State</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('Tennessee')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1514533450685-4493e01d1fdc?w=400&h=300&fit=crop" alt="Tennessee" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🎸</span><span class="state-name">Tennessee</span><span class="state-nick">Volunteer State</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('Virginia')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1501700493788-fa1a4fc9fe62?w=400&h=300&fit=crop" alt="Virginia" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🏛️</span><span class="state-name">Virginia</span><span class="state-nick">Old Dominion</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('West Virginia')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=400&h=300&fit=crop" alt="West Virginia" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">⛰️</span><span class="state-name">West Virginia</span><span class="state-nick">Mountain State</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MIDWEST -->
+    <div id="region-midwest" class="region-group">
+      <h3 class="region-title">🌾 Midwest</h3>
+      <div class="states-grid">
+        <div class="state-card" onclick="openDestinationMap('Illinois')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1494522855154-9297ac14b55f?w=400&h=300&fit=crop" alt="Illinois" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🏙️</span><span class="state-name">Illinois</span><span class="state-nick">Prairie State</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('Indiana')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop" alt="Indiana" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🏎️</span><span class="state-name">Indiana</span><span class="state-nick">Hoosier State</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('Iowa')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop" alt="Iowa" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🌽</span><span class="state-name">Iowa</span><span class="state-nick">Hawkeye State</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('Kansas')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop" alt="Kansas" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🌾</span><span class="state-name">Kansas</span><span class="state-nick">Sunflower State</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('Michigan')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop" alt="Michigan" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🚗</span><span class="state-name">Michigan</span><span class="state-nick">Great Lakes State</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('Minnesota')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop" alt="Minnesota" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">❄️</span><span class="state-name">Minnesota</span><span class="state-nick">Land of 10k Lakes</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('Missouri')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop" alt="Missouri" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🎵</span><span class="state-name">Missouri</span><span class="state-nick">Show-Me State</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('Nebraska')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop" alt="Nebraska" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🌽</span><span class="state-name">Nebraska</span><span class="state-nick">Cornhusker State</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('North Dakota')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop" alt="North Dakota" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🌾</span><span class="state-name">North Dakota</span><span class="state-nick">Peace Garden</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('Ohio')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop" alt="Ohio" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🌰</span><span class="state-name">Ohio</span><span class="state-nick">Buckeye State</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('South Dakota')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1541732260-2f73e95dfcee?w=400&h=300&fit=crop" alt="South Dakota" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🗿</span><span class="state-name">South Dakota</span><span class="state-nick">Mt. Rushmore</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('Wisconsin')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop" alt="Wisconsin" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🧀</span><span class="state-name">Wisconsin</span><span class="state-nick">Badger State</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SOUTH -->
+    <div id="region-south" class="region-group">
+      <h3 class="region-title">🤠 South</h3>
+      <div class="states-grid">
+        <div class="state-card" onclick="openDestinationMap('Oklahoma')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop" alt="Oklahoma" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🌪️</span><span class="state-name">Oklahoma</span><span class="state-nick">Sooner State</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('Texas')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1531218150217-54595bc2b934?w=400&h=300&fit=crop" alt="Texas" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🤠</span><span class="state-name">Texas</span><span class="state-nick">Lone Star State</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('New Mexico')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=300&fit=crop" alt="New Mexico" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🌵</span><span class="state-name">New Mexico</span><span class="state-nick">Land of Enchantment</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('Arizona')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1615551043360-33de8b5f410c?w=400&h=300&fit=crop" alt="Arizona" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🌵</span><span class="state-name">Arizona</span><span class="state-nick">Grand Canyon State</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MOUNTAIN WEST -->
+    <div id="region-mountain" class="region-group">
+      <h3 class="region-title">🏔️ Mountain West</h3>
+      <div class="states-grid">
+        <div class="state-card" onclick="openDestinationMap('Colorado')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=400&h=300&fit=crop" alt="Colorado" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🏔️</span><span class="state-name">Colorado</span><span class="state-nick">Centennial State</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('Idaho')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop" alt="Idaho" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🥔</span><span class="state-name">Idaho</span><span class="state-nick">Gem State</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('Montana')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1508739773434-c26b3d09e071?w=400&h=300&fit=crop" alt="Montana" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🦌</span><span class="state-name">Montana</span><span class="state-nick">Treasure State</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('Nevada')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1605833556294-ea5c7a74f97a?w=400&h=300&fit=crop" alt="Nevada" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🎰</span><span class="state-name">Nevada</span><span class="state-nick">Silver State</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('Utah')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1474044159687-1ee9f3a51722?w=400&h=300&fit=crop" alt="Utah" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🌿</span><span class="state-name">Utah</span><span class="state-nick">Beehive State</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('Wyoming')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1590492359745-f7e5dc0ef4b6?w=400&h=300&fit=crop" alt="Wyoming" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🦬</span><span class="state-name">Wyoming</span><span class="state-nick">Equality State</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PACIFIC & TERRITORIES -->
+    <div id="region-pacific" class="region-group">
+      <h3 class="region-title">🌴 Pacific & Territories</h3>
+      <div class="states-grid">
+        <div class="state-card" onclick="openDestinationMap('Alaska')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop" alt="Alaska" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🐻</span><span class="state-name">Alaska</span><span class="state-nick">Last Frontier</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('California')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1501594907352-04cda38ebc29?w=400&h=300&fit=crop" alt="California" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🎬</span><span class="state-name">California</span><span class="state-nick">Golden State</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('Hawaii')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1542259009477-d625272157b7?w=400&h=300&fit=crop" alt="Hawaii" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🌺</span><span class="state-name">Hawaii</span><span class="state-nick">Aloha State</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('Oregon')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1426604966848-d7adac402bff?w=400&h=300&fit=crop" alt="Oregon" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🌲</span><span class="state-name">Oregon</span><span class="state-nick">Beaver State</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('Washington')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1438401171849-74ac270044ee?w=400&h=300&fit=crop" alt="Washington" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">☕</span><span class="state-name">Washington</span><span class="state-nick">Evergreen State</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('Puerto Rico')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1580820267682-426da823b514?w=400&h=300&fit=crop" alt="Puerto Rico" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🌺</span><span class="state-name">Puerto Rico</span><span class="state-nick">Island of Enchantment</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('Guam')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&h=300&fit=crop" alt="Guam" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🏝️</span><span class="state-name">Guam</span><span class="state-nick">Where Day Begins</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('US Virgin Islands')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1533106418989-88406c7cc8ca?w=400&h=300&fit=crop" alt="US Virgin Islands" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🌊</span><span class="state-name">US Virgin Islands</span><span class="state-nick">American Paradise</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('American Samoa')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1542259009477-d625272157b7?w=400&h=300&fit=crop" alt="American Samoa" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🌴</span><span class="state-name">American Samoa</span><span class="state-nick">Cradle of Culture</span></div>
+        </div>
+        <div class="state-card" onclick="openDestinationMap('Northern Mariana Islands')">
+          <div class="state-card-img"><img src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop" alt="Northern Mariana Islands" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop'"></div>
+          <div class="state-card-info"><span class="state-flag">🏝️</span><span class="state-name">Northern Mariana</span><span class="state-nick">Marianas</span></div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </section>
 
@@ -1544,5 +2131,15 @@
 </footer>
 
 <script src="script.js"></script>
+<script>
+// Filter destinations by category
+function filterDests(cat) {
+  document.querySelectorAll('.dest-filter-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  document.querySelectorAll('.destination-card').forEach(card => {
+    card.style.display = (cat === 'all' || card.dataset.category === cat) ? '' : 'none';
+  });
+}
+</script>
 </body>
 </html>

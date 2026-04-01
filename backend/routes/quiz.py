@@ -2,6 +2,9 @@ import os
 import json
 import requests
 from flask import Blueprint, jsonify, request
+from bson import ObjectId
+from db import get_collection
+from datetime import datetime
 
 quiz_bp = Blueprint('quiz', __name__)
 
@@ -208,6 +211,10 @@ def get_quiz_result():
         import random
         fallback = random.choice(FALLBACK_POOL)
         fallback["source"] = "fallback"
+        
+        # Save fallback result to MongoDB
+        _save_quiz_result(fallback, data)
+        
         return jsonify(fallback)
 
     # Build answer summary for the prompt
@@ -326,6 +333,11 @@ Respond ONLY with valid JSON. No markdown, no code blocks, just raw JSON.
         result["source"] = "groq"
 
         print(f"[QUIZ] Groq recommended: {result.get('destination')}")
+        
+        # ══════════════════════════════════════════════════════════════════════
+        # SAVE TO MONGODB
+        # ══════════════════════════════════════════════════════════════════════
+        _save_quiz_result(result, data)
 
         return jsonify(result)
 
@@ -335,6 +347,10 @@ Respond ONLY with valid JSON. No markdown, no code blocks, just raw JSON.
         import random
         fallback = random.choice(FALLBACK_POOL)
         fallback["source"] = "fallback"
+        
+        # Save fallback result to MongoDB
+        _save_quiz_result(fallback, data)
+        
         return jsonify(fallback)
 
     except Exception as e:
@@ -342,4 +358,53 @@ Respond ONLY with valid JSON. No markdown, no code blocks, just raw JSON.
         import random
         fallback = random.choice(FALLBACK_POOL)
         fallback["source"] = "fallback"
+        
+        # Save fallback result to MongoDB
+        _save_quiz_result(fallback, data)
+        
         return jsonify(fallback)
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# HELPER & HISTORY ROUTES
+# ═══════════════════════════════════════════════════════════════════════════
+
+def _save_quiz_result(result, request_data):
+    """Save quiz result to MongoDB"""
+    try:
+        quiz_results = get_collection('quiz_results')
+        doc = {
+            'result': result,
+            'answers': request_data.get('answers', {}),
+            'budget': request_data.get('budget', 'moderate'),
+            'style': request_data.get('style', 'mixed'),
+            'group': request_data.get('group', 'couple'),
+            'climate': request_data.get('climate', 'warm'),
+            'activity': request_data.get('activity', 'sightseeing'),
+            'saved_at': datetime.utcnow(),
+            'source': result.get('source', 'unknown')
+        }
+        insert_result = quiz_results.insert_one(doc)
+        print(f"✅ Quiz result saved to MongoDB with ID: {insert_result.inserted_id}")
+    except Exception as e:
+        print(f"⚠️ [MONGODB] Failed to save quiz result: {str(e)}")
+        # Continue anyway - don't crash the API response
+
+
+@quiz_bp.route('/history', methods=['GET'])
+def get_quiz_history():
+    """Retrieve last 20 quiz results from MongoDB"""
+    try:
+        quiz_results = get_collection('quiz_results')
+        docs = list(quiz_results.find().sort('saved_at', -1).limit(20))
+        
+        # Convert ObjectId to string for JSON serialization
+        for doc in docs:
+            doc['_id'] = str(doc['_id'])
+        
+        print(f"✅ Retrieved {len(docs)} quiz results from history")
+        return jsonify({"count": len(docs), "history": docs}), 200
+        
+    except Exception as e:
+        print(f"❌ Error retrieving quiz history: {str(e)}")
+        return jsonify({"error": "Failed to retrieve quiz history"}), 500

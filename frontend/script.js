@@ -56,23 +56,7 @@ document.addEventListener('click', (e) => {
 });
 
 /* ─────────────────────────────────────────────────────────
-   4. CURRENCY TICKER
-───────────────────────────────────────────────────────── */
-const tickerRates = {
-  USD:1, EUR:0.92, GBP:0.79, JPY:149.5, AUD:1.53,
-  CAD:1.36, INR:83.1, CHF:0.88, SGD:1.34, AED:3.67
-};
-function buildTicker() {
-  const track = document.getElementById('tickerTrack');
-  if (!track) return;
-  const items = Object.entries(fxRates).map(([c, r]) =>
-    `<span>1 USD = <strong>${r.toFixed(4)} ${c}</strong></span>`
-  ).join('');
-  track.innerHTML = items + items; // duplicate for seamless loop
-}
-
-/* ─────────────────────────────────────────────────────────
-   5. NAVBAR
+   4. NAVBAR
 ───────────────────────────────────────────────────────── */
 let lastScroll = 0;
 const navbar = document.getElementById('navbar');
@@ -1213,13 +1197,11 @@ async function loadLiveRates() {
     
     // Always call these regardless of where rates came from
     convertCurrency();
-    buildTicker();
     
   } catch (err) {
     console.error('[CURRENCY] Fetch failed:', err.message);
     // Still call convertCurrency so UI shows something
     convertCurrency();
-    buildTicker();
   }
 }
 
@@ -2729,9 +2711,6 @@ document.addEventListener('DOMContentLoaded', () => {
   } else {
     console.warn('[INIT] AOS library not loaded');
   }
-
-  // Build currency ticker
-  buildTicker();
 
   // Initialize dark mode from localStorage
   initDarkMode();
