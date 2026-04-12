@@ -73,13 +73,6 @@ services:
     ports:
       - "80:80"
     
-    # Mount volumes for static file serving and live updates
-    volumes:
-      # Mount frontend directory to Nginx serving directory (live update on file changes)
-      - ./frontend:/usr/share/nginx/html
-      # Mount custom nginx config for live modifications
-      - ./frontend/nginx.conf:/etc/nginx/conf.d/default.conf
-    
     # Declare dependency on backend service
     depends_on:
       # Wait for backend service to be healthy before starting frontend
