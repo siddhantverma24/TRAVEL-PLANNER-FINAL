@@ -1,6 +1,13 @@
 # ============================================================================
 # DOCKER-COMPOSE.JENKINS.YML - JENKINS CI/CD CONTAINER WITH DOCKER INTEGRATION
 # ============================================================================
+# IMPORTANT: This file lives in the jenkins/ subfolder of the project.
+# The volume mount uses ".." (two dots) to go up one level to the project root.
+# This is why the mount is:  ..:/workspace
+# NOT:                         .:/workspace
+# /workspace inside the container = the project root on the host
+# which contains: docker-compose.yml, backend/, frontend/, Jenkinsfile
+#
 # This docker-compose file runs a custom Jenkins container with Docker CLI permanently
 # installed. It is separate from the main docker-compose.yml to avoid port and service conflicts.
 # Run with: docker compose -f jenkins/docker-compose.jenkins.yml up -d
@@ -79,11 +86,14 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       
       # Mount the entire project root into the container as /workspace
-      # The pipeline uses /workspace to find docker-compose.yml and other project files
-      # This ensures Jenkinsfile can ALWAYS find docker-compose.yml regardless of
-      # where Jenkins decides to check out the code (which can vary)
-      # Using absolute path .:/workspace ensures the current directory is mounted as /workspace
-      - .:/workspace
+      # This file (docker-compose.jenkins.yml) lives in the jenkins/ subdirectory
+      # Using ".." (two dots) goes up one level from jenkins/ to the project root
+      # So /workspace inside the container = the project root on the host
+      # The pipeline can then find docker-compose.yml, backend/, frontend/, Jenkinsfile, etc.
+      # 
+      # CORRECT mount:  ..:/workspace   (goes UP one level to project root)
+      # WRONG mount:     .:/workspace   (points to jenkins/ directory)
+      - ..:/workspace
     
     # ====================================================================
     # ENVIRONMENT VARIABLES - Configure Jenkins runtime behavior
