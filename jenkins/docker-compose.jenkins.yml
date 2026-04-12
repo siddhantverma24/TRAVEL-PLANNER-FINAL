@@ -1,0 +1,56 @@
+# Docker Compose configuration for Jenkins CI/CD server
+# This file is separate from the main docker-compose.yml to avoid conflicts
+# Run with: docker-compose -f jenkins/docker-compose.jenkins.yml up -d
+
+version: '3.9'
+
+# Services for Jenkins infrastructure
+services:
+  # Jenkins server container
+  jenkins:
+    # Use the official Jenkins LTS (Long Term Support) image for stability
+    image: jenkins/jenkins:lts
+    
+    # Container name for easy identification in Docker commands
+    container_name: jenkins
+    
+    # Ports mapping: host:container
+    # 8080 is the main Jenkins web UI
+    # 50000 is for Jenkins agent communication protocol
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    
+    # Volume mounts for data persistence and Docker integration
+    volumes:
+      # Mount Docker socket from host intoContainer so Jenkins can control Docker
+      # This enables Jenkins to run docker-compose commands
+      - /var/run/docker.sock:/var/run/docker.sock
+      
+      # Mount Jenkins home directory as a named volume for persistent data
+      # This preserves job configurations, build history across container restarts
+      - jenkins_home:/var/jenkins_home
+      
+      # Mount the entire project root into Jenkins container as workspace
+      # Jenkins will clone/build from here
+      - .:/workspace
+    
+    # Environment variables for Jenkins configuration
+    environment:
+      # Set Docker host so Jenkins CLI can communicate with Docker daemon
+      # This allows Jenkins to run docker and docker-compose commands
+      DOCKER_HOST: unix:///var/run/docker.sock
+    
+    # Restart policy: automatically restart container unless explicitly stopped
+    # Ensures Jenkins survives Docker daemon restarts
+    restart: unless-stopped
+
+# Named volumes for persistent data storage
+volumes:
+  # Jenkins home volume stores all configuration, jobs, plugins, build history
+  # Persists across container restarts
+  jenkins_home:
+    driver: local
+
+# Network configuration (uses default bridge network)
+# Jenkins and app services can be on same network if needed
