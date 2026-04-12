@@ -22,13 +22,6 @@ services:
     ports:
       - "5000:5000"
     
-    # Mount volumes for hot reload and code changes
-    volumes:
-      # Mount entire backend source code for development (auto-reload on changes)
-      - ./backend:/app
-      # Exclude Python cache directory from mount (prevents sync conflicts)
-      - /app/__pycache__
-    
     # Set environment variables (using ${VAR} interpolation from shell/system)
     environment:
       # Set Flask to development mode (enables debug, auto-reload)
