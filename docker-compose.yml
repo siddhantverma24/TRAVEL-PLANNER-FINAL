@@ -12,6 +12,12 @@ services:
       # Use Dockerfile from backend directory
       dockerfile: Dockerfile
     
+    # Auto-restart policy: Keep running unless explicitly stopped
+    # - unless-stopped: restart on crash, system reboot, or Docker daemon restart
+    # - ONLY stops if explicitly stopped: docker stop backend or docker compose down
+    # This ensures the backend stays running continuously in development/testing
+    restart: unless-stopped
+    
     # Map port 5000 from container to host port 5000
     ports:
       - "5000:5000"
@@ -63,6 +69,12 @@ services:
       context: ./frontend
       # Use Dockerfile from frontend directory
       dockerfile: Dockerfile
+    
+    # Auto-restart policy: Keep running unless explicitly stopped
+    # - unless-stopped: restart on crash, system reboot, or Docker daemon restart
+    # - ONLY stops if explicitly stopped: docker stop frontend or docker compose down
+    # This ensures the frontend stays running continuously in development/testing
+    restart: unless-stopped
     
     # Map port 80 from container to host port 80
     ports:

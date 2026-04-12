@@ -1,56 +1,137 @@
-# Docker Compose configuration for Jenkins CI/CD server
-# This file is separate from the main docker-compose.yml to avoid conflicts
-# Run with: docker-compose -f jenkins/docker-compose.jenkins.yml up -d
+# ============================================================================
+# DOCKER-COMPOSE.JENKINS.YML - JENKINS CI/CD CONTAINER WITH DOCKER INTEGRATION
+# ============================================================================
+# This docker-compose file runs a custom Jenkins container with Docker CLI permanently
+# installed. It is separate from the main docker-compose.yml to avoid port and service conflicts.
+# Run with: docker compose -f jenkins/docker-compose.jenkins.yml up -d
+# ============================================================================
 
 version: '3.9'
 
-# Services for Jenkins infrastructure
 services:
-  # Jenkins server container
+  # ========================================================================
+  # JENKINS SERVICE - CI/CD automation server
+  # ========================================================================
   jenkins:
-    # Use the official Jenkins LTS (Long Term Support) image for stability
-    image: jenkins/jenkins:lts
+    # Build from the custom Dockerfile.jenkins (not the plain jenkins/jenkins:lts image)
+    # This custom image has Docker CLI and Docker Compose V2 permanently baked in
+    # Context is the jenkins directory, dockerfile is in the same directory
+    build:
+      context: .
+      dockerfile: Dockerfile.jenkins
     
     # Container name for easy identification in Docker commands
+    # Makes it convenient to run: docker exec jenkins [command]
     container_name: jenkins
     
-    # Ports mapping: host:container
-    # 8080 is the main Jenkins web UI
-    # 50000 is for Jenkins agent communication protocol
+    # Automatically restart the container if it crashes or exits
+    # unless-stopped: restart on crash, but don't restart if explicitly stopped by user
+    # This ensures Jenkins survives system reboots and temporary Docker issues
+    restart: unless-stopped
+    
+    # ====================================================================
+    # CRITICAL: Run as root user
+    # ====================================================================
+    # On Windows Docker Desktop, the Docker socket is owned by root inside the Linux VM.
+    # Jenkins MUST run as root to access /var/run/docker.sock with proper permissions.
+    # (On Linux hosts, you would use the docker group and run as jenkins,
+    #  but Windows Docker Desktop behaves differently)
+    # Running as root is safe here because:
+    #   1. The container is isolated from the host OS
+    #   2. The socket is read-only to containers (the container cannot modify host Docker)
+    #   3. This is the standard pattern for Jenkins + Docker on Docker Desktop
+    user: root
+    
+    # ====================================================================
+    # PORT MAPPINGS
+    # ====================================================================
     ports:
+      # Jenkins web UI: accessible at http://localhost:8080
+      # port 8080 is the standard Jenkins web port (change if port conflict exists)
       - "8080:8080"
+      
+      # Jenkins agent protocol: port 50000
+      # This port allows Jenkins agents to connect to the master for distributed builds
+      # Only needed if you plan to use Jenkins agents (not required for single-node setup)
       - "50000:50000"
     
-    # Volume mounts for data persistence and Docker integration
+    # ====================================================================
+    # VOLUME MOUNTS - Data persistence and Docker access
+    # ====================================================================
     volumes:
-      # Mount Docker socket from host intoContainer so Jenkins can control Docker
-      # This enables Jenkins to run docker-compose commands
-      - /var/run/docker.sock:/var/run/docker.sock
-      
-      # Mount Jenkins home directory as a named volume for persistent data
-      # This preserves job configurations, build history across container restarts
+      # Mount the jenkins_home named volume (created at bottom of compose file)
+      # This volume stores ALL Jenkins data:
+      #   - Job configurations
+      #   - Build history and artifacts
+      #   - Plugin installations
+      #   - Credentials and secrets
+      #   - System settings
+      # Using a named volume ensures data persists across container restarts
       - jenkins_home:/var/jenkins_home
       
-      # Mount the entire project root into Jenkins container as workspace
-      # Jenkins will clone/build from here
+      # Mount the host Docker socket into the Jenkins container
+      # /var/run/docker.sock is a Unix socket that controls the Docker daemon
+      # By mounting it into Jenkins, the jenkins process can run docker commands
+      # This socket is read-only from the container's perspective
+      #   - The container CAN: run docker, docker compose, build images, start containers
+      #   - The container CANNOT: modify host Docker daemon, remove host containers without permission
+      # This is the key mount that fixes "docker: Permission denied" and "Cannot connect to Docker daemon" errors
+      - /var/run/docker.sock:/var/run/docker.sock
+      
+      # Mount the entire project root into the container as /workspace
+      # The pipeline uses /workspace to find docker-compose.yml and other project files
+      # This ensures Jenkinsfile can ALWAYS find docker-compose.yml regardless of
+      # where Jenkins decides to check out the code (which can vary)
+      # Using absolute path .:/workspace ensures the current directory is mounted as /workspace
       - .:/workspace
     
-    # Environment variables for Jenkins configuration
+    # ====================================================================
+    # ENVIRONMENT VARIABLES - Configure Jenkins runtime behavior
+    # ====================================================================
     environment:
-      # Set Docker host so Jenkins CLI can communicate with Docker daemon
-      # This allows Jenkins to run docker and docker-compose commands
-      DOCKER_HOST: unix:///var/run/docker.sock
+      # Tell the Docker CLI where to find the Docker daemon socket
+      # The Docker CLI (installed in Dockerfile.jenkins) uses this variable to locate the daemon
+      # unix:///var/run/docker.sock is the standard Unix socket path
+      # This ENV fixes "Cannot connect to Docker daemon" errors
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      
+      # Enable Docker BuildKit for faster, more reliable image builds
+      # BuildKit has better caching and error reporting than the legacy builder
+      # This ENV variable is matched by ENV DOCKER_BUILDKIT=1 in Dockerfile.jenkins
+      - DOCKER_BUILDKIT=1
+      
+      # Skip the Jenkins setup wizard on first startup
+      # Normally Jenkins shows a setup wizard when first started, which is interactive
+      # Set to "false" if you want the wizard (for manual configuration)
+      # Set to "true" (or omit) to skip and go straight to Jenkins dashboard with defaults
+      # For CI/CD environments, skipping is preferred for faster automated startup
+      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
     
-    # Restart policy: automatically restart container unless explicitly stopped
-    # Ensures Jenkins survives Docker daemon restarts
-    restart: unless-stopped
+    # ====================================================================
+    # RESOURCE LIMITS - Prevent high CPU crashes and system instability
+    # ====================================================================
+    deploy:
+      resources:
+        # Hard limits: container will be killed/paused if it exceeds these
+        limits:
+          cpus: '2'           # Max 2 CPU cores (prevents runaway builds from consuming all host CPU)
+          memory: 2G          # Max 2GB RAM (prevents memory leaks from crashing the system)
+        
+        # Soft reservations: Docker reserves these but allows overallocation under contention
+        reservations:
+          cpus: '0.5'         # Reserve 0.5 CPU cores minimum
+          memory: 512M        # Reserve 512MB RAM minimum
+        # These settings allow Jenkins to use more than its reservation under normal conditions,
+        # but limits prevent a runaway build from consuming 100% of host resources
 
-# Named volumes for persistent data storage
+# ============================================================================
+# NAMED VOLUMES - Persistent storage for Jenkins data
+# ============================================================================
 volumes:
-  # Jenkins home volume stores all configuration, jobs, plugins, build history
-  # Persists across container restarts
+  # Create a named volume called "jenkins_home"
+  # Named volumes are managed by Docker and stored in a standard location
+  # A named volume persists even after the container is deleted
+  # This means: if you run "docker-compose down", the Jenkins data is NOT deleted
+  # To delete Jenkins data, run: docker volume rm jenkins_home
   jenkins_home:
     driver: local
-
-# Network configuration (uses default bridge network)
-# Jenkins and app services can be on same network if needed

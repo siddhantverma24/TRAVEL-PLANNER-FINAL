@@ -1,0 +1,151 @@
+# ============================================================================
+# JENKINSFILE.JENKINS - CUSTOM JENKINS IMAGE WITH DOCKER CLI PERMANENTLY BAKED IN
+# ============================================================================
+# This Dockerfile builds a custom Jenkins image that has Docker CLI and Docker Compose
+# permanently installed. The plain jenkins/jenkins:lts image does NOT include Docker CLI,
+# which is why the pipeline fails with "docker: command not found".
+# ============================================================================
+
+# Start from the official Jenkins LTS image (long-term support, stable)
+FROM jenkins/jenkins:lts
+
+# Switch to root user to install system packages
+# Jenkins user can only run the Jenkins process; cannot install packages
+USER root
+
+# ============================================================================
+# STEP 1: Update apt package lists
+# This refreshes the repository metadata before installing anything
+# Required before any apt-get install commands
+# ============================================================================
+RUN apt-get update
+
+# ============================================================================
+# STEP 2: Install system prerequisites required for Docker CLI installation
+# - ca-certificates: SSL/TLS certificate validation for HTTPS downloads
+# - curl: used to download the Docker GPG key and docker-compose binary
+# - gnupg: used to verify the GPG signature of the Docker GPG key
+# - lsb-release: provides Linux Standard Base release info (used by Docker repo setup)
+# ============================================================================
+RUN apt-get install -y \
+    ca-certificates \
+    curl \
+    gnupg \
+    lsb-release
+
+# ============================================================================
+# STEP 3: Create the directory that will store the Docker GPG key
+# This directory must exist before downloading the key into it
+# /etc/apt/keyrings is the recommended location for package signing keys (Debian policy)
+# ============================================================================
+RUN mkdir -p /etc/apt/keyrings
+
+# ============================================================================
+# STEP 4: Download the Docker GPG key and save it to /etc/apt/keyrings/docker.gpg
+# - curl: fetch the key from Docker's public key server
+# - gpg --dearmor: convert the key from ASCII armor format to binary GPG format
+# - > /etc/apt/keyrings/docker.gpg: write to the keyrings directory
+# This key is used to verify that packages from the Docker repository are authentic
+# ============================================================================
+RUN curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+
+# ============================================================================
+# STEP 5: Add the Docker apt repository to the package sources list
+# This tells apt where to download Docker packages from.
+# The repository URL includes dynamic variables:
+# - $(lsb_release -cs): outputs "bullseye", "bookworm", etc. based on Debian version
+# - $(dpkg --print-architecture): outputs "amd64", "arm64", etc. based on CPU architecture
+# This ensures the correct Docker packages are downloaded for this system
+# ============================================================================
+RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | \
+    tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# ============================================================================
+# STEP 6: Update apt package lists AGAIN to include Docker packages from the new repository
+# After adding a new repository, apt needs to refresh its cache to see the packages
+# ============================================================================
+RUN apt-get update
+
+# ============================================================================
+# STEP 7: Install Docker CLI ONLY (not the full Docker daemon)
+# This is the key package that fixes "docker: command not found" errors.
+# - docker-ce-cli: the Docker command-line interface (CLI) — allows running docker commands
+# - NOT docker-ce: the full Docker daemon (not needed — Docker runs on the host machine)
+# - NOT docker-ce-rootless-extras: not needed for this setup
+# The Jenkins container will talk to the host Docker daemon via /var/run/docker.sock
+# ============================================================================
+RUN apt-get install -y docker-ce-cli
+
+# ============================================================================
+# STEP 8: Install Docker Compose V2 as a Docker plugin
+# This fixes "docker-compose: not found" errors (V1 docker-compose is deprecated).
+# Docker Compose V2 is invoked as "docker compose" (with a space) instead of "docker-compose".
+# Download the binary directly from the GitHub releases page.
+# Version 2.24.5 is a stable, tested version (update version number if a newer stable is available).
+# ============================================================================
+RUN mkdir -p /usr/local/lib/docker/cli-plugins && \
+    curl -L https://github.com/docker/compose/releases/download/v2.24.5/docker-compose-linux-x86_64 \
+    -o /usr/local/lib/docker/cli-plugins/docker-compose
+
+# ============================================================================
+# STEP 9: Make the Docker Compose binary executable
+# The downloaded file is just data until this chmod command makes it runnable
+# 755 means: owner read/write/execute, group read/execute, others read/execute
+# ============================================================================
+RUN chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+
+# ============================================================================
+# STEP 10: Create a symlink so BOTH "docker-compose" and "docker compose" commands work
+# The symlink at /usr/local/bin/docker-compose points to the Docker plugin at
+# /usr/local/lib/docker/cli-plugins/docker-compose
+# This ensures backward compatibility with scripts that use the old "docker-compose" command
+# ==========================================================================
+RUN ln -sf /usr/local/lib/docker/cli-plugins/docker-compose /usr/local/bin/docker-compose
+
+# ============================================================================
+# STEP 11: Create docker group if it doesn't already exist
+# The docker group allows unprivileged users to run Docker commands without sudo
+# -f flag: don't fail if the group already exists
+# This group will be used in the next step to give jenkins user Docker access
+# ============================================================================
+RUN groupadd -f docker
+
+# ============================================================================
+# STEP 12: Add the jenkins user to the docker group
+# This allows the jenkins process to run "docker" and "docker compose" commands
+# without needing sudo (which is not installed in this image anyway)
+# -aG: append to groups (don't remove from existing groups)
+# ============================================================================
+RUN usermod -aG docker jenkins
+
+# ============================================================================
+# STEP 13: Set the DOCKER_BUILDKIT environment variable
+# BuildKit is a modern, faster Docker builder with better caching and error handling
+# Setting this ENV variable tells Docker to use BuildKit mode by default in this image
+# This fixes build performance and reliability issues
+# ============================================================================
+ENV DOCKER_BUILDKIT=1
+
+# ============================================================================
+# STEP 14: Verify that Docker CLI and Docker Compose are installed and working
+# These RUN commands test that the installation succeeded
+# If either command fails, the image build will fail (fail fast — catch errors early)
+# - docker --version: outputs "Docker version X.Y.Z, build ..."
+# - docker compose version: outputs "Docker Compose version X.Y.Z"
+# If the build reaches this point without errors, Docker is guaranteed to be available
+# ============================================================================
+RUN docker --version && docker compose version
+
+# ============================================================================
+# STEP 15: Clean up apt cache to reduce image size
+# apt-get clean removes cached .deb packages that were downloaded but already installed
+# This saves ~100MB of disk space in the image
+# ============================================================================
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# ============================================================================
+# STEP 16: Switch back to the jenkins user (not root)
+# Jenkins process will run as the jenkins user (safer than root)
+# Jenkins can now use docker commands because jenkins is in the docker group
+# ============================================================================
+USER jenkins
