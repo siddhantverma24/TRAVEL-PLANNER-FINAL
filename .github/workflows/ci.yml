@@ -1,0 +1,53 @@
+name: Travel Planner CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    services:
+      docker:
+        image: docker:dind
+        options: --privileged
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Build backend Docker image
+        run: |
+          docker build -t travel-planner-backend:latest ./backend
+      
+      - name: Build frontend Docker image
+        run: |
+          docker build -t travel-planner-frontend:latest ./frontend
+      
+      - name: Start containers with docker compose
+        run: |
+          docker compose -f docker-compose.yml up -d
+      
+      - name: Wait for services to start
+        run: |
+          sleep 15
+      
+      - name: Health check - Backend API
+        run: |
+          curl -f http://localhost:5000/ || (echo "Health check failed!" && exit 1)
+      
+      - name: Show container status
+        if: always()
+        run: |
+          docker ps
+      
+      - name: Tear down containers
+        if: always()
+        run: |
+          docker compose down
