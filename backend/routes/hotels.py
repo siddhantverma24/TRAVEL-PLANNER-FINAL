@@ -315,8 +315,7 @@ def search_hotels():
                         p.get("thumbnailUrl", "") or
                         f"https://placehold.co/400x200/"
                         f"44355b/ffffff?text="
-                        f"{p.get('name','Hotel')
-                            .replace(' ', '+')}"
+                        f"{p.get('name', 'Hotel').replace(' ', '+')}"
                     )
 
                 # Get amenities

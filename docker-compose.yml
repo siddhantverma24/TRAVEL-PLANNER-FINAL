@@ -1,0 +1,94 @@
+# Docker Compose version (3.9 supports all modern features like service_healthy condition)
+version: '3.9'
+
+# Top-level services definition (containers that will be created and run)
+services:
+  # Backend Flask API service
+  backend:
+    # Build the backend image from ./backend directory
+    build:
+      # Build context is the backend directory
+      context: ./backend
+      # Use Dockerfile from backend directory
+      dockerfile: Dockerfile
+    
+    # Map port 5000 from container to host port 5000
+    ports:
+      - "5000:5000"
+    
+    # Mount volumes for hot reload and code changes
+    volumes:
+      # Mount entire backend source code for development (auto-reload on changes)
+      - ./backend:/app
+      # Exclude Python cache directory from mount (prevents sync conflicts)
+      - /app/__pycache__
+    
+    # Set environment variables (using ${VAR} interpolation from shell/system)
+    environment:
+      # Set Flask to development mode (enables debug, auto-reload)
+      FLASK_ENV: development
+      # Specify the Flask app entry point
+      FLASK_APP: app.py
+      # Enable Flask debug mode
+      DEBUG: "True"
+      # Set secret key for sessions (DEFAULT VALUE - override in shell or .env)
+      SECRET_KEY: ${SECRET_KEY:-your-secret-key-change-in-production}
+      # OpenAI API key for AI features (from system environment or .env)
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      # Database URL with fallback to SQLite (from system environment or use default)
+      DATABASE_URL: ${DATABASE_URL:-sqlite:///travel.db}
+    
+    # Health check to verify Flask is truly ready (not just container started)
+    healthcheck:
+      # Test if Flask API is responding to health endpoint
+      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
+      # Check health every 10 seconds
+      interval: 10s
+      # Timeout for health check (5 seconds)
+      timeout: 5s
+      # Number of failures before marking unhealthy
+      retries: 5
+      # Wait 10 seconds after container starts before first check (gives Flask time to initialize)
+      start_period: 10s
+    
+    # Connect backend service to custom bridge network
+    networks:
+      - travel_network
+
+  # Frontend Nginx web server service
+  frontend:
+    # Build the frontend image from ./frontend directory
+    build:
+      # Build context is the frontend directory
+      context: ./frontend
+      # Use Dockerfile from frontend directory
+      dockerfile: Dockerfile
+    
+    # Map port 80 from container to host port 80
+    ports:
+      - "80:80"
+    
+    # Mount volumes for static file serving and live updates
+    volumes:
+      # Mount frontend directory to Nginx serving directory (live update on file changes)
+      - ./frontend:/usr/share/nginx/html
+      # Mount custom nginx config for live modifications
+      - ./frontend/nginx.conf:/etc/nginx/conf.d/default.conf
+    
+    # Declare dependency on backend service
+    depends_on:
+      # Wait for backend service to be healthy before starting frontend
+      backend:
+        # Condition to check before starting (wait for health check to pass)
+        condition: service_healthy
+    
+    # Connect frontend service to custom bridge network
+    networks:
+      - travel_network
+
+# Define custom bridge network for service communication
+networks:
+  # Network name that services will use
+  travel_network:
+    # Use bridge driver (standard Docker network, allows service-name DNS resolution)
+    driver: bridge

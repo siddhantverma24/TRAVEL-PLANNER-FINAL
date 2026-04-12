@@ -1,0 +1,47 @@
+# Ignore Python bytecode and cache files (generated at runtime, wasted space)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# Ignore Python virtual environment directories (never copy local venv into image)
+venv/
+.venv/
+env/
+ENV/
+
+# Ignore version control directories (not needed in containers)
+.git
+.gitignore
+.github/
+
+# Ignore environment files with secrets (never copy .env into image)
+.env
+.env.local
+
+# Ignore log files (generated at runtime, not needed in image)
+*.log
+
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore Node.js artifacts (if ever added to project)
+node_modules/
+npm-debug.log
+
+# Ignore documentation files (not needed at runtime in container)
+*.md
+docs/
+
+# Ignore IDE and editor configuration files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Ignore application build outputs
+build/
+dist/
+*.egg-info/

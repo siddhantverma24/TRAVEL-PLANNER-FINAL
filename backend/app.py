@@ -1,23 +1,21 @@
 import sys
 import os
-from pathlib import Path
 
 # Ensure routes folder is in Python path
 sys.path.insert(0, os.path.dirname(__file__))
 
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify
 from flask_cors import CORS
 from db import get_db, get_collection
 from datetime import datetime
 import json
 from dotenv import load_dotenv
 
-# Load environment variables from backend directory
-env_path = Path(__file__).parent / '.env'
-load_dotenv(env_path)
-
-# Configure frontend directory
-FRONTEND_DIR = os.path.join(os.path.dirname(__file__), '..', 'frontend')
+# FIXED FOR DOCKER: Load environment variables from docker-compose .env file
+# In Docker, this will load variables provided by docker-compose.yml (env_file: .env)
+# In development, this enables loading from a local .env file if present
+# No need to specify a path - load_dotenv() checks common locations
+load_dotenv()
 
 # Import API route blueprints
 from routes.weather import weather_bp
@@ -35,33 +33,31 @@ from routes.quiz import quiz_bp
 from routes.hero_ai import hero_ai_bp
 from routes.ai_tools import ai_tools_bp
 
-app = Flask(__name__, static_folder='../frontend', static_url_path='')
-CORS(app, resources={
-    r"/api/*": {
-        "origins": [
-            "http://localhost:3001",
-            "http://127.0.0.1:3001",
-            "http://localhost:5500",
-            "http://127.0.0.1:5500",
-            "http://localhost:5173",
-            "http://127.0.0.1:5173"
-        ],
-        "methods": ["GET", "POST", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"]
-    },
-    r"/ai/*": {
-        "origins": [
-            "http://localhost:3001",
-            "http://127.0.0.1:3001",
-            "http://localhost:5500",
-            "http://127.0.0.1:5500",
-            "http://localhost:5173",
-            "http://127.0.0.1:5173"
-        ],
-        "methods": ["GET", "POST", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"]
-    }
-})
+# FIXED FOR DOCKER: Don't serve static files from backend
+# In Docker+Nginx setup, Nginx handles all frontend file serving
+# Backend only serves API endpoints (no static_folder needed)
+app = Flask(__name__)
+
+# FIXED FOR DOCKER: Simplified CORS configuration for Docker deployment
+# Allow requests from Nginx/frontend container communication
+# In Docker, services communicate through the docker network with internal DNS
+CORS(app, 
+     resources={r"/api/*": {"origins": "*"}, r"/ai/*": {"origins": "*"}},
+     methods=["GET", "POST", "OPTIONS"],
+     allow_headers=["Content-Type", "Authorization"]
+)
+
+# ============= API ENDPOINTS =============
+
+@app.route("/", methods=['GET'])
+def api_root():
+    """API status endpoint - root"""
+    return jsonify({
+        'status': 'online',
+        'message': 'Travel Planner API is running',
+        'version': '3.0.0',
+        'features': ['weather', 'currency', 'flights', 'hotels', 'itinerary', 'translate', 'visa', 'ai']
+    })
 
 # Register API blueprints
 app.register_blueprint(weather_bp, url_prefix='/api/weather')
@@ -79,81 +75,6 @@ app.register_blueprint(quiz_bp, url_prefix='/api/quiz')
 app.register_blueprint(hero_ai_bp, url_prefix='/api/hero-ai')
 app.register_blueprint(ai_tools_bp, url_prefix='/ai')
 
-# ============= FRONTEND SERVING ROUTES =============
-@app.route('/index.html')
-@app.route('/')
-def serve_index():
-    """Serve the frontend index.html"""
-    return send_from_directory(FRONTEND_DIR, 'index.html')
-
-# Multi-page routes
-@app.route('/destinations')
-def serve_destinations():
-    """Serve destinations page"""
-    return send_from_directory(FRONTEND_DIR, 'destinations.html')
-
-@app.route('/destinations.html')
-def serve_destinations_html():
-    """Serve destinations page with .html extension"""
-    return send_from_directory(FRONTEND_DIR, 'destinations.html')
-
-@app.route('/experiences')
-def serve_experiences():
-    """Serve experiences page"""
-    return send_from_directory(FRONTEND_DIR, 'experiences.html')
-
-@app.route('/experiences.html')
-def serve_experiences_html():
-    """Serve experiences page with .html extension"""
-    return send_from_directory(FRONTEND_DIR, 'experiences.html')
-
-@app.route('/tools')
-def serve_tools():
-    """Serve tools page"""
-    return send_from_directory(FRONTEND_DIR, 'tools.html')
-
-@app.route('/tools.html')
-def serve_tools_html():
-    """Serve tools page with .html extension"""
-    return send_from_directory(FRONTEND_DIR, 'tools.html')
-
-@app.route('/plan')
-def serve_plan():
-    """Serve plan page"""
-    return send_from_directory(FRONTEND_DIR, 'plan.html')
-
-@app.route('/plan.html')
-def serve_plan_html():
-    """Serve plan page with .html extension"""
-    return send_from_directory(FRONTEND_DIR, 'plan.html')
-
-@app.route('/about')
-def serve_about():
-    """Serve about page"""
-    return send_from_directory(FRONTEND_DIR, 'about.html')
-
-@app.route('/about.html')
-def serve_about_html():
-    """Serve about page with .html extension"""
-    return send_from_directory(FRONTEND_DIR, 'about.html')
-
-@app.route('/<path:filename>')
-def serve_static(filename):
-    """Serve static frontend files (CSS, JS, images, etc)"""
-    try:
-        return send_from_directory(FRONTEND_DIR, filename)
-    except:
-        return send_from_directory(FRONTEND_DIR, 'index.html')
-
-@app.route("/")
-def api_root():
-    """API status endpoint"""
-    return jsonify({
-        'status': 'online',
-        'message': 'Visit USA Travel API is running',
-        'version': '3.0.0',
-        'features': ['weather', 'currency', 'flights', 'hotels', 'itinerary', 'translate', 'visa', 'trips']
-    })
 
 @app.route('/favicon.ico')
 def favicon():
@@ -436,20 +357,21 @@ def search_locations():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
-    print("=" * 60)
-    print("✓ TravelFlow Backend Server - MySQL Edition")
-    print("=" * 60)
-    print("Server running on: http://127.0.0.1:3001")
-    print("Database: MySQL (travel_planner)")
-    print("=" * 60)
+    # FIXED FOR DOCKER: Updated startup message to reflect Docker environment
+    print("=" * 70)
+    print("✓ Travel Planner Backend API - Docker Edition")
+    print("=" * 70)
+    print("Server running on: http://0.0.0.0:5000 (inside Docker container)")
+    print("Access from host: http://localhost:5000 or http://localhost/api (via Nginx)")
+    print("Docker Network: travel-planner-network")
+    print("=" * 70)
     print("API Endpoints:")
-    print("  GET    /                    - API status")
+    print("  GET    /                    - API status (root endpoint)")
+    print("  GET    /api/health          - Health check with API availability")
     print("  POST   /save-trip           - Save a new trip")
     print("  GET    /get-trips           - Get all trips")
     print("  DELETE /delete-trip/<id>    - Delete a trip")
     print("  GET    /stats               - Get statistics")
-    print("  POST   /travel-suggestions  - Get travel options")
-    print("  GET    /search-locations    - Search saved locations")
     print("  GET    /api/weather/*       - Weather API")
     print("  GET    /api/currency/*      - Currency API")
     print("  GET    /api/flights/*       - Flights API")
@@ -458,6 +380,14 @@ if __name__ == "__main__":
     print("  GET    /api/maps/*          - Maps API")
     print("  POST   /api/translate/*     - Translate API")
     print("  GET    /api/visa/*          - Visa API")
-    print("=" * 60)
+    print("  POST   /api/hero-ai/*       - AI Itinerary Generation")
+    print("=" * 70)
+    print("NOTE: In Docker, Nginx (port 80) serves frontend files and proxies /api/* to backend.")
+    print("      This backend serves ONLY API endpoints on port 5000.")
+    print("=" * 70)
     
-    app.run(port=3001, debug=True)
+    # FIXED FOR DOCKER: Server configuration ready for Docker+Nginx
+    # - host="0.0.0.0" listens on all interfaces (required for Docker)
+    # - port=5000 matches docker-compose mapping
+    # - debug=True enables auto-reload for development (set via FLASK_ENV env var)
+    app.run(host="0.0.0.0", port=5000, debug=True)
