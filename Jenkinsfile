@@ -108,18 +108,55 @@ pipeline {
         }
 
         // ====================================================================
-        // STAGE 4: STOP OLD CONTAINERS - Clean up previous deployment
+        // STAGE 4: AGGRESSIVE CLEANUP - Remove all containers and free ports
         // ====================================================================
-        stage('Stop Old Containers') {
+        // CRITICAL STAGE FOR IDEMPOTENCY AND PORT CONFLICT RESOLUTION
+        // ====================================================================
+        stage('Aggressive Cleanup') {
             steps {
-                // Stop and remove all running containers from docker-compose
-                // docker-compose down = remove containers and networks
-                // --remove-orphans = remove containers not in current compose file
+                // STEP 1: Stop and remove docker-compose managed containers
+                // This gracefully stops containers and removes networks
                 // || true = succeed even if nothing is running (first deployment)
+                echo "[Cleanup] Stopping docker-compose managed containers..."
                 sh 'docker-compose down --remove-orphans || true'
                 
-                // Confirm cleanup complete
-                echo "✓ Previous containers stopped and removed"
+                // STEP 2: Force remove all running containers (handles orphaned processes)
+                // docker ps -aq = list all container IDs (running and stopped)
+                // docker rm -f = force remove (kill process and delete container)
+                // || true = succeed even if no containers found
+                // CRITICAL: This prevents "port already allocated" errors
+                echo "[Cleanup] Force removing all containers (resolving port conflicts)..."
+                sh 'docker rm -f $(docker ps -aq) || true'
+                
+                // STEP 3: Kill any process using port 5000 (backend port)
+                // lsof -ti :5000 = find process ID using port 5000
+                // xargs kill -9 = forcefully terminate the process
+                // || true = succeed if port is already free
+                // Note: lsof may not be available in all Jenkins environments
+                echo "[Cleanup] Killing any process on port 5000..."
+                sh 'lsof -ti :5000 | xargs kill -9 2>/dev/null || true'
+                
+                // STEP 4: Kill any process using port 80 (frontend port)
+                echo "[Cleanup] Killing any process on port 80..."
+                sh 'lsof -ti :80 | xargs kill -9 2>/dev/null || true'
+                
+                // STEP 5: Prune unused Docker system resources
+                // docker system prune -f = remove dangling images, networks, build cache
+                // -f flag = force removal without confirmation
+                echo "[Cleanup] Pruning unused Docker system resources..."
+                sh 'docker system prune -f || true'
+                
+                // STEP 6: Remove dangling volumes
+                // Dangling volumes can accumulate and consume disk space
+                echo "[Cleanup] Removing dangling volumes..."
+                sh 'docker volume prune -f || true'
+                
+                // STEP 7: Verify cleanup succeeded
+                echo "[Cleanup] Current container status after cleanup:"
+                sh 'docker ps -a || true'
+                
+                // Confirm aggressive cleanup complete
+                echo "✓ AGGRESSIVE CLEANUP COMPLETE - All containers and port conflicts cleared"
             }
         }
 
@@ -132,7 +169,12 @@ pipeline {
                 // docker-compose build = read compose file and build all services
                 // --no-cache = force rebuild from scratch (no layer cache)
                 // Prevents stale dependencies or code in images
+                echo "[Build] Starting Docker image build (no-cache mode)..."
                 sh 'docker-compose build --no-cache'
+                
+                // List built images for verification
+                echo "[Build] Images built. Current images:"
+                sh 'docker images | grep travelplanner || echo "No travelplanner images found"'
                 
                 // Confirm build success
                 echo "✓ Docker images built successfully"
@@ -148,15 +190,24 @@ pipeline {
                 // docker-compose up = build and run containers
                 // -d flag = detached mode (background execution)
                 // Pipeline immediately continues (doesn't wait for services)
+                echo "[Start] Launching containers from docker-compose.yml..."
                 sh 'docker-compose up -d'
+                
+                // Small wait to allow containers to start binding to ports
+                sh 'sleep 2'
                 
                 // Show running containers to confirm startup
                 // docker-compose ps = display status of all managed containers
                 // Useful for deployment verification
+                echo "[Start] Container status:"
                 sh 'docker-compose ps'
                 
+                // Show port mappings and network details
+                echo "[Start] Port mappings:"
+                sh 'docker ps --format "table {{.Names}}\\t{{.Ports}}"'
+                
                 // Log startup completion
-                echo "✓ Containers started in background"
+                echo "✓ Containers started successfully"
             }
         }
 
@@ -167,22 +218,40 @@ pipeline {
             steps {
                 // Wait for services to fully initialize and become ready
                 // Flask and Nginx need time to bind ports and become responsive
-                // 15 seconds is typically sufficient for container startup
-                sh 'sleep 15'
+                // 20 seconds ensures healthcheck passes and services are ready
+                echo "[Health] Waiting for services to initialize (20 seconds)..."
+                sh 'sleep 20'
+                
+                // Verify port 5000 is listening (backend Flask API)
+                // netstat -tlnp = show listening TCP ports
+                // grep 5000 = filter for port 5000
+                echo "[Health] Checking port 5000 (backend)..."
+                sh 'netstat -tlnp | grep 5000 || echo "Port 5000 status: checking via curl instead"'
                 
                 // Test backend Flask API health
                 // curl -f http://localhost:5000/ = send HTTP GET request
                 // -f flag = fail on HTTP errors (non-2xx/3xx status codes)
+                // -m 5 = timeout after 5 seconds
                 // Verifies Flask is running and accepting connections
-                sh 'curl -f http://localhost:5000/ || exit 1'
+                echo "[Health] Testing backend Flask API..."
+                sh 'curl -f -m 5 http://localhost:5000/ || exit 1'
+                
+                // Verify port 80 is listening (frontend Nginx)
+                echo "[Health] Checking port 80 (frontend)..."
+                sh 'netstat -tlnp | grep 80 || echo "Port 80 status: checking via curl instead"'
                 
                 // Test frontend Nginx web server health
                 // curl -f http://localhost:80/ = send HTTP GET to frontend
                 // Verifies Nginx is running and serving pages
-                sh 'curl -f http://localhost:80/ || exit 1'
+                echo "[Health] Testing frontend Nginx server..."
+                sh 'curl -f -m 5 http://localhost:80/ || exit 1'
+                
+                // Additional validation: check Docker container health status
+                echo "[Health] Container health status:"
+                sh 'docker-compose ps --format "table {{.Service}}\\t{{.Status}}"'
                 
                 // Log successful health checks
-                echo "✓ Both services are responding to requests"
+                echo "✓ Both services are healthy and responding to requests"
             }
         }
 

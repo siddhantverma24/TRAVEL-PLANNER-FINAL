@@ -1,5 +1,9 @@
-# Docker Compose version (3.9 supports all modern features like service_healthy condition)
-version: '3.9'
+# ============================================================================
+# Docker Compose Configuration - Travel Planner Application
+# ============================================================================
+# NOTE: version field is optional in Docker Compose v2+
+# If you get version compatibility errors, add: version: '3.9' at the top
+# ============================================================================
 
 # Top-level services definition (containers that will be created and run)
 services:
@@ -12,9 +16,12 @@ services:
       # Use Dockerfile from backend directory
       dockerfile: Dockerfile
     
-    # Map port 5000 from container to host port 5000
+    # Map ports from container to host machine
+    # Format: "host_port:container_port"
+    # If port 5000 is already in use, uncomment the fallback line below
     ports:
-      - "5000:5000"
+      - "5000:5000"      # Default: Flask API on port 5000
+      # - "5001:5000"    # Fallback: If port 5000 is in use, uncomment this line instead
     
     # Mount volumes for hot reload and code changes
     volumes:
@@ -64,9 +71,12 @@ services:
       # Use Dockerfile from frontend directory
       dockerfile: Dockerfile
     
-    # Map port 80 from container to host port 80
+    # Map ports from container to host machine
+    # If port 80 is already in use (common on Linux), uncomment one of the fallbacks below
     ports:
-      - "80:80"
+      - "80:80"          # Default: Nginx web server on port 80
+      # - "8080:80"      # Fallback: If port 80 is in use (Linux), uncomment this line
+      # - "8081:80"      # Alternative: Another fallback option
     
     # Mount volumes for static file serving and live updates
     volumes:
