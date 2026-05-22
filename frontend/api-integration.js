@@ -1,12 +1,12 @@
 /**
  * API Integration Functions for Visit USA Travel Website
- * Connects frontend to Flask backend at http://localhost:3001
+ * Connects frontend to Flask backend at http://localhost:5001
  * 
  * Usage: Include this file in your HTML before script.js or paste functions as needed
  * Replace the hardcoded data functions in script.js with these versions
  */
 
-const API_BASE = 'http://localhost:3001';
+const API_BASE = 'http://localhost:5001';
 
 /* ==== WEATHER API ==== */
 function fetchWeatherLive() {
@@ -290,7 +290,7 @@ function translatePhraseLive(text, targetLang, sourceLang = 'en') {
  * 2. Or include as separate file and call directly
  *
  * 3. Make sure backend is running:
- *    flask --app backend.app run --debug --port 3001
+ *    flask --app backend.app run --debug --port 5001
  *
  * 4. Update API_BASE if deploying to production
  */

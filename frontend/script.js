@@ -10,7 +10,7 @@
 /* ─────────────────────────────────────────────────────────
    0. API CONFIGURATION
 ───────────────────────────────────────────────────────── */
-const API_BASE = window.location.origin; // Dynamically use current origin (localhost or 127.0.0.1)
+const API_BASE = 'http://localhost:5001'; // Backend Flask server on port 5001
 
 let fxRates = { USD:1, EUR:0.924, GBP:0.793, JPY:149.82, AUD:1.531, CAD:1.362, INR:83.18, CHF:0.883 };
 
@@ -1764,7 +1764,7 @@ async function fetchWeather() {
       <div style="text-align:center;padding:2rem;color:var(--text-muted)">
         <p>⚠️ Could not connect to weather service.</p>
         <p style="font-size:.85rem;margin-top:.5rem">
-          Make sure Flask server is running on port 3001.
+          Make sure Flask server is running on port 5001.
         </p>
       </div>`;
   }
@@ -1946,7 +1946,7 @@ async function trackFlight() {
     out.innerHTML = `
       <div style="text-align:center;padding:2rem;color:var(--text-muted)">
         <p>⚠️ Could not track flight ${flight}</p>
-        <p style="font-size:.85rem;margin-top:.5rem">Make sure Flask server is running on port 3001</p>
+        <p style="font-size:.85rem;margin-top:.5rem">Make sure Flask server is running on port 5001</p>
       </div>`;
   }
 }
@@ -2171,7 +2171,7 @@ async function searchHotels() {
                 <p>⚠️ Could not search hotels.</p>
                 <p style="font-size:.82rem;margin-top:.5rem">
                     Make sure Flask server is running 
-                    on port 3001
+                    on port 5001
                 </p>
             </div>`;
     }

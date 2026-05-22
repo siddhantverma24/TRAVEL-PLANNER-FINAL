@@ -70,12 +70,13 @@ If you prefer running without Docker:
 - [ ] **1.5 Start Backend**
   ```bash
   cd backend
-  flask --app app run --debug --host=0.0.0.0 --port=5000
+  flask --app app run --debug --port=5001
   ```
 
 - [ ] **1.6 Start Frontend (in new terminal)**
   ```bash
-  python -m http.server 80 --directory frontend
+  cd frontend
+  python -m http.server 8000
   ```
 
 ---
@@ -89,7 +90,7 @@ If you prefer running without Docker:
   - Should see Travel Planner homepage
 
 - [ ] **2.2 Backend API (Testing)**
-  - Open browser: `http://localhost:5000/api/health`
+  - Open browser: `http://localhost:5000/api/health` (or `http://localhost:5001/api/health` if port 5000 is in use)
   - Should see JSON: `{"status":"ok","apis":{...}}`
 
 - [ ] **2.3 Check Which APIs are Enabled**
@@ -100,11 +101,12 @@ If you prefer running without Docker:
 ### With Virtual Environment (Option B):
 
 - [ ] **2.1 Frontend**
-  - Open browser: `http://localhost:5000` (if running Flask on 5000)
-  - Or: `http://localhost:80` (if running http.server on 80)
+  - Open browser: `http://localhost:8000` (Python http.server)
+  - Should see Travel Planner homepage
 
 - [ ] **2.2 Backend API**
-  - Open browser: `http://localhost:5000/api/health`
+  - Open browser: `http://localhost:5001/api/health`
+  - Should see JSON: `{"status":"ok","apis":{...}}`
 
 ---
 
@@ -115,30 +117,34 @@ If you prefer running without Docker:
 - [ ] **3.1 Weather API**
   - In browser console (F12):
   ```javascript
-  fetch('http://localhost:5000/api/weather?city=NewYork').then(r=>r.json()).then(d=>console.log(d))
+  // Use :5001 if port 5000 is already in use
+  fetch('http://localhost:5001/api/weather?city=London').then(r=>r.json()).then(d=>console.log(d))
   ```
   - Should show: temp, feels, humidity, wind, condition
 
 - [ ] **3.2 Currency API**
   - In browser console:
   ```javascript
-  fetch('http://localhost:5000/api/currency?base=USD').then(r=>r.json()).then(d=>console.log(d))
+  // Use :5001 if port 5000 is already in use
+  fetch('http://localhost:5001/api/currency?base=USD').then(r=>r.json()).then(d=>console.log(d))
   ```
   - Should show: rates for multiple currencies
 
 - [ ] **3.3 Visa API**
   - In browser console:
   ```javascript
-  fetch('http://localhost:5000/api/visa?from=US&to=JP').then(r=>r.json()).then(d=>console.log(d))
+  // Use :5001 if port 5000 is already in use
+  fetch('http://localhost:5001/api/visa?from=US&to=JP').then(r=>r.json()).then(d=>console.log(d))
   ```
   - Should show: visa requirements
 
 - [ ] **3.4 Flights API** (Fallback demo)
   - In browser console:
   ```javascript
-  fetch('http://localhost:5000/api/flights?from=ORD&to=LAX&date=2024-03-15&passengers=1').then(r=>r.json()).then(d=>console.log(d))
+  // Use :5001 if port 5000 is already in use
+  fetch('http://localhost:5001/api/flights?from=ORD&to=LAX&date=2024-06-15&passengers=1').then(r=>r.json()).then(d=>console.log(d))
   ```
-  - Should show: array of flights
+  - Should show: array of flights (may use fallback data if upstream API key missing)
 
 - [ ] **3.5 UI Testing**
   - Click weather search button → Should show live data
@@ -260,12 +266,13 @@ source venv/bin/activate        # macOS/Linux
 # Install packages
 pip install -r requirements.txt
 
-# Run Flask backend
+# Run Flask backend (in one terminal)
 cd backend
-flask --app app run --debug --host=0.0.0.0 --port=5000
+flask --app app run --debug --port=5001
 
-# Run frontend server
-python -m http.server 80 --directory frontend
+# Run frontend server (in another terminal)
+cd frontend
+python -m http.server 8000
 ```
 
 ---
@@ -302,7 +309,13 @@ Then access frontend at: `http://localhost:8080`
 
 #### Issue: Port 5000 already in use
 
-**Solution:** Change port mapping in `docker-compose.yml`:
+**Solution for Virtual Environment:** Flask will automatically try port 5001:
+```bash
+flask --app app run --debug --port=5001
+```
+Then access API at: `http://localhost:5001/api/health`
+
+**Solution for Docker:** Change port mapping in `docker-compose.yml`:
 ```yaml
 backend:
   ports:
@@ -379,10 +392,11 @@ docker-compose -f jenkins/docker-compose.jenkins.yml restart
 - Weather/currency/visa queries return data
 
 ✅ **With Virtual Environment:**
-- Frontend loads at `http://localhost:5000` or custom port
-- Backend responds at `http://localhost:5000`
+- Frontend loads at `http://localhost:8000`
+- Backend responds at `http://localhost:5001/api/health`
 - No import errors in terminal
-- Flask shows "Running on http://0.0.0.0:5000"
+- Flask shows "Running on http://127.0.0.1:5001"
+- Frontend JavaScript correctly points to port 5001
 - No CORS errors in browser console
 
 ✅ **With Jenkins:**
@@ -451,7 +465,7 @@ docker-compose -f jenkins/docker-compose.jenkins.yml restart
 
 1. **Docker Issues**: Check `docker logs` command output
 2. **Jenkins Issues**: Check Jenkins at `http://localhost:8080`
-3. **API Issues**: Check health endpoint: `http://localhost:5000/api/health`
+3. **API Issues**: Check health endpoint: `http://localhost:5000/api/health` or `http://localhost:5001/api/health` if port 5000 is in use
 4. **Code Issues**: Check browser console (F12) for errors
 5. **Git Issues**: Check Jenkins webhook configuration
 
