@@ -18,9 +18,9 @@ services:
     # This ensures the backend stays running continuously in development/testing
     restart: unless-stopped
     
-    # Map port 5000 from container to host port 5000
+    # Map host port 5001 to container port 5000 so the Flask app is reachable even if 5000 is busy on Windows
     ports:
-      - "5000:5000"
+      - "5001:5000"
     
     # Set environment variables (using ${VAR} interpolation from shell/system)
     environment:
@@ -34,12 +34,14 @@ services:
       SECRET_KEY: ${SECRET_KEY:-your-secret-key-change-in-production}
       # OpenAI API key for AI features (from system environment or .env)
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      # Groq API key for AI features (from system environment or .env)
+      GROQ_KEY: ${GROQ_KEY:-}
       # Database URL with fallback to SQLite (from system environment or use default)
       DATABASE_URL: ${DATABASE_URL:-sqlite:///travel.db}
     
     # Health check to verify Flask is truly ready (not just container started)
     healthcheck:
-      # Test if Flask API is responding to health endpoint
+      # Test if Flask API is responding to the root status endpoint inside the container
       test: ["CMD", "curl", "-f", "http://localhost:5000/"]
       # Check health every 10 seconds
       interval: 10s

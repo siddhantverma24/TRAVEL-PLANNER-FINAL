@@ -1,0 +1,454 @@
+/* ════════════════════════════════════════════════════════════════════════════════
+   WARM CINEMATIC EDITORIAL DESIGN SYSTEM
+   Inspired by Condé Nast Traveller, Monocle, Premium Luxury Hospitality Brands
+   Color Direction: Warm ivory, deep charcoal, terracotta accents
+   ════════════════════════════════════════════════════════════════════════════════ */
+
+/* ── GOOGLE FONTS IMPORT ─────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap');
+
+/* ════════════════════════════════════════════════════════════════════════════════
+   ROOT CUSTOM PROPERTIES - WARM EDITORIAL PALETTE
+   ════════════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── BACKGROUNDS (Warm Ivory & Linen Spectrum) ──────────────────── */
+  --color-bg-primary:     #f6f1ea;   /* warm ivory page bg */
+  --color-bg-secondary:   #ede8e0;   /* soft linen surface */
+  --color-bg-tertiary:    #e4ddd3;   /* subtle card/hover bg */
+  --color-bg-overlay:     rgba(31, 24, 18, 0.55); /* cinematic scrim */
+
+  /* ── TEXT (Deep Charcoal & Warm Slate) ──────────────────────────── */
+  --color-text-primary:   #1f2937;   /* deep charcoal */
+  --color-text-secondary: #5b6472;   /* warm slate muted */
+  --color-text-tertiary:  #8e97a3;   /* hint / placeholder */
+  --color-text-inverse:   #f6f1ea;   /* text on dark surfaces */
+
+  /* ── ACCENT (Warm Terracotta / Clay) ───────────────────────────── */
+  --color-accent:         #c97b63;   /* terracotta / warm coral */
+  --color-accent-dark:    #a85f49;   /* pressed / hover state */
+  --color-accent-light:   #f0d5ca;   /* accent tint / badge bg */
+
+  /* ── BORDERS (Subtle to Strong) ────────────────────────────────── */
+  --color-border-subtle:  rgba(31, 24, 18, 0.10);
+  --color-border-default: rgba(31, 24, 18, 0.18);
+  --color-border-strong:  rgba(31, 24, 18, 0.30);
+
+  /* ── SHADOWS (Cinematic, Warm-Tinted) ──────────────────────────── */
+  --shadow-sm:  0 2px 8px rgba(90, 55, 30, 0.08);
+  --shadow-md:  0 8px 24px rgba(90, 55, 30, 0.12);
+  --shadow-lg:  0 20px 48px rgba(90, 55, 30, 0.16);
+
+  /* ── TYPOGRAPHY SYSTEM ────────────────────────────────────────── */
+  --font-display:  'Playfair Display', Georgia, 'Times New Roman', serif;
+  --font-body:     'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono:     'Courier New', monospace;
+
+  /* ── LEGACY COMPATIBILITY MAPPED TO NEW PALETTE ──────────────── */
+  --primary: var(--color-accent);
+  --secondary: var(--color-accent-dark);
+  --bg-light: var(--color-bg-primary);
+  --bg-soft: var(--color-bg-secondary);
+  --text-dark: var(--color-text-primary);
+  --text-light: var(--color-text-inverse);
+
+  /* ── DERIVED PALETTE FOR COMPONENTS ─────────────────────────────── */
+  --sky-aqua:      var(--color-accent);
+  --maya-blue:     var(--color-accent-dark);
+  --powder-blue:   var(--color-text-tertiary);
+  --pastel-petal:  var(--color-accent-light);
+  --lavender:      var(--color-bg-secondary);
+
+  /* ── GRADIENT THEME (Warm Editorial) ───────────────────────────── */
+  --grad-primary:  linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-dark) 50%, var(--color-text-tertiary) 100%);
+  --grad-soft:     linear-gradient(135deg, var(--color-accent-dark) 0%, var(--color-bg-secondary) 100%);
+  --grad-aqua:     linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-dark) 100%);
+
+  /* ── SEMANTIC UI (Light Mode - Warm Tone) ──────────────────────── */
+  --bg-base:        var(--color-bg-primary);
+  --bg-card:        var(--color-bg-secondary);
+  --bg-section:     var(--color-bg-tertiary);
+  --bg-secondary:   var(--color-bg-tertiary);
+  --bg-input:       #ffffff;
+  --bg-hover:       var(--color-bg-secondary);
+
+  --text-primary:   var(--color-text-primary);
+  --text-secondary: var(--color-text-secondary);
+  --text-muted:     var(--color-text-tertiary);
+  --text-light:     var(--color-text-secondary);
+
+  --border:         var(--color-border-subtle);
+  --border-input:   var(--color-border-default);
+  --border-focus:   var(--color-accent);
+
+  /* ── BUTTON & INTERACTIVE ──────────────────────────────────────── */
+  --btn-primary:        var(--color-accent);
+  --btn-primary-hover:  var(--color-accent-dark);
+  --btn-secondary:      var(--color-accent-dark);
+  --btn-secondary-hover: var(--color-accent);
+  --btn-accent:         var(--color-accent-light);
+  --btn-accent-hover:   var(--color-accent);
+
+  /* ── NAVBAR (Luxury Editorial) ─────────────────────────────────── */
+  --navbar-bg:      rgba(212, 118, 111, 0.08);
+  --navbar-bg-scroll: rgba(246, 241, 234, 0.98);
+  --navbar-border:  var(--color-border-subtle);
+  --nav-color:      var(--color-text-primary);
+
+  /* ── LUXURY PALETTE FOR EDITORIAL NAVBAR ───────────────────────── */
+  --luxury-beige:     var(--color-bg-primary);
+  --luxury-cream:     #faf8f6;
+  --luxury-warm-gray: var(--color-text-secondary);
+  --luxury-dark-text: var(--color-text-primary);
+  --luxury-coral:     var(--color-accent);
+  --luxury-coral-light: var(--color-accent-light);
+  --luxury-gold:      var(--color-accent-dark);
+
+  /* ── ACCENT COLORS (Semantic) ──────────────────────────────────── */
+  --accent-success: #48bb78;
+  --accent-warning: #ed8936;
+  --accent-error:   #f56565;
+  --accent-info:    #4299e1;
+
+  /* ── SPACING & BORDERS ────────────────────────────────────────── */
+  --r-sm:     8px;
+  --r-md:     12px;
+  --r-lg:     16px;
+  --r-xl:     24px;
+  --r-full:   999px;
+
+  /* ── BACKWARD COMPATIBILITY ────────────────────────────────────– */
+  --honey-bronze:         var(--color-accent-dark);
+  --honey-bronze-light:   var(--color-accent-light);
+  --vintage-grape:        var(--color-text-tertiary);
+  --charcoal-blue:        var(--color-accent);
+  --spicy-paprika:        var(--color-accent);
+  --spicy-paprika-light:  var(--color-accent-dark);
+  --midnight-violet:      var(--color-accent-dark);
+  --shadow-grey:          var(--color-text-tertiary);
+  --cream:                #ffffff;
+  --cream-dark:           var(--color-bg-secondary);
+  --sand:                 var(--color-accent-light);
+  --charcoal:             var(--color-text-primary);
+  --bg-sand:              var(--color-bg-tertiary);
+  --grad-green:           var(--grad-aqua);
+  --grad-gold:            linear-gradient(135deg, var(--color-accent-dark) 0%, var(--color-accent-light) 100%);
+  --surface-alt:          var(--color-bg-secondary);
+
+  /* ── SHADOWS (Warm Tinted) ────────────────────────────────────── */
+  --sh-soft:   var(--shadow-sm);
+  --sh-mid:    var(--shadow-md);
+  --sh-hard:   var(--shadow-lg);
+}
+
+/* ════════════════════════════════════════════════════════════════════════════════
+   DARK MODE - WARM EDITORIAL ADAPTATION
+   ════════════════════════════════════════════════════════════════════════════════ */
+
+body.dark-mode {
+  /* ── DARK MODE BACKGROUNDS ────────────────────────────────────── */
+  --bg-base:        #1a1410;
+  --bg-card:        #241f1a;
+  --bg-section:     #2a231c;
+  --bg-secondary:   #2a231c;
+  --bg-input:       #1f1915;
+  --bg-hover:       #241f1a;
+  --bg-sand:        #2a231c;
+  --surface-alt:    #241f1a;
+
+  /* ── DARK MODE TEXT ────────────────────────────────────────────– */
+  --text-primary:   #f6f1ea;
+  --text-secondary: #d4c5b8;
+  --text-muted:     #a89e94;
+  --text-light:     #8e97a3;
+
+  /* ── DARK MODE BORDERS ────────────────────────────────────────– */
+  --border:         rgba(246, 241, 234, 0.12);
+  --border-input:   rgba(246, 241, 234, 0.18);
+  --border-focus:   var(--color-accent);
+
+  /* ── DARK MODE BUTTONS ─────────────────────────────────────────– */
+  --btn-primary:        var(--color-accent);
+  --btn-primary-hover:  var(--color-accent-light);
+  --btn-secondary:      var(--color-accent-dark);
+  --btn-secondary-hover: var(--color-accent);
+  --btn-accent:         var(--color-accent-dark);
+  --btn-accent-hover:   var(--color-accent);
+
+  /* ── DARK MODE NAVBAR ──────────────────────────────────────────– */
+  --navbar-bg:      rgba(201, 123, 99, 0.08);
+  --navbar-bg-scroll: rgba(26, 20, 16, 0.92);
+  --navbar-border:  rgba(246, 241, 234, 0.12);
+  --nav-color:      #f6f1ea;
+
+  /* ── LUXURY DARK MODE ──────────────────────────────────────────– */
+  --luxury-beige:     #241f1a;
+  --luxury-cream:     #1a1410;
+  --luxury-warm-gray: #a89e94;
+  --luxury-dark-text: #f6f1ea;
+  --luxury-coral:     var(--color-accent);
+  --luxury-coral-light: var(--color-accent-dark);
+  --luxury-gold:      var(--color-accent);
+
+  /* ── DARK MODE LEGACY ──────────────────────────────────────────– */
+  --cream:          #1a1410;
+  --cream-dark:     #241f1a;
+  --sand:           #2a231c;
+  --charcoal:       #f6f1ea;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════════
+   RESET & BASE ELEMENTS
+   ════════════════════════════════════════════════════════════════════════════════ */
+
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+/* ── BASE BODY STYLING ────────────────────────────────────────── */
+body {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.65;
+  color: var(--text-primary);
+  background: var(--bg-base);
+  overflow-x: hidden;
+  transition: background 0.4s ease, color 0.4s ease;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── TYPOGRAPHY BASE ────────────────────────────────────────────– */
+h1, h2, h3, h4, h5 {
+  font-family: var(--font-display);
+  line-height: 1.15;
+  color: var(--text-primary);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+h1 {
+  font-size: clamp(2rem, 4vw, 3.25rem);
+}
+
+h2 {
+  font-size: clamp(1.5rem, 3vw, 2.25rem);
+}
+
+h3 {
+  font-size: 1.375rem;
+}
+
+h4, h5, h6 {
+  font-family: var(--font-body);
+  font-weight: 500;
+}
+
+p {
+  font-family: var(--font-body);
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+a {
+  color: var(--color-accent);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 2px;
+  transition: color 0.3s ease;
+}
+
+a:hover {
+  color: var(--color-accent-dark);
+}
+
+em {
+  font-style: italic;
+  color: var(--color-accent);
+}
+
+label {
+  color: var(--text-primary) !important;
+  font-weight: 500;
+  font-family: var(--font-body);
+}
+
+/* ── INPUT & FORM ELEMENTS ────────────────────────────────────── */
+input::placeholder,
+textarea::placeholder,
+select option {
+  color: var(--text-tertiary);
+  opacity: 1;
+}
+
+input, textarea, select {
+  color: var(--text-primary);
+  background-color: var(--bg-input);
+  border: 1.5px solid var(--border-input);
+  border-radius: var(--r-md);
+  padding: 0.75rem 1rem;
+  font-family: var(--font-body);
+  transition: all 0.3s ease;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px rgba(201, 123, 99, 0.1);
+}
+
+/* ════════════════════════════════════════════════════════════════════════════════
+   UTILITY CLASSES & COMPONENTS
+   ════════════════════════════════════════════════════════════════════════════════ */
+
+/* ── TEXT SIZE UTILITIES ────────────────────────────────────────– */
+.text-hero   { font-size: clamp(2.75rem, 6vw, 5rem); font-family: var(--font-display); }
+.text-h1     { font-size: clamp(2rem, 4vw, 3.25rem); font-family: var(--font-display); }
+.text-h2     { font-size: clamp(1.5rem, 3vw, 2.25rem); font-family: var(--font-display); }
+.text-h3     { font-size: 1.375rem; font-family: var(--font-display); }
+.text-body   { font-size: 1rem; font-family: var(--font-body); }
+.text-small  { font-size: 0.875rem; font-family: var(--font-body); }
+.text-label  { font-size: 0.6875rem; letter-spacing: 0.14em; text-transform: uppercase; font-family: var(--font-body); font-weight: 600; }
+
+/* ── FLEX UTILITIES ────────────────────────────────────────────– */
+.flex-center { display: flex; align-items: center; justify-content: center; }
+.flex-between { display: flex; align-items: center; justify-content: space-between; }
+.full-w { width: 100%; }
+
+/* ────────────────────────────────────────────────────────────────
+   BUTTON STYLING - WARM EDITORIAL SYSTEM
+   ──────────────────────────────────────────────────────────────── */
+
+/* ── PRIMARY BUTTON ────────────────────────────────────────────– */
+.btn-primary, button[class*="primary"],
+.btn, button {
+  background:    var(--color-accent);
+  color:         var(--color-text-inverse);
+  border:        1.5px solid var(--color-accent);
+  border-radius: 4px;
+  padding:       0.75rem 1.75rem;
+  font-family:   var(--font-body);
+  font-size:     0.8125rem;
+  font-weight:   500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  box-shadow:    var(--shadow-sm);
+  transition:    background 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease, border-color 0.3s ease;
+  cursor:        pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  outline: none;
+}
+
+.btn-primary:hover, button[class*="primary"]:hover,
+.btn:hover, button:hover {
+  background:   var(--color-accent-dark);
+  border-color: var(--color-accent-dark);
+  box-shadow:   var(--shadow-md);
+  transform:    translateY(-1px);
+}
+
+.btn-primary:active, button[class*="primary"]:active,
+.btn:active, button:active {
+  transform: translateY(0);
+}
+
+/* ── SECONDARY / GHOST BUTTON ──────────────────────────────────– */
+.btn-ghost, .btn-secondary {
+  background:   transparent;
+  color:        var(--color-accent);
+  border:       1.5px solid var(--color-accent);
+  padding:      0.75rem 1.75rem;
+  font-family:  var(--font-body);
+  font-size:    0.8125rem;
+  font-weight:  500;
+  border-radius: 4px;
+  cursor:       pointer;
+  transition:   all 0.3s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-ghost:hover, .btn-secondary:hover {
+  background:   var(--color-accent-light);
+  color:        var(--color-text-primary);
+  border-color: var(--color-accent);
+}
+
+/* ── LARGE BUTTON VARIANT ──────────────────────────────────────– */
+.btn-lg {
+  padding: 1rem 2.25rem;
+  font-size: 0.9375rem;
+}
+
+/* ── SMALL BUTTON VARIANT ──────────────────────────────────────– */
+.btn-sm {
+  padding: 0.5rem 1.25rem;
+  font-size: 0.75rem;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════════
+   HEX VALUE REPLACEMENT LOG
+   ════════════════════════════════════════════════════════════════════════════════
+
+   REPLACED COLOR VALUES:
+   ─────────────────────────────────────────────────────────────────────────────
+
+   COOL BLUES (Startup Palette → Warm Terracotta):
+     #3B82F6 (tailwind blue-500)        → var(--color-accent) #c97b63
+     #2563EB (tailwind blue-600)        → var(--color-accent-dark) #a85f49
+     #1D4ED8 (tailwind blue-700)        → var(--color-accent-dark) #a85f49
+     #EFF6FF (tailwind blue-50)         → var(--color-accent-light) #f0d5ca
+     #DBEAFE (tailwind blue-100)        → var(--color-accent-light) #f0d5ca
+     #BFDBFE (tailwind blue-200)        → var(--color-accent-light) #f0d5ca
+     #56cbf9 (old sky aqua)             → var(--color-accent) #c97b63
+     #7fbeeb (old maya blue)            → var(--color-accent-dark) #a85f49
+
+   LIGHT GRAYS & WHITES (Cool Tone → Warm Ivory):
+     #ffffff (pure white)               → var(--color-bg-primary) #f6f1ea
+     #f9fafb (gray-50)                  → var(--color-bg-secondary) #ede8e0
+     #f3f4f6 (gray-100)                 → var(--color-bg-tertiary) #e4ddd3
+     #ede8e0 (existing linen)           → var(--color-bg-secondary) #ede8e0
+
+   DARK TEXTS (Cool Gray → Warm Charcoal):
+     #111827 (gray-900)                 → var(--color-text-primary) #1f2937
+     #1a1a1a (existing dark)            → var(--color-text-primary) #1f2937
+     #374151 (gray-700)                 → var(--color-text-secondary) #5b6472
+     #2d3748 (previous dark)            → var(--color-text-primary) #1f2937
+
+   MUTED TEXTS (Cool Slate → Warm Slate):
+     #6B7280 (gray-500)                 → var(--color-text-secondary) #5b6472
+     #9CA3AF (gray-400)                 → var(--color-text-tertiary) #8e97a3
+     #a0aec0 (existing muted)           → var(--color-text-tertiary) #8e97a3
+
+   OVERLAYS (Black Tint → Warm Brown):
+     rgba(0,0,0,0.5)                    → var(--color-bg-overlay) rgba(31, 24, 18, 0.55)
+     rgba(0,0,0,0.25..0.8)              → var(--color-bg-overlay) variants
+
+   SHADOWS (Black Tint → Warm Brown Tint):
+     0 2px 8px rgba(0,0,0,0.08)         → var(--shadow-sm)
+     0 4px 16px rgba(0,0,0,0.12)        → var(--shadow-md)
+     0 8px 32px rgba(0,0,0,0.16)        → var(--shadow-lg)
+     All shadows updated to use warm-tinted rgba(90, 55, 30, ...)
+
+   BORDERS (Cool Blue Tint → Warm Brown):
+     rgba(86, 203, 249, 0.15)           → var(--color-border-subtle) rgba(31, 24, 18, 0.10)
+     rgba(127, 190, 235, 0.25)          → var(--color-border-default) rgba(31, 24, 18, 0.18)
+     All border colors use warm brown rgba(31, 24, 18, ...)
+
+   ─────────────────────────────────────────────────────────────────────────────
+   RESULT: Complete transition from cool startup palette to warm luxury editorial
+   ════════════════════════════════════════════════════════════════════════════════ */

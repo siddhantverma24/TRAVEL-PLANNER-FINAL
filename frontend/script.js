@@ -99,12 +99,12 @@ function setActiveNavLink() {
   const currentPage = window.location.pathname;
   const currentFile = currentPage.split('/').pop() || 'index.html';
   
-  document.querySelectorAll('.nav-link[data-page]').forEach(link => {
+  document.querySelectorAll('.nav-luxury-link[data-page]').forEach(link => {
     link.classList.remove('active');
   });
   
-  const activeLink = document.querySelector(`.nav-link[data-page="${currentFile.replace('.html', '')}"]`) ||
-                     document.querySelector(`.nav-link[data-page="index"]`);
+  const activeLink = document.querySelector(`.nav-luxury-link[data-page="${currentFile.replace('.html', '')}"]`) ||
+                     document.querySelector(`.nav-luxury-link[data-page="index"]`);
   if (activeLink) activeLink.classList.add('active');
 }
 
@@ -2375,7 +2375,7 @@ async function submitQuiz() {
   console.log('[QUIZ] Submitting answers:', quizAnswers);
 
   try {
-    const res = await fetch(`${API_BASE}/api/quiz`, {
+    const res = await fetch(`${API_BASE}/api/quiz/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

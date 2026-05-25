@@ -1,0 +1,364 @@
+<!-- ════════════════════════════════════════════════════════════════════════════════
+     MOTION SYSTEM - PRACTICAL IMPLEMENTATION EXAMPLE
+     Copy & adapt these patterns to your HTML files
+     ════════════════════════════════════════════════════════════════════════════════ -->
+
+<!-- ────────────────────────────────────────────────────────────────────────────
+     1. HEADER / NAVBAR - Include Motion Files
+     ──────────────────────────────────────────────────────────────────────────── -->
+<head>
+  <!-- ... other head content ... -->
+  
+  <!-- Load motion CSS before your main stylesheet -->
+  <link rel="stylesheet" href="motion.css">
+  
+  <!-- Your main stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <!-- ──────────────────────────────────────────────────────────────────────────
+       2. HERO SECTION - With Parallax Background
+       ────────────────────────────────────────────────────────────────────────── -->
+  <section class="hero" data-scroll-reveal>
+    <!-- Hero video with automatic parallax -->
+    <video class="hero-video" autoplay muted loop>
+      <source src="hero.mp4" type="video/mp4">
+    </video>
+    
+    <div class="hero-overlay"></div>
+    
+    <div class="hero-content-vtusa">
+      <div class="hero-ai-label">✨ Discover Luxury Travel</div>
+      <h1 class="hero-headline-vtusa">Your Journey Awaits</h1>
+      <p class="hero-subtitle">
+        Experience the world's most exclusive destinations
+      </p>
+      
+      <!-- CTA Buttons with automatic hover effects -->
+      <div class="hero-ai-pills">
+        <button class="hero-pill btn-primary">Explore Destinations</button>
+        <button class="hero-pill btn-ghost">Watch Story</button>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ──────────────────────────────────────────────────────────────────────────
+       3. FEATURES SECTION - Staggered Card Animation
+       ────────────────────────────────────────────────────────────────────────── -->
+  <section class="features-section" data-scroll-reveal>
+    <div class="container">
+      <h2 data-char-animate>Why Choose Us</h2>
+      
+      <!-- Staggered animation - each card appears 100ms after the previous -->
+      <div class="features-grid" data-scroll-stagger>
+        
+        <!-- Card 1: animates immediately (0ms delay) -->
+        <div class="feature-card">
+          <div class="feature-icon">🌍</div>
+          <h3>Curated Experiences</h3>
+          <p>Hand-picked destinations and exclusive experiences</p>
+        </div>
+        
+        <!-- Card 2: animates 100ms after Card 1 -->
+        <div class="feature-card">
+          <div class="feature-icon">✨</div>
+          <h3>Luxury Stays</h3>
+          <p>Partner with the world's finest hotels and resorts</p>
+        </div>
+        
+        <!-- Card 3: animates 200ms after Card 1 -->
+        <div class="feature-card">
+          <div class="feature-icon">🎯</div>
+          <h3>Expert Planning</h3>
+          <p>Personalized itineraries crafted by travel experts</p>
+        </div>
+        
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ──────────────────────────────────────────────────────────────────────────
+       4. DESTINATIONS GALLERY - With Parallax Images
+       ────────────────────────────────────────────────────────────────────────── -->
+  <section class="destinations-section" data-scroll-reveal>
+    <div class="container">
+      <h2>Featured Destinations</h2>
+      
+      <!-- Staggered cards with parallax images -->
+      <div class="destinations-grid" data-scroll-stagger>
+        
+        <!-- Destination 1 -->
+        <div class="destination-card">
+          <!-- Image in parallax container -->
+          <div data-parallax>
+            <img src="paris.jpg" alt="Paris" loading="lazy">
+          </div>
+          
+          <div class="card-content">
+            <h3>Paris</h3>
+            <p>The City of Light awaits with romance and elegance</p>
+            <button class="btn-primary btn-sm">Explore</button>
+          </div>
+        </div>
+        
+        <!-- Destination 2 -->
+        <div class="destination-card">
+          <div data-parallax>
+            <img src="tokyo.jpg" alt="Tokyo" loading="lazy">
+          </div>
+          
+          <div class="card-content">
+            <h3>Tokyo</h3>
+            <p>Modern marvels blend with ancient traditions</p>
+            <button class="btn-primary btn-sm">Explore</button>
+          </div>
+        </div>
+        
+        <!-- Destination 3 -->
+        <div class="destination-card">
+          <div data-parallax>
+            <img src="maldives.jpg" alt="Maldives" loading="lazy">
+          </div>
+          
+          <div class="card-content">
+            <h3>Maldives</h3>
+            <p>Pristine beaches and crystal waters await</p>
+            <button class="btn-primary btn-sm">Explore</button>
+          </div>
+        </div>
+        
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ──────────────────────────────────────────────────────────────────────────
+       5. EXPERIENCES SECTION - Enhanced Card Hovers
+       ────────────────────────────────────────────────────────────────────────── -->
+  <section class="experiences-section" data-scroll-reveal>
+    <div class="container">
+      <h2>Curated Experiences</h2>
+      
+      <div class="experiences-grid" data-scroll-stagger>
+        
+        <div class="experience-card">
+          <img src="hiking.jpg" alt="Mountain Hiking">
+          <h3>Mountain Adventures</h3>
+          <p>Trek through breathtaking mountain ranges</p>
+        </div>
+        
+        <div class="experience-card">
+          <img src="cultural.jpg" alt="Cultural Tours">
+          <h3>Cultural Immersion</h3>
+          <p>Connect with local traditions and communities</p>
+        </div>
+        
+        <div class="experience-card">
+          <img src="luxury.jpg" alt="Luxury Retreats">
+          <h3>Luxury Retreats</h3>
+          <p>Unwind at world-class spas and resorts</p>
+        </div>
+        
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ──────────────────────────────────────────────────────────────────────────
+       6. TESTIMONIALS - With Animated Gradient
+       ────────────────────────────────────────────────────────────────────────── -->
+  <section class="testimonials-section" data-scroll-reveal data-gradient-animate 
+           style="background: linear-gradient(135deg, #c97b63 0%, #a85f49 25%, #f0d5ca 50%, #c97b63 75%, #a85f49 100%);">
+    <div class="container">
+      <h2>What Our Guests Say</h2>
+      
+      <div class="testimonials-grid" data-scroll-stagger>
+        
+        <div class="testimonial-card">
+          <div class="stars">★★★★★</div>
+          <p>"An unforgettable journey crafted perfectly for us."</p>
+          <p class="testimonial-author">- Sarah Johnson</p>
+        </div>
+        
+        <div class="testimonial-card">
+          <div class="stars">★★★★★</div>
+          <p>"Every detail was thought through with care and elegance."</p>
+          <p class="testimonial-author">- Michael Chen</p>
+        </div>
+        
+        <div class="testimonial-card">
+          <div class="stars">★★★★★</div>
+          <p>"The luxury and service exceeded our highest expectations."</p>
+          <p class="testimonial-author">- Emma Williams</p>
+        </div>
+        
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ──────────────────────────────────────────────────────────────────────────
+       7. CTA SECTION - With Floating Decorative Elements
+       ────────────────────────────────────────────────────────────────────────── -->
+  <section class="cta-section" data-scroll-reveal>
+    <div class="container">
+      <!-- Floating decorative elements -->
+      <div data-float class="decoration decoration-1">✨</div>
+      <div data-float-slow class="decoration decoration-2">🌍</div>
+      
+      <h2>Ready for Your Next Adventure?</h2>
+      <p>Start planning your luxury getaway today</p>
+      
+      <button class="btn-primary btn-lg">Plan My Journey</button>
+    </div>
+  </section>
+
+
+  <!-- ──────────────────────────────────────────────────────────────────────────
+       8. FOOTER - Navigation Links with Smooth Scroll
+       ────────────────────────────────────────────────────────────────────────── -->
+  <footer>
+    <div class="container">
+      <!-- All anchor links automatically smooth scroll -->
+      <nav>
+        <a href="#destinations">Destinations</a>
+        <a href="#experiences">Experiences</a>
+        <a href="#testimonials">Testimonials</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </div>
+  </footer>
+
+  <!-- ──────────────────────────────────────────────────────────────────────────
+       9. SCROLL PROGRESS INDICATOR - At top of page
+       ────────────────────────────────────────────────────────────────────────── -->
+  <div data-scroll-progress style="
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #c97b63, #a85f49);
+    z-index: 9999;
+    width: 0;
+  "></div>
+
+
+  <!-- ──────────────────────────────────────────────────────────────────────────
+       10. LOAD MOTION JAVASCRIPT - At end of body
+       ────────────────────────────────────────────────────────────────────────── -->
+  <script defer src="motion.js"></script>
+
+</body>
+
+<!-- ════════════════════════════════════════════════════════════════════════════════
+     PATTERN SUMMARY
+     ════════════════════════════════════════════════════════════════════════════════
+
+  PATTERN 1: Section Reveal
+  ├─ Add: data-scroll-reveal
+  ├─ Effect: Fade + slide up when visible
+  └─ Use: Major sections (hero, features, cta)
+
+  PATTERN 2: Staggered Cards
+  ├─ Add: data-scroll-stagger to parent
+  ├─ Effect: Each child animates with 100ms delay
+  └─ Use: Card grids (destinations, experiences, testimonials)
+
+  PATTERN 3: Image Parallax
+  ├─ Add: data-parallax to container
+  ├─ Content: <img> or <video> inside
+  ├─ Effect: Image moves subtly as you scroll
+  └─ Use: Hero backgrounds, destination cards
+
+  PATTERN 4: Card Hovers
+  ├─ Add: class="destination-card" (or similar)
+  ├─ Effect: Lift, zoom, shadow on hover
+  └─ Use: Clickable cards, previews
+
+  PATTERN 5: Animated Text
+  ├─ Add: data-char-animate
+  ├─ Effect: Letter-by-letter fade in
+  └─ Use: Headings, important text
+
+  PATTERN 6: Floating Elements
+  ├─ Add: data-float or data-float-slow
+  ├─ Effect: Subtle drifting movement
+  └─ Use: Decorative elements, icons
+
+  PATTERN 7: Gradient Animation
+  ├─ Add: data-gradient-animate
+  ├─ Add: linear-gradient() background
+  ├─ Effect: Colors shift slowly
+  └─ Use: Hero sections, accent backgrounds
+
+  PATTERN 8: Smooth Scrolling
+  ├─ Add: href="#section-id"
+  ├─ Add: id="section-id" on target
+  ├─ Effect: Smooth scroll to anchor
+  └─ Use: Navigation links (automatic)
+
+  ════════════════════════════════════════════════════════════════════════════════ -->
+
+<!-- ════════════════════════════════════════════════════════════════════════════════
+     CSS CLASSES FOR QUICK USE
+     ════════════════════════════════════════════════════════════════════════════════
+
+  Button Classes:
+  ├─ .btn-primary      → Solid terracotta button
+  ├─ .btn-secondary    → Secondary action
+  ├─ .btn-ghost        → Transparent with border
+  ├─ .btn-sm           → Small button
+  └─ .btn-lg           → Large button
+
+  Card Classes:
+  ├─ .destination-card → Enhanced hover + zoom
+  ├─ .experience-card  → Enhanced hover + zoom
+  └─ .activity-card    → Enhanced hover + zoom
+
+  Text Classes:
+  ├─ .text-hero        → Large hero text (clamp 2.75rem-5rem)
+  ├─ .text-h1          → H1 size (clamp 2rem-3.25rem)
+  ├─ .text-h2          → H2 size (clamp 1.5rem-2.25rem)
+  ├─ .text-body        → Regular body text
+  ├─ .text-small       → Small text (0.875rem)
+  └─ .text-label       → Uppercase label (0.6875rem)
+
+  Animation Classes:
+  ├─ .float-element    → Alternative to data-float
+  ├─ .float-slow       → Alternative to data-float-slow
+  ├─ .gradient-animate → Alternative to data-gradient-animate
+  └─ .pulse            → Pulsing opacity effect
+
+  ════════════════════════════════════════════════════════════════════════════════ -->
+
+<!-- ════════════════════════════════════════════════════════════════════════════════
+     STYLING TIPS FOR MOTION CARDS
+     ════════════════════════════════════════════════════════════════════════════════
+
+  To make cards look polished with motion:
+
+  1. Structure:
+     <div class="destination-card">
+       <div data-parallax><img src="..."></div>
+       <div class="card-content">
+         <h3>Title</h3>
+         <p>Description</p>
+       </div>
+     </div>
+
+  2. CSS for the card:
+     .destination-card {
+       border-radius: 8px;
+       overflow: hidden;
+       background: white;
+       box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+       /* Motion system adds hover effects automatically */
+     }
+
+  3. Image container must have overflow: hidden
+     (This is already set by data-parallax CSS)
+
+  ════════════════════════════════════════════════════════════════════════════════ -->

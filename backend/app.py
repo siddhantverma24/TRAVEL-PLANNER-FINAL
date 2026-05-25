@@ -390,4 +390,4 @@ if __name__ == "__main__":
     # - host="0.0.0.0" listens on all interfaces (required for Docker)
     # - port=5000 matches docker-compose mapping
     # - debug=True enables auto-reload for development (set via FLASK_ENV env var)
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5001, debug=True)

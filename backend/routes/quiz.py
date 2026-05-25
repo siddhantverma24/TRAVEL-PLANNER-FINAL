@@ -219,8 +219,10 @@ def get_quiz_result():
 
     # Build answer summary for the prompt
     answer_summary = []
-    for q, a in answers.items():
-        answer_summary.append(f"- {q}: {a}")
+    if isinstance(answers, dict):
+        for q, a in answers.items():
+            answer_summary.append(f"- {q}: {a}")
+    
     answers_text = "\n".join(answer_summary) \
         if answer_summary else (
             f"Budget: {budget}, "

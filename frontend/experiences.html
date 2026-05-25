@@ -9,90 +9,60 @@
   <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800;900&family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800;900&family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
   <style>img { background: #e0e0e0; }</style>
 </head>
-<body>
+<body class="page-no-hero">
 
-<nav id="navbar">
-  <a href="./index.html" class="nav-logo">
-    <span class="nav-logo-icon">✈</span>
-    <span class="nav-logo-text">VISIT USA</span>
+<!-- ══════════════════════════════════════════
+     EDITORIAL LUXURY NAVBAR
+══════════════════════════════════════════ -->
+<nav id="navbar" class="editorial-navbar">
+  <!-- Logo -->
+  <a href="./index.html" class="nav-luxury-logo">
+    <span class="nav-luxury-logo-icon">✈</span>
+    <span class="nav-luxury-logo-text">VISIT USA</span>
   </a>
-  <ul class="nav-center-links">
-    <li class="nav-item">
-      <a href="./index.html" class="nav-link" data-page="index">Home</a>
-    </li>
-    <li class="nav-item nav-has-dropdown">
-      <a href="./destinations.html" class="nav-link" data-page="destinations">Destinations <span class="nav-chevron">›</span></a>
-      <div class="nav-mega-dropdown">
-        <div class="nav-dropdown-inner">
-          <div class="nav-dropdown-section">
-            <p class="nav-dropdown-label">Popular Cities</p>
-            <div class="nav-dropdown-grid">
-              <a href="./destinations.html" class="nav-dropdown-card"><span class="nav-dc-emoji">🗽</span><span class="nav-dc-name">New York</span><span class="nav-dc-state">New York</span></a>
-              <a href="./destinations.html" class="nav-dropdown-card"><span class="nav-dc-emoji">🌴</span><span class="nav-dc-name">Miami</span><span class="nav-dc-state">Florida</span></a>
-              <a href="./destinations.html" class="nav-dropdown-card"><span class="nav-dc-emoji">🎰</span><span class="nav-dc-name">Las Vegas</span><span class="nav-dc-state">Nevada</span></a>
-              <a href="./destinations.html" class="nav-dropdown-card"><span class="nav-dc-emoji">🌉</span><span class="nav-dc-name">San Francisco</span><span class="nav-dc-state">California</span></a>
-              <a href="./destinations.html" class="nav-dropdown-card"><span class="nav-dc-emoji">🌺</span><span class="nav-dc-name">Hawaii</span><span class="nav-dc-state">Hawaii</span></a>
-              <a href="./destinations.html" class="nav-dropdown-card"><span class="nav-dc-emoji">🏙️</span><span class="nav-dc-name">Chicago</span><span class="nav-dc-state">Illinois</span></a>
-            </div>
-          </div>
-          <div class="nav-dropdown-section">
-            <p class="nav-dropdown-label">Nature & Adventure</p>
-            <div class="nav-dropdown-list">
-              <a href="./destinations.html" class="nav-dropdown-list-item"><span>🏜️</span>Grand Canyon</a>
-              <a href="./destinations.html" class="nav-dropdown-list-item"><span>🦌</span>Yellowstone</a>
-              <a href="./destinations.html" class="nav-dropdown-list-item"><span>🌲</span>Yosemite</a>
-              <a href="./destinations.html" class="nav-dropdown-list-item"><span>🏔️</span>Rocky Mountains</a>
-            </div>
-          </div>
-          <div class="nav-dropdown-cta">
-            <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:.75rem">Not sure where to go?</p>
-            <a href="./plan.html" class="nav-dropdown-cta-btn">✨ Take the AI Quiz</a>
-          </div>
-        </div>
-      </div>
-    </li>
-    <li class="nav-item">
-      <a href="./experiences.html" class="nav-link" data-page="experiences">Experiences</a>
-    </li>
-    <li class="nav-item">
-      <a href="./tools.html" class="nav-link" data-page="tools">Tools</a>
-    </li>
-    <li class="nav-item">
-      <a href="./plan.html" class="nav-link" data-page="plan">Plan Trip</a>
-    </li>
-    <li class="nav-item">
-      <a href="./about.html" class="nav-link" data-page="about">About</a>
-    </li>
+
+  <!-- Center Navigation Links -->
+  <ul class="nav-luxury-links">
+    <li><a href="./index.html" class="nav-luxury-link" data-page="index">Home</a></li>
+    <li><a href="./destinations.html" class="nav-luxury-link" data-page="destinations">Destinations</a></li>
+    <li><a href="./experiences.html" class="nav-luxury-link" data-page="experiences">Experiences</a></li>
+    <li><a href="./tools.html" class="nav-luxury-link" data-page="tools">Tools</a></li>
+    <li><a href="./plan.html" class="nav-luxury-link" data-page="plan">Plan Trip</a></li>
+    <li><a href="./about.html" class="nav-luxury-link" data-page="about">About</a></li>
   </ul>
-  <div class="nav-actions">
-    <button class="nav-icon-btn" id="navSearchBtn" onclick="toggleNavSearch()" title="Search destinations">
+
+  <!-- Right Actions: CTA & Controls -->
+  <div class="nav-luxury-actions">
+    <button class="nav-luxury-icon-btn" id="navSearchBtn" onclick="toggleNavSearch()" title="Search destinations">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
       </svg>
     </button>
-    <button class="nav-icon-btn nav-dark-btn" id="darkToggle" onclick="toggleDarkMode()" title="Toggle dark mode">
-      <span class="nav-sun">
+    <button class="nav-luxury-icon-btn nav-luxury-dark-btn" id="darkToggle" onclick="toggleDarkMode()" title="Toggle dark mode">
+      <span class="nav-luxury-sun">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
         </svg>
       </span>
-      <span class="nav-moon">
+      <span class="nav-luxury-moon">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
         </svg>
       </span>
     </button>
-    <a href="./plan.html" class="nav-cta-btn">Plan a Trip</a>
-    <button class="nav-hamburger" id="hamburger" onclick="toggleMobileMenu()" aria-label="Menu">
+    <a href="./plan.html" class="nav-luxury-cta">Plan a Trip</a>
+    <button class="nav-luxury-hamburger" id="hamburger" onclick="toggleMobileMenu()" aria-label="Menu">
       <span></span><span></span><span></span>
     </button>
   </div>
-  <div class="nav-search-bar" id="navSearchBar">
+
+  <!-- Search Bar -->
+  <div class="nav-luxury-search-bar" id="navSearchBar">
     <input type="text" id="navSearchInput" placeholder="Search destinations, experiences, tools..." onkeydown="handleNavSearch(event)">
     <button onclick="toggleNavSearch()">✕</button>
   </div>
@@ -101,7 +71,10 @@
 <div class="nav-mobile-overlay" id="mobileMenu">
   <div class="nav-mobile-inner">
     <div class="nav-mobile-header">
-      <span class="nav-logo-text">VISIT USA</span>
+      <a href="./index.html" class="nav-mobile-logo">
+        <span class="nav-luxury-logo-icon">✈</span>
+        <span class="nav-luxury-logo-text">VISIT USA</span>
+      </a>
       <button onclick="toggleMobileMenu()" class="nav-mobile-close">✕</button>
     </div>
     <nav class="nav-mobile-links">
@@ -113,7 +86,7 @@
       <a href="./about.html" class="nav-mobile-link"><span>About</span><span class="nav-mobile-arrow">›</span></a>
     </nav>
     <div class="nav-mobile-footer">
-      <a href="./plan.html" class="nav-mobile-cta">✨ Start Planning</a>
+      <a href="./plan.html" class="nav-mobile-cta">Plan a Trip</a>
       <p style="font-size:.75rem;color:var(--text-muted);text-align:center;margin-top:1rem">Free trip planning tools</p>
     </div>
   </div>

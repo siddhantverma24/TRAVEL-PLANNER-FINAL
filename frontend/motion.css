@@ -1,0 +1,506 @@
+/* ════════════════════════════════════════════════════════════════════════════════
+   PREMIUM CINEMATIC MOTION & SCROLL INTERACTION SYSTEM
+   Subtle, elegant animations for luxury editorial website
+   ════════════════════════════════════════════════════════════════════════════════ */
+
+/* ── SCROLL REVEAL ANIMATIONS ──────────────────────────────────────────────────── */
+
+/* Base state for scroll-revealed elements */
+[data-scroll-reveal] {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: opacity, transform;
+}
+
+/* Revealed state - added by JavaScript */
+[data-scroll-reveal].revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Staggered reveal for child elements */
+[data-scroll-stagger] > * {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: opacity, transform;
+}
+
+[data-scroll-stagger].revealed > * {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Stagger delay multiplier - each child delays by 100ms */
+[data-scroll-stagger].revealed > *:nth-child(1) { transition-delay: 0ms; }
+[data-scroll-stagger].revealed > *:nth-child(2) { transition-delay: 100ms; }
+[data-scroll-stagger].revealed > *:nth-child(3) { transition-delay: 200ms; }
+[data-scroll-stagger].revealed > *:nth-child(4) { transition-delay: 300ms; }
+[data-scroll-stagger].revealed > *:nth-child(5) { transition-delay: 400ms; }
+[data-scroll-stagger].revealed > *:nth-child(6) { transition-delay: 500ms; }
+[data-scroll-stagger].revealed > *:nth-child(7) { transition-delay: 600ms; }
+[data-scroll-stagger].revealed > *:nth-child(8) { transition-delay: 700ms; }
+[data-scroll-stagger].revealed > *:nth-child(n+9) { transition-delay: 800ms; }
+
+/* ── SECTION FADE-IN ON SCROLL ────────────────────────────────────────────────── */
+section[data-scroll-reveal] {
+  opacity: 0;
+  transform: translateY(50px);
+}
+
+section[data-scroll-reveal].revealed {
+  opacity: 1;
+  transform: translateY(0);
+  transition: all 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* ── PARALLAX HERO BACKGROUND ─────────────────────────────────────────────────── */
+.hero-video {
+  transition: transform 0.5s ease-out;
+  will-change: transform;
+}
+
+/* ── PARALLAX IMAGE CONTAINERS ────────────────────────────────────────────────── */
+[data-parallax] {
+  position: relative;
+  overflow: hidden;
+}
+
+[data-parallax] img,
+[data-parallax] video {
+  will-change: transform;
+  transition: transform 0.3s ease-out;
+}
+
+/* ── CARD HOVER INTERACTIONS ───────────────────────────────────────────────────── */
+
+/* Destination cards */
+.destination-card,
+.experience-card,
+.activity-card,
+[class*="card"],
+[class*="Card"] {
+  transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  position: relative;
+  overflow: hidden;
+}
+
+.destination-card:hover,
+.experience-card:hover,
+.activity-card:hover,
+[class*="card"]:hover,
+[class*="Card"]:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.16);
+}
+
+/* Card image zoom on hover */
+.destination-card img,
+.destination-card video,
+.experience-card img,
+.experience-card video,
+.activity-card img,
+.activity-card video,
+[class*="card"] img,
+[class*="card"] video,
+[class*="Card"] img,
+[class*="Card"] video {
+  transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: transform;
+}
+
+.destination-card:hover img,
+.destination-card:hover video,
+.experience-card:hover img,
+.experience-card:hover video,
+.activity-card:hover img,
+.activity-card:hover video,
+[class*="card"]:hover img,
+[class*="card"]:hover video,
+[class*="Card"]:hover img,
+[class*="Card"]:hover video {
+  transform: scale(1.08);
+}
+
+/* Subtle overlay darkening on card hover */
+.destination-card::after,
+.experience-card::after,
+.activity-card::after,
+[class*="card"]::after,
+[class*="Card"]::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0);
+  transition: background 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.destination-card:hover::after,
+.experience-card:hover::after,
+.activity-card:hover::after,
+[class*="card"]:hover::after,
+[class*="Card"]:hover::after {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+/* ── BUTTON HOVER ENHANCEMENT ──────────────────────────────────────────────────── */
+button,
+.btn,
+.btn-primary,
+.btn-secondary,
+.btn-ghost,
+a[class*="btn"],
+[role="button"] {
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  position: relative;
+  overflow: hidden;
+}
+
+button:hover,
+.btn:hover,
+.btn-primary:hover,
+.btn-secondary:hover,
+.btn-ghost:hover,
+a[class*="btn"]:hover,
+[role="button"]:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+button:active,
+.btn:active,
+.btn-primary:active,
+.btn-secondary:active,
+.btn-ghost:active,
+a[class*="btn"]:active,
+[role="button"]:active {
+  transform: translateY(0);
+}
+
+/* ── AMBIENT FLOATING ANIMATION ────────────────────────────────────────────────── */
+
+/* Subtle floating effect for decorative elements */
+@keyframes floatSoft {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px);
+  }
+  25% {
+    transform: translateY(-6px) translateX(2px);
+  }
+  50% {
+    transform: translateY(-12px) translateX(0px);
+  }
+  75% {
+    transform: translateY(-6px) translateX(-2px);
+  }
+}
+
+[data-float],
+.float-element,
+.floating {
+  animation: floatSoft 6s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* Slower floating variant */
+@keyframes floatSlower {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+[data-float-slow],
+.float-slow {
+  animation: floatSlower 8s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* ── ANIMATED GRADIENT BACKGROUNDS ────────────────────────────────────────────── */
+
+@keyframes gradientShift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+[data-gradient-animate],
+.gradient-animate {
+  background-size: 200% 200%;
+  animation: gradientShift 8s ease infinite;
+  will-change: background-position;
+}
+
+/* Faster gradient animation */
+@keyframes gradientShiftFast {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+[data-gradient-animate-fast],
+.gradient-animate-fast {
+  background-size: 200% 200%;
+  animation: gradientShiftFast 4s ease infinite;
+  will-change: background-position;
+}
+
+/* ── LINK UNDERLINE ANIMATION ──────────────────────────────────────────────────– */
+a {
+  position: relative;
+  transition: color 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+a::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: currentColor;
+  transition: width 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+a:hover::after {
+  width: 100%;
+}
+
+/* Disable for navigation links and buttons */
+nav a::after,
+button::after,
+.btn::after,
+[role="button"]::after {
+  display: none;
+}
+
+/* ── INPUT FOCUS ANIMATION ────────────────────────────────────────────────────── */
+input, textarea, select {
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+input:focus, textarea:focus, select:focus {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* ── LOADING & PRELOADER ANIMATION ────────────────────────────────────────────── */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.preloader-globe,
+.spinner,
+[class*="loading"] {
+  animation: spin 2s linear infinite;
+}
+
+.pulse,
+[class*="pulse"] {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* ── SMOOTH PAGE TRANSITIONS ────────────────────────────────────────────────────– */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Fade-in animation for page load */
+@keyframes pageLoad {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+body {
+  animation: pageLoad 0.6s ease-out;
+}
+
+/* ── SCROLL INDICATOR ANIMATION ────────────────────────────────────────────────– */
+@keyframes scrollBounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.scroll-indicator,
+[class*="scroll-indicator"],
+[data-scroll-indicator] {
+  animation: scrollBounce 2s ease-in-out infinite;
+}
+
+/* ── TEXT ANIMATION - FADE IN LETTER BY LETTER ────────────────────────────────– */
+@keyframes charFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+[data-char-animate] {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+[data-char-animate] span {
+  opacity: 0;
+  animation: charFadeIn 0.6s ease-out forwards;
+}
+
+/* ── RESPONSIVE MOTION ADJUSTMENTS ────────────────────────────────────────────── */
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Mobile optimization - slightly faster animations */
+@media (max-width: 768px) {
+  [data-scroll-reveal] {
+    transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  [data-scroll-stagger] > * {
+    transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  [data-scroll-stagger].revealed > *:nth-child(2) { transition-delay: 50ms; }
+  [data-scroll-stagger].revealed > *:nth-child(3) { transition-delay: 100ms; }
+  [data-scroll-stagger].revealed > *:nth-child(4) { transition-delay: 150ms; }
+  [data-scroll-stagger].revealed > *:nth-child(5) { transition-delay: 200ms; }
+
+  .destination-card:hover,
+  .experience-card:hover,
+  .activity-card:hover {
+    transform: translateY(-4px);
+  }
+
+  .destination-card:hover img,
+  .destination-card:hover video,
+  .experience-card:hover img,
+  .experience-card:hover video {
+    transform: scale(1.05);
+  }
+
+  button:hover,
+  .btn:hover {
+    transform: translateY(-1px);
+  }
+}
+
+/* ── PERFORMANCE OPTIMIZATION ──────────────────────────────────────────────────– */
+
+/* Use GPU acceleration for animations */
+[data-scroll-reveal],
+[data-scroll-stagger],
+[data-parallax],
+[data-float],
+[data-gradient-animate],
+.destination-card,
+.experience-card,
+.activity-card {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-perspective: 1000;
+  perspective: 1000;
+}
+
+/* Lazy load images for better performance */
+img[loading="lazy"] {
+  background: var(--bg-light);
+  transition: opacity 0.4s ease;
+}
+
+img[loading="lazy"][src] {
+  opacity: 1;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════════
+   SECTION SPACING & VISUAL RHYTHM
+   ════════════════════════════════════════════════════════════════════════════════ */
+
+section {
+  transition: padding 0.4s ease;
+}
+
+/* Alternating section spacing for visual rhythm */
+section:nth-child(even) {
+  padding-top: 5rem;
+  padding-bottom: 5rem;
+}
+
+section:nth-child(odd) {
+  padding-top: 4rem;
+  padding-bottom: 4rem;
+}
+
+@media (max-width: 768px) {
+  section:nth-child(even) {
+    padding-top: 3.5rem;
+    padding-bottom: 3.5rem;
+  }
+
+  section:nth-child(odd) {
+    padding-top: 2.5rem;
+    padding-bottom: 2.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  section:nth-child(even) {
+    padding-top: 2.5rem;
+    padding-bottom: 2.5rem;
+  }
+
+  section:nth-child(odd) {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════════ */
